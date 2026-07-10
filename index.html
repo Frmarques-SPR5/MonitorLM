@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPR5 Controle de ID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:       #f0f2f5;
+  --surface:  #ffffff;
+  --card:     #ffffff;
+  --border:   #e0e3e8;
+  --blue:     #3483fa;
+  --blue-d:   #2968c8;
+  --accent:   #ffe600;
+  --danger:   #e05252;
+  --warn:     #f0a800;
+  --ok:       #00a650;
+  --text:     #1c1c1e;
+  --text2:    #6c757d;
+  --radius:   8px;
+  --font:     'Segoe UI', system-ui, sans-serif;
+  --shadow:   0 2px 8px rgba(0,0,0,.10);
+  --header-h: 56px;
+}
+
+[data-theme="dark"] {
+  --bg:      #0f0f1a;
+  --surface: #1a1a2e;
+  --card:    #22223b;
+  --border:  #2d2d4e;
+  --text:    #e8e8f0;
+  --text2:   #8888aa;
+  --shadow:  0 2px 8px rgba(0,0,0,.35);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
+
+/* ── SCROLLBAR discreta ── */
+.gb, .hist-wrap, .tabs { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.gb::-webkit-scrollbar, .hist-wrap::-webkit-scrollbar, .tabs::-webkit-scrollbar { height: 6px; width: 6px; }
+.gb::-webkit-scrollbar-track, .hist-wrap::-webkit-scrollbar-track, .tabs::-webkit-scrollbar-track { background: transparent; }
+.gb::-webkit-scrollbar-thumb, .hist-wrap::-webkit-scrollbar-thumb, .tabs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.gb::-webkit-scrollbar-thumb:hover, .hist-wrap::-webkit-scrollbar-thumb:hover, .tabs::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+/* ── HEADER ── */
+header {
+  background: var(--accent);
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: var(--shadow);
+}
+
+[data-theme="dark"] header { background: #1a1a2e; border-bottom: 1px solid var(--border); }
+
+.logo-wrap { display: flex; align-items: center; gap: 10px; }
+
+.logo-txt {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+  color: #4C3B97;
+  white-space: nowrap;
+}
+
+.logo-txt .ltr {
+  display: inline-block;
+  opacity: 0;
+  animation: ltrUp .35s ease-out forwards;
+}
+.logo-txt .ltr.sp { width: .28em; }
+@keyframes ltrUp {
+  from { opacity: 0; transform: translateY(-14px) scale(.6); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* lobo animado */
+.lobo { width: 34px; height: 44px; flex-shrink: 0; overflow: visible; }
+.lobo #Izquierda, .lobo #Derecha { visibility: hidden; }
+.lobo #Ojo-izquierdo { animation: lobo-opacidad 1s 3.9s forwards; }
+.lobo #Ojo-derecho   { animation: lobo-opacidad 1s 3.9s forwards; }
+.lobo [id^="poligono"] { animation: lobo-montar .5s forwards; opacity: 0; }
+.lobo #Izquierda [id^="poligono"] { animation-name: lobo-slide-izq; }
+.lobo #Derecha [id^="poligono"]   { animation-name: lobo-slide-der; }
+
+@keyframes lobo-opacidad { from { visibility: hidden; } to { visibility: visible; } }
+@keyframes lobo-slide-izq {
+  from { transform: translate(-80px,-60px); opacity: 0; }
+  to   { transform: translate(0,0); opacity: 1; visibility: visible; }
+}
+@keyframes lobo-slide-der {
+  from { transform: translate(80px,-60px); opacity: 0; }
+  to   { transform: translate(0,0); opacity: 1; visibility: visible; }
+}
+@keyframes lobo-montar { to { opacity: 1; } }
+
+/* stagger dos polígonos — atraso progressivo */
+.lobo g[id] { animation: lobo-reveal .1s forwards; }
+@keyframes lobo-reveal { to { visibility: visible; } }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+/* toggle dark mode estilo iPhone */
+.dark-toggle {
+  position: relative;
+  width: 50px;
+  height: 28px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.dark-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.dark-track {
+  position: absolute;
+  inset: 0;
+  background: #c8c8c8;
+  border-radius: 28px;
+  transition: background .3s;
+}
+.dark-track::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 22px; height: 22px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,.25);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s;
+  display: flex; align-items: center; justify-content: center;
+}
+.dark-toggle input:checked + .dark-track { background: #3a3a5c; }
+.dark-toggle input:checked + .dark-track::after { transform: translateX(22px); background: #e8e8f0; }
+.dark-icon { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12px; pointer-events: none; transition: opacity .2s; }
+.dark-icon.sun { left: 6px; opacity: 1; }
+.dark-icon.moon { right: 5px; opacity: 0; }
+.dark-toggle input:checked ~ .dark-icon.sun { opacity: 0; }
+.dark-toggle input:checked ~ .dark-icon.moon { opacity: 1; }
+
+.header-user { display: none; align-items: center; gap: 8px; font-size: 13px; }
+.header-user.show { display: flex; }
+.header-transp { color: var(--blue); font-weight: 700; background: rgba(52,131,250,.12); border-radius: 5px; padding: 2px 9px; font-size: 12px; white-space: nowrap; }
+.header-nome { color: var(--text2); font-size: 12px; display: none; }
+@media(min-width:640px){ .header-nome { display: inline; } }
+
+/* botão sair animado */
+.link_wrapper { position: relative; display: inline-block; }
+.link_wrapper a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 32px;
+  font-weight: 700;
+  text-decoration: none;
+  background: #333;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px;
+  border: 2px solid #333;
+  border-radius: 4px;
+  transition: all .3s;
+  position: relative;
+  z-index: 1;
+}
+[data-theme="dark"] .link_wrapper a { background: var(--border); border-color: var(--border); }
+.link_wrapper .lw-icon {
+  width: 32px; height: 32px;
+  border: 2px solid transparent;
+  position: absolute;
+  transform: rotate(45deg);
+  right: 0; top: 0;
+  z-index: 0;
+  transition: all .3s;
+  border-radius: 4px;
+}
+.link_wrapper .lw-icon svg {
+  width: 14px;
+  position: absolute;
+  top: calc(50% - 7px); left: calc(50% - 7px);
+  transform: rotate(-45deg);
+  fill: var(--danger);
+  transition: all .3s;
+}
+.link_wrapper a:hover {
+  width: 62px;
+  border-color: var(--danger);
+  background: transparent;
+  color: var(--danger);
+}
+.link_wrapper a:hover + .lw-icon { border-color: var(--danger); right: -30%; }
+
+/* ── LOGIN ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 400;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.overlay.oculto { display: none; }
+
+.login-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.2);
+}
+
+.login-header { text-align: center; }
+.login-logo { font-size: 18px; font-weight: 900; color: #1c1c1e; background: var(--accent); display: inline-block; padding: 7px 18px; border-radius: 8px; margin-bottom: 8px; letter-spacing: -.3px; overflow: hidden; min-width: 90px; text-align: center; }
+#logoFlip { display: inline-block; }
+#logoFlip.flip-out { animation: logoOut .35s ease-in forwards; }
+#logoFlip.flip-in  { animation: logoIn  .35s ease-out forwards; }
+@keyframes logoOut {
+  from { transform: translateY(0) rotateX(0); opacity: 1; }
+  to   { transform: translateY(-100%) rotateX(90deg); opacity: 0; }
+}
+@keyframes logoIn {
+  from { transform: translateY(100%) rotateX(-90deg); opacity: 0; }
+  to   { transform: translateY(0) rotateX(0); opacity: 1; }
+}
+.login-header p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+.login-field { display: flex; flex-direction: column; gap: 5px; }
+.login-field label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.login-field select,
+.login-field input[type=text],
+.login-field input[type=password] {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 13px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .15s, background .15s;
+  width: 100%;
+}
+.login-field select:focus,
+.login-field input:focus { border-color: var(--blue); background: var(--surface); }
+[data-theme="dark"] .login-field select option { background: var(--card); }
+
+.input-senha { position: relative; }
+.input-senha input { padding-right: 42px; }
+.toggle-senha { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text2); font-size: 15px; padding: 0; line-height: 1; }
+
+/* botão entrar animado */
+/* botão entrar — borda animada */
+.btn-entrar-svg {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  margin-top: 4px;
+  cursor: pointer;
+  background: var(--blue);
+  border: 1px solid #91C9FF;
+  outline: none;
+  transition: background 1s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.btn-entrar-svg svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  fill: none;
+  stroke: #fff;
+  stroke-dasharray: 150 480;
+  stroke-dashoffset: 150;
+  transition: stroke-dashoffset 1s ease-in-out;
+}
+.btn-entrar-svg:hover { background: var(--blue-d); }
+.btn-entrar-svg:hover svg { stroke-dashoffset: -480; }
+.btn-entrar-svg span {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-erro { background: #fff0f0; border: 1px solid #fcc; border-radius: 6px; padding: 9px 13px; font-size: 13px; color: var(--danger); display: none; text-align: center; }
+[data-theme="dark"] .login-erro { background: rgba(224,82,82,.1); border-color: rgba(224,82,82,.3); }
+.login-erro.show { display: block; }
+
+/* ── APP ── */
+#app { padding: 16px; max-width: 1200px; margin: 0 auto; }
+@media(min-width:768px){ #app { padding: 20px 24px; } }
+
+.page-header { margin-bottom: 16px; }
+.page-title { font-size: 16px; font-weight: 700; }
+.page-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+@media(min-width:640px){ .page-title { font-size: 18px; } }
+
+/* KPI */
+.kpi-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+@media(min-width:640px){ .kpi-bar { grid-template-columns: repeat(3, 1fr); } }
+@media(min-width:900px){ .kpi-bar { grid-template-columns: repeat(6, 1fr); } }
+
+.kpi { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+.kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); margin-bottom: 5px; font-weight: 700; }
+.kpi-val { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+@media(min-width:640px){ .kpi-val { font-size: 26px; } }
+.kpi-val.d { color: var(--danger); }
+.kpi-val.w { color: var(--warn); }
+.kpi-val.g { color: var(--ok); }
+.kpi-val.b { color: var(--blue); }
+
+/* TABS */
+.tabs { display: flex; margin-bottom: 16px; border-bottom: 2px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { padding: 9px 16px; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all .15s; font-weight: 600; white-space: nowrap; }
+.tab:hover { color: var(--blue); }
+.tab.ativo { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* FILTROS */
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.filtros input,
+.filtros select {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 11px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color .15s;
+  font-family: var(--font);
+  width: 100%;
+}
+@media(min-width:500px){ .filtros input { width: 200px; } .filtros select { width: auto; } }
+.filtros input:focus, .filtros select:focus { border-color: var(--blue); }
+
+/* botão atualizar animado */
+.ref-wrap { margin-left: auto; position: relative; display: inline-block; }
+.ref-wrap a {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  width: 110px; height: 34px;
+  font-weight: 700; font-size: 12px;
+  text-decoration: none;
+  background: var(--blue);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  border: 2px solid var(--blue);
+  border-radius: 5px;
+  transition: all .3s;
+  cursor: pointer;
+  position: relative; z-index: 1;
+}
+.ref-wrap .lw-icon {
+  width: 34px; height: 34px;
+  border: 2px solid transparent;
+  position: absolute;
+  transform: rotate(45deg);
+  right: 0; top: 0; z-index: 0;
+  transition: all .3s; border-radius: 5px;
+}
+.ref-wrap .lw-icon svg { width: 14px; position: absolute; top: calc(50% - 7px); left: calc(50% - 7px); transform: rotate(-45deg); fill: var(--accent); transition: all .3s; }
+.ref-wrap a:hover { width: 88px; border-color: var(--accent); background: transparent; color: var(--accent); }
+.ref-wrap a:hover + .lw-icon { border-color: var(--accent); right: -20%; }
+[data-theme="dark"] .ref-wrap a:hover { color: #1c1c1e; }
+
+/* GRUPOS */
+.grupo { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.gh { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; user-select: none; background: var(--bg); border-bottom: 1.5px solid var(--border); transition: background .15s; }
+.gh:hover { filter: brightness(.97); }
+[data-theme="dark"] .gh:hover { filter: brightness(1.1); }
+.gh-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; flex-wrap: wrap; }
+.bt { background: var(--border); color: var(--text2); border-radius: 20px; padding: 1px 9px; font-size: 11px; font-weight: 700; }
+.bp { background: rgba(224,82,82,.12); color: var(--danger); border-radius: 20px; padding: 1px 9px; font-size: 11px; font-weight: 700; }
+.gv { font-size: 11px; color: var(--text2); font-weight: 500; }
+.chev { color: var(--text2); transition: transform .2s; font-size: 13px; flex-shrink: 0; }
+.grupo.open .chev { transform: rotate(180deg); }
+.gb { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.grupo.open .gb { display: block; }
+
+/* TABELA */
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 680px; }
+@media(min-width:900px){ table { font-size: 13px; } }
+th { background: var(--bg); padding: 7px 11px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); border-bottom: 1.5px solid var(--border); font-weight: 700; white-space: nowrap; }
+td { padding: 8px 11px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(52,131,250,.04); }
+
+.sid { font-family: monospace; font-size: 11px; color: var(--blue); font-weight: 700; }
+
+.route-link { color: var(--blue); font-weight: 600; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+.route-link:hover { text-decoration: underline; }
+.route-link::after { content: '↗'; font-size: 10px; opacity: .7; }
+
+.sb { display: inline-block; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; }
+.status-missing { background: rgba(224,82,82,.12); color: var(--danger); }
+.status-stale   { background: rgba(240,168,0,.12); color: #b07800; }
+[data-theme="dark"] .status-stale { color: var(--warn); }
+
+.jok { font-size: 11px; color: var(--ok); font-weight: 700; }
+
+/* botão justificar animado */
+.just-wrap { position: relative; display: inline-block; }
+.just-wrap a {
+  display: flex; align-items: center; justify-content: center;
+  width: 90px; height: 28px;
+  font-weight: 700; font-size: 10px;
+  text-decoration: none;
+  background: var(--blue);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  border: 2px solid var(--blue);
+  border-radius: 4px;
+  transition: all .3s;
+  cursor: pointer;
+  position: relative; z-index: 1;
+}
+.just-wrap .lw-icon {
+  width: 28px; height: 28px;
+  border: 2px solid transparent;
+  position: absolute;
+  transform: rotate(45deg);
+  right: 0; top: 0; z-index: 0;
+  transition: all .3s; border-radius: 4px;
+}
+.just-wrap .lw-icon svg { width: 11px; position: absolute; top: calc(50% - 5.5px); left: calc(50% - 5.5px); transform: rotate(-45deg); fill: var(--ok); transition: all .3s; }
+.just-wrap a:hover { width: 70px; border-color: var(--ok); background: transparent; color: var(--ok); }
+.just-wrap a:hover + .lw-icon { border-color: var(--ok); right: -25%; }
+
+.dt { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text2); font-size: 11px; }
+.dc { font-size: 11px; font-weight: 700; }
+.dc.crit { color: var(--danger); }
+.dc.alto { color: var(--warn); }
+.dc.ok   { color: var(--ok); }
+.valor-brl { font-weight: 700; font-size: 12px; white-space: nowrap; }
+.valor-alto { color: var(--danger); }
+
+/* MODAL */
+.moverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 300; align-items: center; justify-content: center; padding: 16px; }
+.moverlay.open { display: flex; }
+.mcard { background: var(--card); border-radius: 12px; padding: 24px; width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.2); max-height: 90vh; overflow-y: auto; }
+.mcard h3 { font-size: 16px; font-weight: 700; }
+.minfo { background: var(--bg); border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; font-size: 12px; border: 1px solid var(--border); }
+.mi label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); margin-bottom: 2px; font-weight: 700; }
+.mi span { font-weight: 600; }
+.flabel { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 600; }
+textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 13px; resize: vertical; min-height: 80px; font-family: var(--font); outline: none; transition: border-color .15s; }
+textarea:focus { border-color: var(--blue); background: var(--surface); }
+.mactions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.bcancel { background: none; border: 1.5px solid var(--border); border-radius: 6px; padding: 8px 16px; color: var(--text2); font-size: 13px; cursor: pointer; font-weight: 600; }
+.bcancel:hover { border-color: var(--text); color: var(--text); }
+
+/* botão salvar animado */
+.save-wrap { position: relative; display: inline-block; }
+.save-wrap a {
+  display: flex; align-items: center; justify-content: center;
+  width: 160px; height: 36px;
+  font-weight: 700; font-size: 12px;
+  text-decoration: none;
+  background: var(--blue);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  border: 2px solid var(--blue);
+  border-radius: 5px;
+  transition: all .3s;
+  cursor: pointer;
+  position: relative; z-index: 1;
+}
+.save-wrap .lw-icon { width: 36px; height: 36px; border: 2px solid transparent; position: absolute; transform: rotate(45deg); right: 0; top: 0; z-index: 0; transition: all .3s; border-radius: 5px; }
+.save-wrap .lw-icon svg { width: 14px; position: absolute; top: calc(50% - 7px); left: calc(50% - 7px); transform: rotate(-45deg); fill: var(--ok); transition: all .3s; }
+.save-wrap a:hover { width: 130px; border-color: var(--ok); background: transparent; color: var(--ok); }
+.save-wrap a:hover + .lw-icon { border-color: var(--ok); right: -10%; }
+.save-wrap a.disabled { opacity: .5; pointer-events: none; }
+
+/* HISTÓRICO */
+.htable { width: 100%; font-size: 12px; border-collapse: collapse; min-width: 600px; }
+.htable th { background: var(--bg); padding: 7px 11px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); border-bottom: 1.5px solid var(--border); font-weight: 700; }
+.htable td { padding: 8px 11px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.htable tr:last-child td { border-bottom: none; }
+.htable tr:hover td { background: rgba(52,131,250,.04); }
+.mcell { max-width: 240px; color: var(--text2); font-size: 11px; word-break: break-word; }
+.hist-wrap { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); overflow-x: auto; }
+
+/* misc */
+.spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 48px 16px; color: var(--text2); font-size: 14px; }
+
+.toast { position: fixed; bottom: 20px; right: 20px; left: 20px; background: var(--ok); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; z-index: 500; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,.2); text-align: center; }
+@media(min-width:500px){ .toast { left: auto; width: auto; min-width: 220px; text-align: left; } }
+.toast.err { background: var(--danger); }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* SVG helper */
+.arrow-svg { display: inline-block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div id="loboContainer"></div>
+    <div class="logo-txt" id="logoTexto">SPR5 Controle de ID</div>
+  </div>
+  <div class="header-right">
+
+    <!-- dark mode toggle -->
+    <label class="dark-toggle" title="Modo noturno">
+      <input type="checkbox" id="darkToggle" onchange="toggleDark()">
+      <div class="dark-track"></div>
+      <span class="dark-icon sun">☀️</span>
+      <span class="dark-icon moon">🌙</span>
+    </label>
+
+    <!-- user info + sair -->
+    <div class="header-user" id="headerUser">
+      <span class="header-transp" id="hTransp"></span>
+      <span class="header-nome" id="hNome"></span>
+      <div class="link_wrapper">
+        <a onclick="sair()">Sair</a>
+        <div class="lw-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268.832 268.832">
+            <path d="M265.17 125.577l-80-80c-4.88-4.88-12.796-4.88-17.677 0-4.882 4.882-4.882 12.796 0 17.678l58.66 58.66H12.5c-6.903 0-12.5 5.598-12.5 12.5 0 6.903 5.597 12.5 12.5 12.5h213.654l-58.66 58.662c-4.88 4.882-4.88 12.796 0 17.678 2.44 2.44 5.64 3.66 8.84 3.66s6.398-1.22 8.84-3.66l79.997-80c4.883-4.882 4.883-12.796 0-17.678z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- LOGIN -->
+<div class="overlay" id="overlayLogin">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo"><span id="logoFlip">#TodoMundoJunto</span></div>
+      <p>Controle de Pacotes Faltantes 📦</p>
+    </div>
+
+    <div class="login-field">
+      <label>Transportadora</label>
+      <select id="selTransp">
+        <option value="">Selecione...</option>
+        <option value="MELI">Meli</option>
+        <option value="BLD SVC">BLD LOGÍSTICA (SVC)</option>
+        <option value="BLD XPT">BLD LOGÍSTICA (XPT)</option>
+        <option value="ALTOVALE">ALTOVALE</option>
+        <option value="BRAVOX">BRAVOX</option>
+        <option value="RodaCoop">RodaCoop</option>
+        <option value="Kangu Logistics">Kangu Logistics</option>
+      </select>
+    </div>
+
+    <div class="login-field">
+      <label>Senha</label>
+      <div class="input-senha">
+        <input type="password" id="inputSenha" placeholder="Digite a senha" autocomplete="off">
+        <button class="toggle-senha" onclick="toggleSenha()" tabindex="-1">👁</button>
+      </div>
+    </div>
+
+    <div class="login-field">
+      <label>Seu nome</label>
+      <input type="text" id="inputNome" placeholder="Nome" maxlength="60" autocomplete="off">
+    </div>
+
+    <div class="login-erro" id="loginErro"></div>
+
+    <button class="btn-entrar-svg" type="button" onclick="fazerLogin()">
+      <svg width="100%" height="48" viewBox="0 0 180 48" preserveAspectRatio="none" class="border">
+        <polyline points="179,1 179,47 1,47 1,1 179,1" class="bg-line" />
+        <polyline points="179,1 179,47 1,47 1,1 179,1" class="hl-line" />
+      </svg>
+      <span>Entrar</span>
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="page-header">
+    <div class="page-title">Pacotes Faltantes</div>
+    <div class="page-sub" id="pageSub">Carregando...</div>
+  </div>
+
+  <div class="kpi-bar">
+    <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-val b" id="kTotal">—</div></div>
+    <div class="kpi"><div class="kpi-label">Críticos</div><div class="kpi-val d" id="kCrit">—</div></div>
+    <div class="kpi"><div class="kpi-label">Altos</div><div class="kpi-val w" id="kAlto">—</div></div>
+    <div class="kpi"><div class="kpi-label">Justificados</div><div class="kpi-val g" id="kJust">—</div></div>
+    <div class="kpi"><div class="kpi-label">Pendentes</div><div class="kpi-val d" id="kPend">—</div></div>
+    <div class="kpi"><div class="kpi-label">Valor (R$)</div><div class="kpi-val b" id="kValor" style="font-size:15px;padding-top:4px">—</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab ativo" data-tab="pac">Pacotes faltantes</div>
+    <div class="tab" data-tab="his">Histórico de justificativas</div>
+  </div>
+
+  <div id="panePac">
+    <div class="filtros">
+      <input type="text" id="fBusca" placeholder="Buscar shipment ID, rota, produto...">
+      <select id="fStatus">
+        <option value="">Todos os status</option>
+        <option value="missing">Missing</option>
+        <option value="stale">Stale</option>
+      </select>
+      <select id="fJust">
+        <option value="">Todos</option>
+        <option value="nao">Pendentes</option>
+        <option value="sim">Justificados</option>
+      </select>
+      <div class="ref-wrap">
+        <a onclick="carregar()">↻ Atualizar</a>
+        <div class="lw-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268.832 268.832">
+            <path d="M265.17 125.577l-80-80c-4.88-4.88-12.796-4.88-17.677 0-4.882 4.882-4.882 12.796 0 17.678l58.66 58.66H12.5c-6.903 0-12.5 5.598-12.5 12.5 0 6.903 5.597 12.5 12.5 12.5h213.654l-58.66 58.662c-4.88 4.882-4.88 12.796 0 17.678 2.44 2.44 5.64 3.66 8.84 3.66s6.398-1.22 8.84-3.66l79.997-80c4.883-4.882 4.883-12.796 0-17.678z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div id="listaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+  </div>
+
+  <div id="paneHis" style="display:none">
+    <div id="tabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="moverlay" id="modalJust">
+  <div class="mcard">
+    <h3>Justificar pacote</h3>
+    <div class="minfo" id="mInfo"></div>
+    <div>
+      <label class="flabel">Motivo da justificativa *</label>
+      <textarea id="mMotivo" placeholder="Descreva o que está acontecendo com este pacote..."></textarea>
+    </div>
+    <div class="mactions">
+      <button class="bcancel" onclick="fecharModal()">Cancelar</button>
+      <div class="save-wrap">
+        <a id="bSave" onclick="salvar()">Salvar</a>
+        <div class="lw-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268.832 268.832">
+            <path d="M265.17 125.577l-80-80c-4.88-4.88-12.796-4.88-17.677 0-4.882 4.882-4.882 12.796 0 17.678l58.66 58.66H12.5c-6.903 0-12.5 5.598-12.5 12.5 0 6.903 5.597 12.5 12.5 12.5h213.654l-58.66 58.662c-4.88 4.882-4.88 12.796 0 17.678 2.44 2.44 5.64 3.66 8.84 3.66s6.398-1.22 8.84-3.66l79.997-80c4.883-4.882 4.883-12.796 0-17.678z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var API     = 'https://script.google.com/macros/s/AKfycbxI3Dk6Tz345aALZo-BmWLzDXrtUSOKJjQ245Ztf3_9ZBdz1BnfjvuIaPtb2QcyzUuR/exec';
+var USD_BRL = 5.75;
+
+var ACESSOS = {
+  'MELI'           : 'spr5top',
+  'BLD SVC'        : '123bld',
+  'BLD XPT'        : 'bldxpt',
+  'ALTOVALE'       : 'vale321',
+  'BRAVOX'         : '123bravo',
+  'RodaCoop'       : 'roda321',
+  'Kangu Logistics': 'kang321'
+};
+
+var cache  = [];
+var sessao = null;
+var pacSel = null;
+
+// ── DARK MODE ─────────────────────────────────────────────────
+function toggleDark() {
+  var dark = document.getElementById('darkToggle').checked;
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  localStorage.setItem('spr5theme', dark ? 'dark' : 'light');
+  recolorirTitulo();
+}
+
+// Recolore as letras do título conforme o tema atual
+function recolorirTitulo() {
+  var el = document.getElementById('logoTexto');
+  if (!el) return;
+  var letras = el.querySelectorAll('.ltr');
+  if (!letras.length) return;
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var cores = dark
+    ? [[93,202,165],[105,172,222],[126,145,193],[170,158,205]]
+    : [[53,138,158],[83,177,218],[98,106,177],[76,59,151]];
+  function corNa(t) {
+    var seg = t * (cores.length - 1);
+    var i = Math.min(Math.floor(seg), cores.length - 2);
+    var f = seg - i;
+    var a = cores[i], b = cores[i + 1];
+    return 'rgb(' + Math.round(a[0]+(b[0]-a[0])*f) + ',' + Math.round(a[1]+(b[1]-a[1])*f) + ',' + Math.round(a[2]+(b[2]-a[2])*f) + ')';
+  }
+  var n = letras.length;
+  letras.forEach(function(s, i) { s.style.color = corNa(n > 1 ? i/(n-1) : 0); });
+}
+
+window.addEventListener('load', function() {
+  var tema = localStorage.getItem('spr5theme') || 'dark';
+  if (tema === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('darkToggle').checked = true;
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('darkToggle').checked = false;
+  }
+
+  var s = sessionStorage.getItem('spr5sessao');
+  if (s) { sessao = JSON.parse(s); iniciarApp(); }
+
+  document.getElementById('inputSenha').addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+  document.getElementById('inputNome').addEventListener('keydown',  function(e){ if(e.key==='Enter') fazerLogin(); });
+
+  iniciarLogoFlip();
+});
+
+// ── LOGO ANIMADO (loop entre #TodoMundoJunto e SPR5) ──────────
+function iniciarLogoFlip() {
+  var el = document.getElementById('logoFlip');
+  if (!el) return;
+  var textos = ['#TodoMundoJunto', 'SPR5'];
+  var i = 0;
+  setInterval(function() {
+    el.classList.remove('flip-in');
+    el.classList.add('flip-out');
+    setTimeout(function() {
+      i = (i + 1) % textos.length;
+      el.textContent = textos[i];
+      el.classList.remove('flip-out');
+      el.classList.add('flip-in');
+    }, 350);
+  }, 2600);
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────
+function fazerLogin() {
+  var transp = document.getElementById('selTransp').value;
+  var senha  = document.getElementById('inputSenha').value;
+  var nome   = document.getElementById('inputNome').value.trim();
+  var erro   = document.getElementById('loginErro');
+  if (!transp || !senha || !nome) { erro.classList.add('show'); erro.textContent = 'Preencha todos os campos.'; return; }
+  if (ACESSOS[transp] !== senha)  { erro.classList.add('show'); erro.textContent = 'Senha incorreta.'; return; }
+  erro.classList.remove('show');
+  sessao = { transp: transp, nome: nome, isMeli: transp === 'MELI' };
+  sessionStorage.setItem('spr5sessao', JSON.stringify(sessao));
+  iniciarApp();
+}
+
+function iniciarApp() {
+  document.getElementById('overlayLogin').classList.add('oculto');
+  var hu = document.getElementById('headerUser');
+  hu.classList.add('show');
+  document.getElementById('hTransp').textContent = sessao.transp;
+  document.getElementById('hNome').textContent   = '— ' + sessao.nome;
+  carregar();
+}
+
+function sair() {
+  sessionStorage.removeItem('spr5sessao');
+  sessao = null; cache = [];
+  document.getElementById('overlayLogin').classList.remove('oculto');
+  document.getElementById('headerUser').classList.remove('show');
+  document.getElementById('selTransp').value = '';
+  document.getElementById('inputSenha').value = '';
+  document.getElementById('inputNome').value  = '';
+  document.getElementById('listaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+}
+
+function toggleSenha() {
+  var i = document.getElementById('inputSenha');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+// ── DADOS ─────────────────────────────────────────────────────
+function carregar() {
+  document.getElementById('listaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando pacotes...</div>';
+  var cb = 'cb' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
+    var todos = d.pacotes || [];
+    cache = sessao.isMeli ? todos : todos.filter(function(p){ return perteceAoUsuario(p); });
+    render();
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getPacotes&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function carregarHis() {
+  document.getElementById('tabelaHis').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando histórico...</div>';
+  var cb = 'cbh' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
+    var hist = d.historico || [];
+    if (!sessao.isMeli) hist = hist.filter(function(r){ return perteceAoUsuarioHist(r); });
+    renderHis(hist);
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getHistorico&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function brl(usd) {
+  var v = parseFloat(String(usd).replace(',','.')) || 0;
+  return (v * USD_BRL).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+}
+
+function routeLink(id) {
+  if (!id) return '<span style="color:var(--text2);font-size:11px">—</span>';
+  var url = 'https://envios.adminml.com/logistics/monitoring-distribution/detail/' + id + '?site=MLB';
+  return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener">' + e(id) + '</a>';
+}
+
+function arrowSvg() {
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268.832 268.832"><path d="M265.17 125.577l-80-80c-4.88-4.88-12.796-4.88-17.677 0-4.882 4.882-4.882 12.796 0 17.678l58.66 58.66H12.5c-6.903 0-12.5 5.598-12.5 12.5 0 6.903 5.597 12.5 12.5 12.5h213.654l-58.66 58.662c-4.88 4.882-4.88 12.796 0 17.678 2.44 2.44 5.64 3.66 8.84 3.66s6.398-1.22 8.84-3.66l79.997-80c4.883-4.882 4.883-12.796 0-17.678z"/></svg>';
+}
+
+// Define o nome do grupo de exibição de um pacote.
+// A BLD LOGÍSTICA é dividida: XPT -> "BLD XPT", demais tramos -> "BLD SVC".
+function grupoDoPacote(p) {
+  var t = (p.transportadora || '').trim();
+  if (t === 'BLD LOGÍSTICA') {
+    return (p.tramo || '').trim().toUpperCase() === 'XPT' ? 'BLD XPT' : 'BLD SVC';
+  }
+  return t || '— Sem transportadora —';
+}
+
+// Verifica se um pacote pertence ao usuário logado (não-MELI).
+function perteceAoUsuario(p) {
+  if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
+    return grupoDoPacote(p) === sessao.transp;
+  }
+  return (p.transportadora || '').trim() === sessao.transp;
+}
+
+// Mesma verificação para registros do histórico (usa transportadora + tramo gravados).
+function perteceAoUsuarioHist(r) {
+  var t = (r.transportadora || '').trim();
+  if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
+    if (t !== 'BLD LOGÍSTICA') return false;
+    var ehXpt = (r.tramo || '').trim().toUpperCase() === 'XPT';
+    return sessao.transp === 'BLD XPT' ? ehXpt : !ehXpt;
+  }
+  return t === sessao.transp;
+}
+
+// ── RENDER PACOTES ────────────────────────────────────────────
+function filtrar() {
+  var b  = document.getElementById('fBusca').value.toLowerCase();
+  var st = document.getElementById('fStatus').value;
+  var j  = document.getElementById('fJust').value;
+  return cache.filter(function(p) {
+    if (st && p.status_negocio !== st) return false;
+    if (j === 'sim' && !p.justificado) return false;
+    if (j === 'nao' &&  p.justificado) return false;
+    if (b) { var t=[p.shipment_id,p.route_id,p.route_name,p.descricao,p.transportadora,p.acao].join(' ').toLowerCase(); if(!t.includes(b)) return false; }
+    return true;
+  });
+}
+
+function render() {
+  var tot   = cache.length;
+  var crit  = cache.filter(function(p){return p.risco==='CRITICO';}).length;
+  var alto  = cache.filter(function(p){return p.risco==='ALTO';}).length;
+  var jus   = cache.filter(function(p){return p.justificado;}).length;
+  var valor = cache.reduce(function(acc,p){ return acc+(parseFloat(String(p.custo_usd).replace(',','.')) || 0); },0)*USD_BRL;
+
+  document.getElementById('kTotal').textContent = tot;
+  document.getElementById('kCrit').textContent  = crit;
+  document.getElementById('kAlto').textContent  = alto;
+  document.getElementById('kJust').textContent  = jus;
+  document.getElementById('kPend').textContent  = tot - jus;
+  document.getElementById('kValor').textContent = valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  document.getElementById('pageSub').textContent = tot + ' pacote' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '');
+
+  var f = filtrar();
+  if (!f.length) { document.getElementById('listaGrupos').innerHTML='<div class="empty">Nenhum pacote encontrado.</div>'; return; }
+
+  f.sort(function(a,b){
+    var va = parseFloat(String(a.custo_usd).replace(',','.')) || 0;
+    var vb = parseFloat(String(b.custo_usd).replace(',','.')) || 0;
+    return vb - va;
+  });
+
+  var grupos = {};
+  if (sessao.isMeli) {
+    // MELI vê todas agrupadas; BLD aparece dividida em BLD XPT / BLD SVC
+    f.forEach(function(p){ var k=grupoDoPacote(p); if(!grupos[k]) grupos[k]=[]; grupos[k].push(p); });
+  } else {
+    // BLD SVC / BLD XPT já vêm filtrados; usa o nome do login como título
+    grupos[sessao.transp] = f;
+  }
+
+  var keys = Object.keys(grupos).sort(function(a,b){ return grupos[b].length - grupos[a].length; });
+  var h = '';
+
+  keys.forEach(function(tr) {
+    var ps   = grupos[tr];
+    var pend = ps.filter(function(p){return !p.justificado;}).length;
+    var vGr  = ps.reduce(function(acc,p){ return acc+(parseFloat(String(p.custo_usd).replace(',','.')) || 0); },0)*USD_BRL;
+
+    h += '<div class="grupo open">';
+    h += '<div class="gh" onclick="tog(this)"><div class="gh-left">';
+    h += '<span>'+e(tr)+'</span>';
+    h += '<span class="bt">'+ps.length+' pacote'+(ps.length>1?'s':'')+'</span>';
+    if(pend) h += '<span class="bp">'+pend+' pendente'+(pend>1?'s':'')+'</span>';
+    h += '<span class="gv">'+vGr.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+'</span>';
+    h += '</div><span class="chev">▾</span></div>';
+    h += '<div class="gb"><table><thead><tr>';
+    h += '<th>Shipment ID</th><th>Status</th><th>Tramo</th><th>Dias</th><th>Rota</th><th>Produto</th><th>Valor</th><th>Ação</th><th></th>';
+    h += '</tr></thead><tbody>';
+
+    ps.forEach(function(p) {
+      var d   = parseInt(p.dias_no_svc)||0;
+      var dc  = d>=20?'crit':(d>=10?'alto':'ok');
+      var val = parseFloat(String(p.custo_usd).replace(',','.')) || 0;
+      var vc  = val*USD_BRL >= 100 ? 'valor-brl valor-alto' : 'valor-brl';
+
+      h += '<tr>';
+      h += '<td><span class="sid">'+e(p.shipment_id)+'</span></td>';
+      h += '<td><span class="sb status-'+p.status_negocio+'">'+p.status_negocio+'</span></td>';
+      h += '<td style="font-size:11px">'+e(p.tramo)+'</td>';
+      h += '<td><span class="dc '+dc+'">'+d+'d</span></td>';
+      h += '<td>'+routeLink(p.route_id)+'</td>';
+      h += '<td><div class="dt" title="'+e(p.descricao)+'">'+e(p.descricao||'—')+'</div></td>';
+      h += '<td><span class="'+vc+'">'+(val*USD_BRL).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+'</span></td>';
+      h += '<td style="font-size:11px;color:var(--text2);max-width:160px">'+e((p.acao||'').split('|')[0].trim())+'</td>';
+      if (p.justificado) {
+        h += '<td><span class="jok">✓ Justificado</span></td>';
+      } else {
+        h += '<td><div class="just-wrap"><a onclick="abrirModal(\''+e(p.shipment_id)+'\')">Justificar</a><div class="lw-icon">'+arrowSvg()+'</div></div></td>';
+      }
+      h += '</tr>';
+    });
+
+    h += '</tbody></table></div></div>';
+  });
+
+  document.getElementById('listaGrupos').innerHTML = h;
+}
+
+// ── HISTÓRICO ─────────────────────────────────────────────────
+function renderHis(registros) {
+  if (!registros.length) { document.getElementById('tabelaHis').innerHTML='<div class="empty">Nenhuma justificativa registrada ainda.</div>'; return; }
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Shipment ID</th><th>Transportadora</th><th>Rota</th><th>Tramo</th><th>Dias</th><th>Motivo</th><th>Dispatcher</th></tr></thead><tbody>';
+  registros.forEach(function(r) {
+    h += '<tr>';
+    h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
+    h += '<td style="font-family:monospace;color:var(--blue);font-weight:700">'+e(r.shipment_id)+'</td>';
+    h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
+    h += '<td>'+routeLink(r.rota)+'</td>';
+    h += '<td>'+e(r.tramo||'—')+'</td>';
+    h += '<td style="text-align:center">'+e(r.dias_no_svc)+'d</td>';
+    h += '<td><div class="mcell">'+e(r.motivo_justificativa)+'</div></td>';
+    h += '<td style="color:var(--text2)">'+e(r.nome_dispatcher||r.email_dispatcher)+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('tabelaHis').innerHTML = h;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function abrirModal(id) {
+  pacSel = cache.find(function(p){return p.shipment_id===id;});
+  if (!pacSel) return;
+  var p = pacSel;
+  var valBrl = ((parseFloat(String(p.custo_usd).replace(',','.')) || 0)*USD_BRL).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  document.getElementById('mInfo').innerHTML =
+    mi('Shipment ID',p.shipment_id)+mi('Transportadora',p.transportadora||'—')+
+    mi('Rota (ID)',p.route_id||'—')+mi('Status',p.status_negocio)+
+    mi('Tramo',p.tramo)+mi('Dias no SVC',p.dias_no_svc+'d')+
+    mi('Valor',valBrl)+mi('Ciclo',p.ciclo_rota||'—')+
+    '<div class="mi" style="grid-column:1/-1"><label>Ação</label><span style="font-size:11px;font-weight:400;color:var(--text2)">'+e(p.acao)+'</span></div>'+
+    '<div class="mi" style="grid-column:1/-1"><label>Produto</label><span style="font-size:11px;font-weight:400">'+e(p.descricao||'—')+'</span></div>';
+  document.getElementById('mMotivo').value = '';
+  document.getElementById('bSave').classList.remove('disabled');
+  document.getElementById('bSave').textContent = 'Salvar';
+  document.getElementById('modalJust').classList.add('open');
+  setTimeout(function(){document.getElementById('mMotivo').focus();},100);
+}
+
+function mi(l,v){ return '<div class="mi"><label>'+l+'</label><span>'+e(String(v))+'</span></div>'; }
+function fecharModal() { document.getElementById('modalJust').classList.remove('open'); pacSel=null; }
+
+// ── SALVAR ────────────────────────────────────────────────────
+function salvar() {
+  var motivo = document.getElementById('mMotivo').value.trim();
+  if (!motivo) { toast('Informe o motivo.',1); return; }
+  if (!pacSel) return;
+  var btn = document.getElementById('bSave');
+  btn.classList.add('disabled'); btn.textContent = 'Salvando...';
+  var p = pacSel;
+  fetch(API, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action:'salvarJustificativa',
+      shipment_id:p.shipment_id,
+      transportadora:p.transportadora,
+      route_name:p.route_id,
+      risco:p.risco,
+      tramo:p.tramo,
+      dias_no_svc:p.dias_no_svc,
+      motivo:motivo,
+      email_dispatcher:'',
+      nome_dispatcher:sessao.nome+' ('+sessao.transp+')'
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    btn.classList.remove('disabled'); btn.textContent='Salvar';
+    if(d.ok){
+      var i=cache.findIndex(function(x){return x.shipment_id===pacSel.shipment_id;});
+      if(i!==-1) cache[i].justificado=true;
+      fecharModal(); render(); toast('Justificativa salva!');
+    } else { toast('Erro: '+(d.erro||'desconhecido'),1); }
+  })
+  .catch(function(){ btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão.',1); });
+}
+
+// ── ABAS ─────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('ativo');});
+    t.classList.add('ativo');
+    var n=t.getAttribute('data-tab');
+    document.getElementById('panePac').style.display = n==='pac'?'block':'none';
+    document.getElementById('paneHis').style.display = n==='his'?'block':'none';
+    if(n==='his') carregarHis();
+  });
+});
+
+['fBusca','fStatus','fJust'].forEach(function(id){
+  var el=document.getElementById(id);
+  el.addEventListener('input',render);
+  el.addEventListener('change',render);
+});
+
+function tog(h){ h.parentElement.classList.toggle('open'); }
+function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast'+(err?' err':'')+' show'; setTimeout(function(){t.classList.remove('show');},3500); }
+
+document.getElementById('modalJust').addEventListener('click',function(ev){if(ev.target===this)fecharModal();});
+document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModal();});
+</script>
+
+<script>
+// lobo.js — Lobo animado que monta as peças ao carregar a página
+// Injeta o SVG no elemento #loboContainer
+
+(function() {
+  var LOBO_SVG = `<svg class="lobo" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-132 160.8 346.8 472.2" preserveAspectRatio="xMidYMid meet">
+<style>
+.lb0{fill:#2B485F}.lb1{fill:#4C3B97}.lb2{fill:#493163}.lb3{fill:#603163}.lb4{fill:#49312D}.lb5{fill:#242059}.lb6{fill:#3A4F54}.lb7{fill:#B0D8E3}.lb8{fill:#EFDFCE}.lb9{fill:#E2D4CC}.lb10{fill:#CFCAE5}.lb11{fill:#E9E9EA}.lb12{fill:#D3C8C2}.lb13{fill:#C7B7AD}.lb14{fill:#B7BCCD}.lb15{fill:#A1B0B5}.lb16{fill:#B7A5BF}.lb17{fill:#C3C3C7}.lb18{fill:#D2D3D4}.lb19{fill:#A8BCDB}.lb20{fill:#787FA0}.lb21{fill:#626AB1}.lb22{fill:#7E91C1}.lb23{fill:#358A9E}.lb24{fill:#A7D0DB}.lb25{fill:#C0D3E2}.lb26{fill:#737CBB}.lb27{fill:#E9F3E3}.lb28{fill:#E0F3F9}.lb29{fill:#E5D9EB}.lb30{fill:#D6E8F7}.lb31{fill:#A799CA}.lb32{fill:#91A9D8}.lb33{fill:#9AAAC6}.lb34{fill:#5E679B}.lb35{fill:#5A627B}.lb36{fill:#585857}.lb37{fill:#69534D}.lb38{fill:#0B5C8D}.lb39{fill:#2B5C61}.lb40{fill:#AA9ECD}.lb41{fill:#A5C2D2}.lb42{fill:#C2E7EF}.lb43{fill:#FDFCE7}.lb44{fill:#FEF8CC}.lb45{fill:#C0B5DA}.lb46{fill:#6E877F}.lb47{fill:#454C4D}.lb48{fill:#526487}.lb49{fill:#88B0C4}.lb50{fill:#62A8C4}.lb51{fill:#8DCADB}.lb52{fill:#5D7ABC}.lb53{fill:#8A979B}.lb54{fill:#765A85}.lb55{fill:#53B1DA}.lb56{fill:#737372}.lb57{fill:#B2967D}.lb58{fill:#69ACDE}.lb59{fill:#7AB9DD}
+.lobo polygon, .lobo #Ojo-izquierdo, .lobo #Ojo-derecho { opacity: 0; }
+.lobo.go polygon { animation: lbup .35s ease-out forwards; }
+.lobo.go #Ojo-izquierdo, .lobo.go #Ojo-derecho { animation: lbfade .4s 1.6s forwards; }
+@keyframes lbup { from { opacity:0; transform: translateY(-30px) scale(.7);} to { opacity:1; transform:none; } }
+@keyframes lbfade { to { opacity:1; } }
+</style>
+<g id="Izquierda">
+<polygon class="lb0" points="-21.4,268.1 5.4,241.1 14.8,255.2"/><polygon class="lb1" points="5.4,241.1 -11.9,241.8 -21.4,268.1"/><polygon class="lb2" points="-11.9,241.8 -3.2,231.8 5.4,241.1"/><polygon class="lb3" points="-11.9,241.8 -19.1,231.8 -3.2,231.8"/><polygon class="lb4" points="-19.1,231.8 -20.4,213.4 -3.2,231.8"/><polygon class="lb5" points="-19.1,231.8 -38.3,209.5 -20.4,213.4"/><polygon class="lb6" points="-38.3,209.5 -38.8,193.8 -20.4,213.4"/><polygon class="lb2" points="-38.3,209.5 -57.2,192.4 -38.8,193.8"/><polygon class="lb1" points="-57.2,192.4 -47.1,181.5 -38.8,193.8"/><polygon class="lb6" points="-57.2,192.4 -56.1,177.6 -47.1,181.5"/><polygon class="lb0" points="-57.2,192.4 -74.4,193.9 -56.1,177.6"/><polygon class="lb1" points="-74.4,193.9 -67.2,200.4 -57.2,192.4"/><polygon class="lb5" points="-74.4,193.9 -79.3,213.6 -67.2,200.4"/><polygon class="lb2" points="-67.2,245.4 -53.7,248.7 -38.3,231.8"/><polygon class="lb6" points="-53.7,248.7 -53.8,276.4 -41.1,287.3"/><polygon class="lb7" points="-53.7,248.7 -21.4,268.1 -41.1,287.3"/><polygon class="lb8" points="-53.7,248.7 -38.3,231.8 -21.4,268.1"/><polygon class="lb9" points="-38.3,231.8 -19.1,231.8 -21.4,268.1"/><polygon class="lb10" points="-19.1,231.8 -11.9,241.8 -21.4,268.1"/><polygon class="lb11" points="-67.2,245.4 -85.3,237.7 -69.6,271.7"/><polygon class="lb8" points="-85.3,237.7 -79.3,213.6 -67.2,245.4"/><polygon class="lb12" points="-67.2,245.4 -53.8,276.4 -69.6,271.7"/><polygon class="lb13" points="-67.2,245.4 -53.8,276.4 -53.7,248.7"/><polygon class="lb14" points="-69.6,271.7 -58.3,299.8 -53.8,276.4"/><polygon class="lb15" points="-53.8,276.4 -41.1,287.3 -58.3,299.8"/><polygon class="lb16" points="-58.3,299.8 -90.6,279.6 -64.9,283.4"/><polygon class="lb17" points="-90.6,279.6 -69.6,271.7 -64.9,283.4"/><polygon class="lb18" points="-69.6,271.7 -88,260.9 -85.3,237.7"/><polygon class="lb19" points="-88,260.9 -84.3,277.2 -69.6,271.7"/><polygon class="lb20" points="-57.2,192.4 -38.3,231.8 -38.3,209.5"/><polygon class="lb21" points="-38.3,209.5 -19.1,231.8 -38.3,231.8"/><polygon class="lb22" points="-57.2,192.4 -67.2,200.4 -38.3,231.8"/><polygon class="lb23" points="-67.2,200.4 -79.3,213.6 -38.3,231.8"/><polygon class="lb24" points="-16.7,336.1 -33.6,340.3 0.7,350.1"/><polygon class="lb25" points="-33.6,340.3 -23.9,354.3 -2.7,348.7"/><polygon class="lb26" points="-79.3,213.6 -67.2,245.4 -38.3,231.8"/><polygon class="lb27" points="-23.9,354.3 -35.4,360.5 -13.9,367.7"/><polygon class="lb4" points="8.2,361.7 13.2,378.8 -3.3,370.7"/><polygon class="lb2" points="8.2,361.7 16.1,361.9 13.2,378.8"/><polygon class="lb20" points="-33.6,340.3 -2.7,332.7 -21.6,307.5"/><polygon class="lb20" points="15.1,315.3 -58.3,299.8 -41.1,287.3"/><polygon class="lb12" points="-2.7,332.7 3.8,352.5 -16.7,336.1"/><polygon class="lb28" points="-2.7,332.7 15.9,331.9 8.2,361.7 3.8,352.5"/><polygon class="lb29" points="15.1,315.3 15.9,331.9 -2.7,332.7"/><polygon class="lb11" points="15.1,315.3 27.8,332.7 15.9,331.9"/><polygon class="lb30" points="15.9,331.9 27.2,362.2 8.2,361.7"/><polygon class="lb24" points="15.9,331.9 27.8,332.7 27.2,362.2"/><polygon class="lb22" points="27.8,332.7 45.6,342.6 27.2,362.2"/><polygon class="lb31" points="27.2,362.2 45.6,386.8 45.6,342.6"/><polygon class="lb32" points="27.2,362.2 28.7,401.3 45.6,386.8"/><polygon class="lb33" points="28.7,401.3 45.6,437.1 45.6,386.8"/><polygon class="lb16" points="28.7,401.3 17.9,447.4 45.6,437.1"/><polygon class="lb18" points="13.2,378.8 27.2,362.2 16.1,361.9"/><polygon class="lb21" points="15.1,315.3 45.6,307.1 27.8,332.7"/><polygon class="lb23" points="27.8,332.7 45.6,307.1 45.6,342.6"/><polygon class="lb34" points="15.1,315.3 45.6,256.1 45.6,307.1"/><polygon class="lb35" points="15.1,315.3 14.8,255.2 33.7,279.1"/><polygon class="lb36" points="14.8,255.2 -21.4,268.1 15.1,315.3"/><polygon class="lb36" points="14.8,255.2 32.8,254.2 33.7,279.1"/><polygon class="lb37" points="14.8,255.2 22.3,236.5 32.8,254.2"/><polygon class="lb38" points="32.8,254.2 45.6,256.1 33.7,279.1"/><polygon class="lb1" points="32.8,254.2 39.2,235 45.6,256.1"/><polygon class="lb39" points="22.3,236.5 5.4,241.1 14.8,255.2"/><polygon class="lb21" points="-21.4,268.1 -41.1,287.3 15.1,315.3"/><polygon class="lb32" points="-2.7,332.7 15.1,315.3 -21.6,307.5"/><polygon class="lb26" points="-35.4,360.5 -46.5,389.2 -89.4,398.1"/><polygon class="lb32" points="-35.4,360.5 -24.8,379.4 -41.1,375.4"/><polygon class="lb40" points="-24.8,379.4 -25.5,400.4 -14.8,403.5"/><polygon class="lb15" points="-24.8,379.4 -41.1,375.4 -25.5,400.4"/><polygon class="lb15" points="-46.5,389.2 -49.7,411.3 -89.4,398.1"/><polygon class="lb41" points="-46.5,389.2 -36.8,424.4 -49.7,411.3"/><polygon class="lb41" points="-46.5,389.2 -41.1,375.4 -25.5,400.4"/><polygon class="lb42" points="17.9,447.4 18.2,459.9 35.2,440.9"/><polygon class="lb43" points="17.9,447.4 -7.9,467.6 20.2,475.7"/><polygon class="lb44" points="-7.9,467.6 -0.9,491.9 20.2,475.7"/><polygon class="lb27" points="17.9,447.4 -6.7,440.5 -7.9,467.6"/><polygon class="lb42" points="-6.7,440.5 28.7,401.3 17.9,447.4"/><polygon class="lb10" points="-7.9,467.6 -15.4,458.5 -6.7,440.5"/><polygon class="lb10" points="35.2,440.9 45.6,447.4 28.7,447.9"/><polygon class="lb45" points="35.2,440.9 45.6,437.1 45.6,447.4"/><polygon class="lb38" points="-15.4,458.5 -17.2,466.9 -7.9,467.6"/><polygon class="lb21" points="-17.2,466.9 -0.9,491.9 -7.9,467.6"/><polygon class="lb14" points="20.2,475.7 32.7,492.5 21.8,489.7"/><polygon class="lb11" points="-12.4,382.7 -3.2,370.7 -13.9,367.7"/><polygon class="lb18" points="20.2,475.7 21.8,489.7 -0.9,491.9"/><polygon class="lb46" points="45.6,495.8 21.8,489.7 25.6,498.7"/><polygon class="lb39" points="25.6,498.7 14.3,503 45.6,500.9 45.6,495.8"/><polygon class="lb0" points="14.3,503 31.1,509.5 45.6,508.9 45.6,500.9"/><polygon class="lb16" points="21.8,489.7 14.3,503 25.6,498.7"/><polygon class="lb14" points="21.8,489.7 -0.9,491.9 14.3,503"/><polygon class="lb44" points="-35.4,360.5 -13.9,367.7 -24.8,379.4"/><polygon class="lb27" points="-13.9,367.7 -12.4,382.7 -24.8,379.4"/><polygon class="lb42" points="-12.4,382.7 -14.8,403.5 -24.8,379.4"/><polygon class="lb7" points="-12.4,382.7 -7.6,408 -14.8,403.5"/><polygon class="lb14" points="-12.4,382.7 1.2,393.6 -7.6,408"/>
+<g id="Ojo-izquierdo"><path class="lb5" d="M-23.9,354.3c0,0,19.7-11.2,27.7-1.7l4.4,9.2c0,0-6.4,15.4-22.1,5.9C-13.9,367.7-18.9,363.6-23.9,354.3z"/><path class="lb23" d="M-5.3,355c3,0,5.6,2,6.4,4.7c0.2-0.6,0.3-1.3,0.3-2c0-3.7-3-6.7-6.7-6.7s-6.7,3-6.7,6.7c0,0.7,0.1,1.4,0.3,2C-10.9,357-8.3,355-5.3,355z"/><path class="lb42" d="M-5.3,364.4c3,0,5.6-2,6.4-4.7C0.2,357-2.3,355-5.3,355c-3,0-5.6,2-6.4,4.7C-10.9,362.5-8.3,364.4-5.3,364.4z"/><circle class="lb6" cx="-4.1" cy="356.4" r="1.9"/></g>
+<polygon class="lb30" points="-12.4,382.7 1.2,393.6 -3.2,370.7"/><polygon class="lb25" points="-3.2,370.7 13.2,378.8 1.2,393.6"/><polygon class="lb8" points="13.2,378.8 27.2,362.2 28.7,401.3"/><polygon class="lb9" points="13.2,378.8 1.2,393.6 28.7,401.3"/><polygon class="lb12" points="1.2,393.6 -7.6,408 28.7,401.3"/><polygon class="lb13" points="-7.6,408 -6.7,440.5 28.7,401.3"/><polygon class="lb18" points="-36.8,424.4 -7.6,408 -6.7,440.5"/><polygon class="lb9" points="-25.5,400.4 -36.8,424.4 -46.5,389.2"/><polygon class="lb11" points="-25.5,400.4 -18.6,414.2 -36.8,424.4"/><polygon class="lb11" points="-49.7,411.3 -73.7,437.1 -36.8,424.4"/><polygon class="lb44" points="-49.7,411.3 -73,413.9 -73.7,437.1"/><polygon class="lb29" points="-73,413.9 -69.5,404.7 -49.7,411.3"/><polygon class="lb29" points="-14.8,403.5 -18.6,414.2 -25.5,400.4"/><polygon class="lb10" points="-14.8,403.5 -7.6,408 -18.6,414.2"/><polygon class="lb45" points="-15.4,458.5 -36.8,424.4 -6.7,440.5"/><polygon class="lb18" points="-36.8,424.4 -45.5,452.7 -73.7,437.1"/><polygon class="lb9" points="-36.8,424.4 -15.4,458.5 -45.5,452.7"/><polygon class="lb9" points="-17.2,466.9 -47.7,476.3 -45.5,452.7"/><polygon class="lb47" points="32.7,492.5 45.6,480.5 45.6,495.8"/><polygon class="lb5" points="39.8,485.9 30.7,477.5 31.2,469.4 39.1,469.4"/><polygon class="lb48" points="20.2,475.7 30.7,477.5 18.9,459.2"/><polygon class="lb6" points="31.2,469.4 28.7,447.9 18.9,459.2"/><polygon class="lb5" points="28.7,447.9 45.6,462.1 45.6,447.4"/><polygon class="lb2" points="45.6,462.1 39.1,469.4 39.8,485.9 45.6,480.5"/><polygon class="lb3" points="39.1,469.4 28.7,447.9 45.6,462.1"/><polygon class="lb2" points="31.2,469.4 28.7,447.9 39.1,469.4"/><polygon class="lb0" points="31.2,469.4 30.7,477.5 18.9,459.2"/><polygon class="lb2" points="20.2,475.7 32.7,492.5 39.8,485.9 30.7,477.5"/><polygon class="lb21" points="-45.5,452.7 -73.7,437.1 -78.1,471.5"/><polygon class="lb26" points="-73.7,437.1 -89,448 -78.1,471.5"/><polygon class="lb22" points="-89,448 -95.6,421.6 -73.7,437.1"/><polygon class="lb31" points="-95.6,421.6 -73,413.9 -73.7,437.1"/><polygon class="lb49" points="-95.6,421.6 -89.4,398.1 -73,413.9"/><polygon class="lb50" points="-89.4,398.1 -73,413.9 -69.5,404.7"/><polygon class="lb51" points="-95.6,421.6 -109.3,488 -89,448"/><polygon class="lb50" points="-89,448 -78.1,471.5 -109.3,488"/><polygon class="lb41" points="-95.6,421.6 -118.1,424.9 -89.4,398.1"/><polygon class="lb21" points="-35.4,360.5 -89.9,379.1 -89.4,398.1"/><polygon class="lb52" points="-89.9,379.1 -88.7,357.6 -35.4,360.5"/><polygon class="lb53" points="-35.4,360.5 -33.6,340.3 -23.9,354.3"/><polygon class="lb53" points="-89.9,379.1 -115.7,392 -89.4,398.1"/><polygon class="lb54" points="-89.9,379.1 -112.9,378.6 -88.7,357.6"/><polygon class="lb31" points="-88.7,357.6 -85,343.1 -35.4,360.5"/><polygon class="lb22" points="-58.3,299.8 -33.6,340.3 -21.6,307.5"/><polygon class="lb20" points="-58.3,299.8 -70,314.8 -49.2,314.8"/><polygon class="lb26" points="-70,314.8 -74.6,330 -49.2,314.8"/><polygon class="lb55" points="-74.6,330 -35.4,360.5 -85,343.1"/><polygon class="lb22" points="-74.6,330 -33.6,340.3 -35.4,360.5"/><polygon class="lb55" points="-74.6,330 -49.2,314.8 -33.6,340.3"/><polygon class="lb34" points="-74.6,330 -98.5,317.5 -70,314.8"/><polygon class="lb23" points="-74.6,330 -103.1,331.6 -85,343.1"/><polygon class="lb20" points="-85,343.1 -107.4,363 -88.7,357.6"/><polygon class="lb56" points="-58.3,299.8 -70,314.8 -92.8,298.8"/><polygon class="lb57" points="-92.8,298.8 -81.1,285.5 -58.3,299.8"/><polygon class="lb14" points="-78.1,471.5 -50.9,506.4 -47.7,476.3"/><polygon class="lb45" points="-45.5,452.7 -47.7,476.3 -78.1,471.5"/><polygon class="lb30" points="-50.9,506.4 -17.2,466.9 -47.7,476.3"/><polygon class="lb8" points="-17.2,466.9 -33.7,500.1 -50.9,506.4"/><polygon class="lb18" points="-17.2,466.9 -0.9,491.9 -33.7,500.1"/><polygon class="lb18" points="-50.9,506.4 -36.9,518.7 -33.7,500.1"/><polygon class="lb49" points="-50.9,506.4 -98.9,501.6 -66.1,486.9"/><polygon class="lb58" points="-78.1,471.5 -98.9,501.6 -66.1,486.9"/><polygon class="lb22" points="-50.9,506.4 -83,526.7 -78.1,503.7"/><polygon class="lb32" points="-50.9,506.4 -36.9,518.7 -83,526.7"/><polygon class="lb13" points="-36.9,518.7 -0.9,491.9 -33.7,500.1"/><polygon class="lb15" points="-36.9,518.7 -76.9,548.5 -67.8,524.1"/><polygon class="lb53" points="-36.9,518.7 -47.7,548 -77.4,548.7"/><polygon class="lb19" points="-36.9,518.7 -15.5,537.1 -6.1,511.6"/><polygon class="lb14" points="-0.9,491.9 -6.1,511.6 -36.9,518.7"/><polygon class="lb11" points="14.3,503 29.3,516.6 31.1,509.5"/><polygon class="lb28" points="31.1,509.5 45.6,508.9 29.3,516.6"/><polygon class="lb27" points="29.3,516.6 45.6,518 45.6,508.9"/><polygon class="lb42" points="29.3,516.6 45.6,528.4 45.6,518"/><polygon class="lb45" points="7,526.4 -15.5,537.1 -4.2,549.9"/><polygon class="lb10" points="7,526.4 12.8,559.2 -4.2,549.9"/><polygon class="lb25" points="12.8,559.2 45.6,575.4 10.2,544.7"/><polygon class="lb42" points="12.8,559.2 28,605 45.6,575.4"/><polygon class="lb18" points="12.8,559.2 -7.9,589.2 -4.2,549.9"/><polygon class="lb11" points="12.8,559.2 1.1,576.2 28,605"/><polygon class="lb8" points="45.6,575.4 35.4,592.6 45.6,603"/><polygon class="lb44" points="35.4,592.6 45.6,616.9 45.6,603"/><polygon class="lb10" points="10.2,544.7 28.7,536.6 45.6,575.4"/><polygon class="lb18" points="28.7,536.6 45.6,528.4 45.6,575.4"/><polygon class="lb41" points="29.3,516.6 28.7,536.6 45.6,528.4"/><polygon class="lb45" points="29.3,516.6 10.2,544.7 28.7,536.6"/><polygon class="lb16" points="14.3,503 7,526.4 29.3,516.6"/><polygon class="lb41" points="29.3,516.6 10.2,544.7 7,526.4"/><polygon class="lb59" points="-0.9,491.9 14.3,503 -6.1,511.6"/><polygon class="lb40" points="-15.5,537.1 -34,572.5 -48.5,548"/><polygon class="lb14" points="-15.5,537.1 -7.9,589.2 -4.2,549.9"/><polygon class="lb15" points="-15.5,537.1 -27.5,560 -7.9,589.2"/><polygon class="lb33" points="-36.9,518.7 -15.5,537.1 -48.5,548"/><polygon class="lb13" points="-6.1,511.6 7,526.4 -15.5,537.1"/><polygon class="lb14" points="-6.1,511.6 14.3,503 7,526.4"/><polygon class="lb14" points="-15.4,458.5 -17.2,466.9 -45.5,452.7"/>
+</g>
+<g id="Derecha">
+<polygon class="lb0" points="112.3,267.8 85.5,240.7 76.1,254.8"/><polygon class="lb1" points="85.5,240.7 102.8,241.4 112.3,267.8"/><polygon class="lb2" points="102.8,241.4 94.1,231.4 85.5,240.7"/><polygon class="lb3" points="102.8,241.4 110,231.4 94.1,231.4"/><polygon class="lb4" points="110,231.4 111.3,213 94.1,231.4"/><polygon class="lb5" points="110,231.4 129.2,209.1 111.3,213"/><polygon class="lb6" points="129.2,209.1 129.8,193.4 111.3,213"/><polygon class="lb2" points="129.2,209.1 148.1,192 129.8,193.4"/><polygon class="lb1" points="148.1,192 138,181.1 129.8,193.4"/><polygon class="lb6" points="148.1,192 147,177.2 138,181.1"/><polygon class="lb0" points="148.1,192 165.3,193.5 147,177.2"/><polygon class="lb1" points="165.3,193.5 158.2,200 148.1,192"/><polygon class="lb5" points="165.3,193.5 170.2,213.2 158.2,200"/><polygon class="lb2" points="158.2,245.1 144.6,248.3 129.2,231.4"/><polygon class="lb6" points="144.6,248.3 144.8,276.1 132,286.9"/><polygon class="lb7" points="144.6,248.3 112.3,267.8 132,286.9"/><polygon class="lb8" points="144.6,248.3 129.2,231.4 112.3,267.8"/><polygon class="lb9" points="129.2,231.4 110,231.4 112.3,267.8"/><polygon class="lb10" points="110,231.4 102.8,241.4 112.3,267.8"/><polygon class="lb11" points="158.2,245.1 176.3,237.3 160.5,271.4"/><polygon class="lb8" points="176.3,237.3 170.2,213.2 158.2,245.1"/><polygon class="lb12" points="158.2,245.1 144.8,276.1 160.5,271.4"/><polygon class="lb13" points="158.2,245.1 144.8,276.1 144.6,248.3"/><polygon class="lb14" points="160.5,271.4 149.2,299.4 144.8,276.1"/><polygon class="lb16" points="149.2,299.4 181.5,279.2 155.8,283.1"/><polygon class="lb15" points="144.8,276.1 132,286.9 149.2,299.4"/><polygon class="lb17" points="181.5,279.2 160.5,271.4 155.8,283.1"/><polygon class="lb18" points="160.5,271.4 178.9,260.5 176.3,237.3"/><polygon class="lb19" points="178.9,260.5 175.2,276.9 160.5,271.4"/><polygon class="lb20" points="148.1,192 129.2,231.4 129.2,209.1"/><polygon class="lb21" points="129.2,209.1 110,231.4 129.2,231.4"/><polygon class="lb22" points="148.1,192 158.2,200 129.2,231.4"/><polygon class="lb23" points="158.2,200 170.2,213.2 129.2,231.4"/><polygon class="lb24" points="107.6,335.8 124.5,339.9 90.2,349.7"/><polygon class="lb25" points="124.5,339.9 114.8,353.9 93.6,348.4"/><polygon class="lb26" points="170.2,213.2 158.2,245.1 129.2,231.4"/><polygon class="lb27" points="114.8,353.9 126.3,360.2 104.9,367.3"/><polygon class="lb4" points="82.8,361.4 77.7,378.4 94.2,370.3"/><polygon class="lb2" points="82.8,361.4 74.8,361.5 77.7,378.4"/><polygon class="lb20" points="124.5,339.9 93.6,332.3 112.5,307.2"/><polygon class="lb20" points="75.8,314.9 149.2,299.4 132,286.9"/><polygon class="lb12" points="93.6,332.3 87.1,352.2 107.6,335.8"/><polygon class="lb28" points="93.6,332.3 75.1,331.5 82.8,361.4 87.1,352.2"/><polygon class="lb29" points="75.8,314.9 75.1,331.5 93.6,332.3"/><polygon class="lb11" points="75.8,314.9 63.1,332.3 75.1,331.5"/><polygon class="lb30" points="75.1,331.5 63.7,361.8 82.8,361.4"/><polygon class="lb24" points="75.1,331.5 63.1,332.3 63.7,361.8"/><polygon class="lb22" points="63.1,332.3 45.3,342.2 63.7,361.8"/><polygon class="lb31" points="63.7,361.8 45.3,386.4 45.3,342.2"/><polygon class="lb32" points="63.7,361.8 62.2,401 45.3,386.4"/><polygon class="lb33" points="62.2,401 45.3,436.7 45.3,386.4"/><polygon class="lb16" points="62.2,401 73,447 45.3,436.7"/><polygon class="lb18" points="77.7,378.4 63.7,361.8 74.8,361.5"/><polygon class="lb21" points="75.8,314.9 45.3,306.7 63.1,332.3"/><polygon class="lb23" points="63.1,332.3 45.3,306.7 45.3,342.2"/><polygon class="lb34" points="75.8,314.9 45.3,255.7 45.3,306.7"/><polygon class="lb35" points="75.8,314.9 76.1,254.8 57.2,278.8"/><polygon class="lb36" points="76.1,254.8 112.3,267.8 75.8,314.9"/><polygon class="lb36" points="76.1,254.8 58.1,253.9 57.2,278.8"/><polygon class="lb37" points="76.1,254.8 68.7,236.1 58.1,253.9"/><polygon class="lb38" points="58.1,253.9 45.3,255.7 57.2,278.8"/><polygon class="lb1" points="58.1,253.9 51.7,234.6 45.3,255.7"/><polygon class="lb39" points="68.7,236.1 85.5,240.7 76.1,254.8"/><polygon class="lb21" points="112.3,267.8 132,286.9 75.8,314.9"/><polygon class="lb32" points="93.6,332.3 75.8,314.9 112.5,307.2"/><polygon class="lb26" points="126.3,360.2 137.4,388.9 180.3,397.8"/><polygon class="lb32" points="126.3,360.2 115.8,379.1 132,375"/><polygon class="lb40" points="115.8,379.1 116.4,400 105.7,403.2"/><polygon class="lb15" points="115.8,379.1 132,375 116.4,400"/><polygon class="lb15" points="137.4,388.9 140.6,410.9 180.3,397.8"/><polygon class="lb41" points="137.4,388.9 127.8,424 140.6,410.9"/><polygon class="lb41" points="137.4,388.9 132,375 116.4,400"/><polygon class="lb42" points="73,447 72.7,459.6 55.7,440.5"/><polygon class="lb43" points="73,447 98.8,467.3 70.7,475.3"/><polygon class="lb44" points="98.8,467.3 91.8,491.5 70.7,475.3"/><polygon class="lb27" points="73,447 97.7,440.1 98.8,467.3"/><polygon class="lb42" points="97.7,440.1 62.2,401 73,447"/><polygon class="lb10" points="98.8,467.3 106.3,458.1 97.7,440.1"/><polygon class="lb10" points="55.7,440.5 45.3,447 62.2,447.6"/><polygon class="lb45" points="55.7,440.5 45.3,436.7 45.3,447"/><polygon class="lb38" points="106.3,458.1 108.1,466.5 98.8,467.3"/><polygon class="lb21" points="108.1,466.5 91.8,491.5 98.8,467.3"/><polygon class="lb14" points="70.7,475.3 58.2,492.1 69.1,489.3"/><polygon class="lb11" points="103.3,382.4 94.1,370.4 104.9,367.3"/><polygon class="lb18" points="70.7,475.3 69.1,489.3 91.8,491.5"/><polygon class="lb46" points="45.3,495.5 69.1,489.3 65.3,498.4"/><polygon class="lb39" points="65.3,498.4 76.6,502.6 45.3,500.5 45.3,495.5"/><polygon class="lb0" points="76.6,502.6 59.9,509.2 45.3,508.6 45.3,500.5"/><polygon class="lb16" points="69.1,489.3 76.6,502.6 65.3,498.4"/><polygon class="lb14" points="69.1,489.3 91.8,491.5 76.6,502.6"/><polygon class="lb44" points="126.3,360.2 104.9,367.3 115.8,379.1"/><polygon class="lb27" points="104.9,367.3 103.3,382.4 115.8,379.1"/><polygon class="lb42" points="103.3,382.4 105.7,403.2 115.8,379.1"/><polygon class="lb7" points="103.3,382.4 98.5,407.6 105.7,403.2"/><polygon class="lb14" points="103.3,382.4 89.7,393.2 98.5,407.6"/>
+<g id="Ojo-derecho"><path class="lb5" d="M114.8,353.9c0,0-19.7-11.2-27.7-1.7l-4.4,9.2c0,0,6.4,15.4,22.1,5.9C104.9,367.3,109.8,363.2,114.8,353.9z"/><path class="lb23" d="M96.2,354.6c-3,0-5.6,2-6.4,4.7c-0.2-0.6-0.3-1.3-0.3-2c0-3.7,3-6.7,6.7-6.7s6.7,3,6.7,6.7c0,0.7-0.1,1.4-0.3,2C101.8,356.6,99.3,354.6,96.2,354.6z"/><path class="lb42" d="M96.2,364.1c-3,0-5.6-2-6.4-4.7c0.9-2.7,3.4-4.7,6.4-4.7s5.6,2,6.4,4.7C101.8,362.1,99.3,364.1,96.2,364.1z"/><circle class="lb6" cx="95" cy="356.1" r="1.9"/></g>
+<polygon class="lb30" points="103.3,382.4 89.7,393.2 94.1,370.4"/><polygon class="lb25" points="94.1,370.4 77.7,378.4 89.7,393.2"/><polygon class="lb8" points="77.7,378.4 63.7,361.8 62.2,401"/><polygon class="lb9" points="77.7,378.4 89.7,393.2 62.2,401"/><polygon class="lb12" points="89.7,393.2 98.5,407.6 62.2,401"/><polygon class="lb13" points="98.5,407.6 97.7,440.1 62.2,401"/><polygon class="lb18" points="127.8,424 98.5,407.6 97.7,440.1"/><polygon class="lb9" points="116.4,400 127.8,424 137.4,388.9"/><polygon class="lb11" points="116.4,400 109.5,413.8 127.8,424"/><polygon class="lb11" points="140.6,410.9 164.6,436.7 127.8,424"/><polygon class="lb44" points="140.6,410.9 163.9,413.5 164.6,436.7"/><polygon class="lb29" points="163.9,413.5 160.4,404.4 140.6,410.9"/><polygon class="lb29" points="105.7,403.2 109.5,413.8 116.4,400"/><polygon class="lb10" points="105.7,403.2 98.5,407.6 109.5,413.8"/><polygon class="lb45" points="106.3,458.1 127.8,424 97.7,440.1"/><polygon class="lb18" points="127.8,424 136.4,452.3 164.6,436.7"/><polygon class="lb9" points="127.8,424 106.3,458.1 136.4,452.3"/><polygon class="lb9" points="108.1,466.5 138.6,475.9 136.4,452.3"/><polygon class="lb47" points="58.2,492.1 45.3,480.1 45.3,495.5"/><polygon class="lb5" points="51.1,485.5 60.2,477.1 59.7,469.1 51.8,469.1"/><polygon class="lb48" points="70.7,475.3 60.2,477.1 72.1,458.9"/><polygon class="lb6" points="59.7,469.1 62.2,447.6 72.1,458.9"/><polygon class="lb5" points="62.2,447.6 45.3,461.7 45.3,447"/><polygon class="lb2" points="45.3,461.7 51.8,469.1 51.1,485.5 45.3,480.1"/><polygon class="lb3" points="51.8,469.1 62.2,447.6 45.3,461.7"/><polygon class="lb2" points="59.7,469.1 62.2,447.6 51.8,469.1"/><polygon class="lb0" points="59.7,469.1 60.2,477.1 72.1,458.9"/><polygon class="lb2" points="70.7,475.3 58.2,492.1 51.1,485.5 60.2,477.1"/><polygon class="lb21" points="136.4,452.3 164.6,436.7 169,471.1"/><polygon class="lb26" points="164.6,436.7 179.9,447.6 169,471.1"/><polygon class="lb22" points="179.9,447.6 186.5,421.3 164.6,436.7"/><polygon class="lb31" points="186.5,421.3 163.9,413.5 164.6,436.7"/><polygon class="lb49" points="186.5,421.3 180.3,397.8 163.9,413.5"/><polygon class="lb50" points="180.3,397.8 163.9,413.5 160.4,404.4"/><polygon class="lb51" points="186.5,421.3 200.2,487.7 179.9,447.6"/><polygon class="lb50" points="179.9,447.6 169,471.1 200.2,487.7"/><polygon class="lb41" points="186.5,421.3 209,424.5 180.3,397.8"/><polygon class="lb21" points="126.3,360.2 180.8,378.7 180.3,397.8"/><polygon class="lb52" points="180.8,378.7 179.6,357.2 126.3,360.2"/><polygon class="lb53" points="126.3,360.2 124.5,339.9 114.8,353.9"/><polygon class="lb53" points="180.8,378.7 206.6,391.6 180.3,397.8"/><polygon class="lb54" points="180.8,378.7 203.8,378.3 179.6,357.2"/><polygon class="lb31" points="179.6,357.2 175.9,342.7 126.3,360.2"/><polygon class="lb22" points="149.2,299.4 124.5,339.9 112.5,307.2"/><polygon class="lb20" points="149.2,299.4 161,314.4 140.1,314.4"/><polygon class="lb26" points="161,314.4 165.5,329.6 140.1,314.4"/><polygon class="lb55" points="165.5,329.6 126.3,360.2 175.9,342.7"/><polygon class="lb22" points="165.5,329.6 124.5,339.9 126.3,360.2"/><polygon class="lb55" points="165.5,329.6 140.1,314.4 124.5,339.9"/><polygon class="lb34" points="165.5,329.6 189.4,317.1 161,314.4"/><polygon class="lb23" points="165.5,329.6 194,331.2 175.9,342.7"/><polygon class="lb20" points="175.9,342.7 198.4,362.6 179.6,357.2"/><polygon class="lb56" points="149.2,299.4 161,314.4 183.7,298.4"/><polygon class="lb57" points="183.7,298.4 172,285.2 149.2,299.4"/><polygon class="lb14" points="169,471.1 141.8,506.1 138.6,475.9"/><polygon class="lb45" points="136.4,452.3 138.6,475.9 169,471.1"/><polygon class="lb30" points="141.8,506.1 108.1,466.5 138.6,475.9"/><polygon class="lb8" points="108.1,466.5 124.7,499.7 141.8,506.1"/><polygon class="lb18" points="108.1,466.5 91.8,491.5 124.7,499.7"/><polygon class="lb18" points="141.8,506.1 127.8,518.3 124.7,499.7"/><polygon class="lb49" points="141.8,506.1 189.8,501.2 157,486.5"/><polygon class="lb58" points="169,471.1 189.8,501.2 157,486.5"/><polygon class="lb22" points="141.8,506.1 174,526.3 169,503.3"/><polygon class="lb32" points="141.8,506.1 127.8,518.3 174,526.3"/><polygon class="lb13" points="127.8,518.3 91.8,491.5 124.7,499.7"/><polygon class="lb15" points="127.8,518.3 167.9,548.1 158.7,523.7"/><polygon class="lb53" points="127.8,518.3 138.6,547.6 168.3,548.3"/><polygon class="lb19" points="127.8,518.3 106.4,536.8 97,511.2"/><polygon class="lb14" points="91.8,491.5 97,511.2 127.8,518.3"/><polygon class="lb11" points="76.6,502.6 61.6,516.2 59.9,509.2"/><polygon class="lb28" points="59.9,509.2 45.3,508.6 61.6,516.2"/><polygon class="lb27" points="61.6,516.2 45.3,517.6 45.3,508.6"/><polygon class="lb42" points="61.6,516.2 45.3,528 45.3,517.6"/><polygon class="lb45" points="83.9,526 106.4,536.8 95.1,549.5"/><polygon class="lb10" points="83.9,526 78.1,558.8 95.1,549.5"/><polygon class="lb25" points="78.1,558.8 45.3,575 80.7,544.3"/><polygon class="lb42" points="78.1,558.8 62.9,604.7 45.3,575"/><polygon class="lb18" points="78.1,558.8 98.8,588.9 95.1,549.5"/><polygon class="lb11" points="78.1,558.8 89.8,575.8 62.9,604.7"/><polygon class="lb8" points="45.3,575 55.5,592.2 45.3,602.6"/><polygon class="lb44" points="55.5,592.2 45.3,616.5 45.3,602.6"/><polygon class="lb10" points="80.7,544.3 62.2,536.2 45.3,575"/><polygon class="lb18" points="62.2,536.2 45.3,528 45.3,575"/><polygon class="lb41" points="61.6,516.2 62.2,536.2 45.3,528"/><polygon class="lb45" points="61.6,516.2 80.7,544.3 62.2,536.2"/><polygon class="lb16" points="76.6,502.6 83.9,526 61.6,516.2"/><polygon class="lb41" points="61.6,516.2 80.7,544.3 83.9,526"/><polygon class="lb59" points="91.8,491.5 76.6,502.6 97,511.2"/><polygon class="lb40" points="106.4,536.8 125,572.2 139.4,547.6"/><polygon class="lb14" points="106.4,536.8 98.8,588.9 95.1,549.5"/><polygon class="lb15" points="106.4,536.8 118.4,559.7 98.8,588.9"/><polygon class="lb33" points="127.8,518.3 106.4,536.8 139.4,547.6"/><polygon class="lb13" points="97,511.2 83.9,526 106.4,536.8"/><polygon class="lb14" points="97,511.2 76.6,502.6 83.9,526"/><polygon class="lb14" points="106.3,458.1 108.1,466.5 136.4,452.3"/>
+</g>
+</svg>`;
+
+  function initLobo() {
+    var c = document.getElementById('loboContainer');
+    if (!c) return;
+    c.innerHTML = LOBO_SVG;
+    var svg = c.querySelector('.lobo');
+    var polys = svg.querySelectorAll('polygon');
+    // aplica delay progressivo para efeito de montagem
+    polys.forEach(function(p, i) {
+      p.style.animationDelay = (i * 0.008) + 's';
+    });
+    // dispara a animação
+    requestAnimationFrame(function() {
+      svg.classList.add('go');
+      svg.querySelector('#Izquierda').style.visibility = 'visible';
+      svg.querySelector('#Derecha').style.visibility = 'visible';
+    });
+    animarTexto();
+  }
+
+  function animarTexto() {
+    var el = document.getElementById('logoTexto');
+    if (!el) return;
+
+    // paleta do lobo — clara ou escura conforme o tema
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var cores = dark
+      ? [[93,202,165],[105,172,222],[126,145,193],[170,158,205]]   // teal→azul→roxo→violeta (claros)
+      : [[53,138,158],[83,177,218],[98,106,177],[76,59,151]];       // teal→azul→roxo→violeta (fortes)
+
+    function corNa(t) { // t de 0 a 1
+      var seg = t * (cores.length - 1);
+      var i = Math.min(Math.floor(seg), cores.length - 2);
+      var f = seg - i;
+      var a = cores[i], b = cores[i + 1];
+      var r = Math.round(a[0] + (b[0] - a[0]) * f);
+      var g = Math.round(a[1] + (b[1] - a[1]) * f);
+      var bl = Math.round(a[2] + (b[2] - a[2]) * f);
+      return 'rgb(' + r + ',' + g + ',' + bl + ')';
+    }
+
+    var texto = el.textContent;
+    el.textContent = '';
+    var frag = document.createDocumentFragment();
+    var n = texto.length;
+    for (var i = 0; i < n; i++) {
+      var s = document.createElement('span');
+      s.className = texto[i] === ' ' ? 'ltr sp' : 'ltr';
+      s.textContent = texto[i] === ' ' ? '\u00A0' : texto[i];
+      s.style.color = corNa(n > 1 ? i / (n - 1) : 0);
+      s.style.animationDelay = (0.15 + i * 0.05) + 's';
+      frag.appendChild(s);
+    }
+    el.appendChild(frag);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLobo);
+  } else {
+    initLobo();
+  }
+})();
+
+</script>
+</body>
+</html>
