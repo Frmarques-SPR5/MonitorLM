@@ -1221,31 +1221,56 @@ function salvar() {
   var btn = document.getElementById('bSave');
   btn.classList.add('disabled'); btn.textContent = 'Salvando...';
   var p = pacSel;
-  fetch(API, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      action:'salvarJustificativa',
-      shipment_id:p.shipment_id,
-      transportadora:p.transportadora,
-      route_name:p.route_id,
-      risco:p.risco,
-      tramo:p.tramo,
-      dias_no_svc:p.dias_no_svc,
-      motivo:motivo,
-      email_dispatcher:'',
-      nome_dispatcher:sessao.nome+' ('+sessao.transp+')'
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    btn.classList.remove('disabled'); btn.textContent='Salvar';
-    if(d.ok){
-      var i=cache.findIndex(function(x){return x.shipment_id===pacSel.shipment_id;});
-      if(i!==-1) cache[i].justificado=true;
+
+  var params = {
+    action: 'salvarJustificativa',
+    shipment_id: p.shipment_id,
+    transportadora: p.transportadora,
+    route_name: p.route_id,
+    risco: p.risco,
+    tramo: p.tramo,
+    dias_no_svc: p.dias_no_svc,
+    motivo: motivo,
+    email_dispatcher: '',
+    nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
+  };
+
+  var cb = 'cbsave_' + Date.now();
+  var timeout = setTimeout(function () {
+    if (window[cb]) {
+      delete window[cb];
+      btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+      toast('Erro de conexão. Tente novamente.', 1);
+    }
+  }, 12000);
+
+  window[cb] = function (d) {
+    clearTimeout(timeout);
+    delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+    if (d && d.ok) {
+      var i = cache.findIndex(function (x) { return x.shipment_id === pacSel.shipment_id; });
+      if (i !== -1) cache[i].justificado = true;
       fecharModal(); render(); toast('Justificativa salva!');
-    } else { toast('Erro: '+(d.erro||'desconhecido'),1); }
-  })
-  .catch(function(){ btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão.',1); });
+    } else {
+      toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1);
+    }
+  };
+
+  var qs = Object.keys(params).map(function (k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+
+  var s = document.createElement('script');
+  s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now();
+  s.onerror = function () {
+    clearTimeout(timeout);
+    delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+    toast('Erro de conexão. Tente novamente.', 1);
+    s.remove();
+  };
+  document.head.appendChild(s);
 }
 
 // ── ABAS ─────────────────────────────────────────────────────
