@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SPR5 Controle de ID</title>
+<title>SPR5 controle lideranças</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ── TOKENS ── */
 :root {
@@ -23,7 +23,7 @@
   --text:     #1c1c1e;
   --text2:    #6c757d;
   --radius:   8px;
-  --font:     'Segoe UI', system-ui, sans-serif;
+  --font:     'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --shadow:   0 2px 8px rgba(0,0,0,.10);
   --header-h: 56px;
 }
@@ -68,13 +68,14 @@ header {
 .logo-wrap { display: flex; align-items: center; gap: 10px; }
 
 .logo-txt {
-  font-family: 'Poppins', system-ui, sans-serif;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -.2px;
-  color: #4C3B97;
+  font-weight: 500;
+  letter-spacing: .2px;
+  color: #ffe600;
   white-space: nowrap;
 }
+[data-theme="dark"] .logo-txt { color: #ffe600; }
 
 .logo-txt .ltr {
   display: inline-block;
@@ -114,39 +115,65 @@ header {
 .header-right { display: flex; align-items: center; gap: 10px; }
 
 /* toggle dark mode estilo iPhone */
-.dark-toggle {
-  position: relative;
-  width: 50px;
-  height: 28px;
-  cursor: pointer;
-  flex-shrink: 0;
+/* toggle sol/lua animado */
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; flex-shrink: 0; transform: scale(.8); transform-origin: center; margin: 0 -6px; }
+.switch #darkToggle { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background-color: #2196f3;
+  transition: .4s; z-index: 0; overflow: hidden;
 }
-.dark-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-.dark-track {
-  position: absolute;
-  inset: 0;
-  background: #c8c8c8;
-  border-radius: 28px;
-  transition: background .3s;
+.sun-moon {
+  position: absolute; height: 26px; width: 26px; left: 4px; bottom: 4px;
+  background-color: yellow; transition: .4s;
 }
-.dark-track::after {
-  content: '';
-  position: absolute;
-  top: 3px; left: 3px;
-  width: 22px; height: 22px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0,0,0,.25);
-  transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s;
-  display: flex; align-items: center; justify-content: center;
+#darkToggle:checked + .slider { background-color: black; }
+#darkToggle:focus + .slider { box-shadow: 0 0 1px #2196f3; }
+#darkToggle:checked + .slider .sun-moon {
+  transform: translateX(26px); background-color: white;
+  animation: rotate-center 0.6s ease-in-out both;
 }
-.dark-toggle input:checked + .dark-track { background: #3a3a5c; }
-.dark-toggle input:checked + .dark-track::after { transform: translateX(22px); background: #e8e8f0; }
-.dark-icon { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12px; pointer-events: none; transition: opacity .2s; }
-.dark-icon.sun { left: 6px; opacity: 1; }
-.dark-icon.moon { right: 5px; opacity: 0; }
-.dark-toggle input:checked ~ .dark-icon.sun { opacity: 0; }
-.dark-toggle input:checked ~ .dark-icon.moon { opacity: 1; }
+.moon-dot { opacity: 0; transition: .4s; fill: gray; }
+#darkToggle:checked + .slider .sun-moon .moon-dot { opacity: 1; }
+.slider.round { border-radius: 34px; }
+.slider.round .sun-moon { border-radius: 50%; }
+#moon-dot-1 { left: 10px; top: 3px; position: absolute; width: 6px; height: 6px; z-index: 4; }
+#moon-dot-2 { left: 2px; top: 10px; position: absolute; width: 10px; height: 10px; z-index: 4; }
+#moon-dot-3 { left: 16px; top: 18px; position: absolute; width: 3px; height: 3px; z-index: 4; }
+#light-ray-1 { left: -8px; top: -8px; position: absolute; width: 43px; height: 43px; z-index: -1; fill: white; opacity: .1; }
+#light-ray-2 { left: -50%; top: -50%; position: absolute; width: 55px; height: 55px; z-index: -1; fill: white; opacity: .1; }
+#light-ray-3 { left: -18px; top: -18px; position: absolute; width: 60px; height: 60px; z-index: -1; fill: white; opacity: .1; }
+.cloud-light { position: absolute; fill: #eee; animation: cloud-move 6s infinite; }
+.cloud-dark { position: absolute; fill: #ccc; animation: cloud-move 6s infinite; animation-delay: 1s; }
+#cloud-1 { left: 30px; top: 15px; width: 40px; }
+#cloud-2 { left: 44px; top: 10px; width: 20px; }
+#cloud-3 { left: 18px; top: 24px; width: 30px; }
+#cloud-4 { left: 36px; top: 18px; width: 40px; }
+#cloud-5 { left: 48px; top: 14px; width: 20px; }
+#cloud-6 { left: 22px; top: 26px; width: 30px; }
+@keyframes cloud-move {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(4px); }
+  80% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+.stars { transform: translateY(-32px); opacity: 0; transition: .4s; }
+.star { fill: white; position: absolute; transition: .4s; animation: star-twinkle 2s infinite; }
+#darkToggle:checked + .slider .stars { transform: translateY(0); opacity: 1; }
+#star-1 { width: 20px; top: 2px; left: 3px; animation-delay: .3s; }
+#star-2 { width: 6px; top: 16px; left: 3px; }
+#star-3 { width: 12px; top: 20px; left: 10px; animation-delay: .6s; }
+#star-4 { width: 18px; top: 0; left: 18px; animation-delay: 1.3s; }
+@keyframes star-twinkle {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  80% { transform: scale(.8); }
+  100% { transform: scale(1); }
+}
+@keyframes rotate-center {
+  0% { transform: translateX(26px) rotate(0); }
+  100% { transform: translateX(26px) rotate(360deg); }
+}
 
 .header-user { display: none; align-items: center; gap: 8px; font-size: 13px; }
 .header-user.show { display: flex; }
@@ -155,52 +182,22 @@ header {
 @media(min-width:640px){ .header-nome { display: inline; } }
 
 /* botão sair animado */
-.link_wrapper { position: relative; display: inline-block; }
-.link_wrapper a {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 32px;
-  font-weight: 700;
-  text-decoration: none;
-  background: #333;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 11px;
-  border: 2px solid #333;
-  border-radius: 4px;
-  transition: all .3s;
-  position: relative;
-  z-index: 1;
+.btn-sair {
+  background: none;
+  color: #1c1c1e;
+  border: 1px solid rgba(0,0,0,.2);
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  font-family: var(--font);
 }
-[data-theme="dark"] .link_wrapper a { background: var(--border); border-color: var(--border); }
-.link_wrapper .lw-icon {
-  width: 32px; height: 32px;
-  border: 2px solid transparent;
-  position: absolute;
-  transform: rotate(45deg);
-  right: 0; top: 0;
-  z-index: 0;
-  transition: all .3s;
-  border-radius: 4px;
-}
-.link_wrapper .lw-icon svg {
-  width: 14px;
-  position: absolute;
-  top: calc(50% - 7px); left: calc(50% - 7px);
-  transform: rotate(-45deg);
-  fill: var(--danger);
-  transition: all .3s;
-}
-.link_wrapper a:hover {
-  width: 62px;
-  border-color: var(--danger);
-  background: transparent;
-  color: var(--danger);
-}
-.link_wrapper a:hover + .lw-icon { border-color: var(--danger); right: -30%; }
+.btn-sair:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+[data-theme="dark"] .btn-sair { color: var(--text); border-color: var(--border); }
+[data-theme="dark"] .btn-sair:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
 
 /* ── LOGIN ── */
 .overlay {
@@ -238,6 +235,33 @@ header {
   to   { transform: translateY(0) rotateX(0); opacity: 1; }
 }
 .login-header p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+/* dica do menu */
+.dica-menu, .dica-menu-app {
+  font-size: 12px !important;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.dica-menu-app { margin-top: 6px; justify-content: flex-start; }
+.ico-menu {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  width: 18px;
+  height: 15px;
+  padding: 3px;
+  background: var(--accent);
+  border-radius: 4px;
+  vertical-align: middle;
+}
+.ico-menu span { display: block; height: 1.5px; width: 100%; background: #1c1c1e; border-radius: 1px; }
 
 .login-field { display: flex; flex-direction: column; gap: 5px; }
 .login-field label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
@@ -369,21 +393,60 @@ header {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  transition: background .15s;
-  margin-bottom: 4px;
+  transition: background .15s, transform .2s;
+  margin-bottom: 8px;
   border: none;
-  background: none;
+  background: var(--bg);
   width: 100%;
   text-align: left;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
 }
-.nav-item:hover { background: var(--bg); }
-.nav-item.ativo { background: rgba(52,131,250,.12); color: var(--blue); }
-.nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  background: var(--bg);
+  border-radius: 9px;
+  z-index: -1;
+  transition: background .15s;
+}
+/* borda girando */
+.nav-item .dots_border {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: -2;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.nav-item .dots_border::before {
+  content: '';
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform-origin: left;
+  width: 100%;
+  height: 2rem;
+  background-color: var(--blue);
+  mask: linear-gradient(transparent 0%, white 120%);
+  animation: navrotate 2.5s linear infinite;
+}
+@keyframes navrotate { to { transform: rotate(360deg); } }
+.nav-item:hover { transform: translateX(2px); }
+.nav-item:hover .dots_border { opacity: 1; }
+.nav-item.ativo { color: var(--blue); }
+.nav-item.ativo::before { background: rgba(52,131,250,.12); }
+.nav-item.ativo .dots_border { opacity: 1; }
+.nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; position: relative; z-index: 1; }
+.nav-item span:not(.nav-icon) { position: relative; z-index: 1; }
 
 .sidebar-footer { padding: 14px 20px; border-top: 1px solid var(--border); }
 
@@ -459,34 +522,21 @@ header {
 .filtros input:focus, .filtros select:focus { border-color: var(--blue); }
 
 /* botão atualizar animado */
-.ref-wrap { margin-left: auto; position: relative; display: inline-block; }
-.ref-wrap a {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  width: 110px; height: 34px;
-  font-weight: 700; font-size: 12px;
-  text-decoration: none;
+.btn-atualizar {
+  margin-left: auto;
   background: var(--blue);
   color: #fff;
-  text-transform: uppercase;
-  letter-spacing: .8px;
-  border: 2px solid var(--blue);
-  border-radius: 5px;
-  transition: all .3s;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  position: relative; z-index: 1;
+  white-space: nowrap;
+  transition: background .15s;
+  font-family: var(--font);
 }
-.ref-wrap .lw-icon {
-  width: 34px; height: 34px;
-  border: 2px solid transparent;
-  position: absolute;
-  transform: rotate(45deg);
-  right: 0; top: 0; z-index: 0;
-  transition: all .3s; border-radius: 5px;
-}
-.ref-wrap .lw-icon svg { width: 14px; position: absolute; top: calc(50% - 7px); left: calc(50% - 7px); transform: rotate(-45deg); fill: var(--accent); transition: all .3s; }
-.ref-wrap a:hover { width: 88px; border-color: var(--accent); background: transparent; color: var(--accent); }
-.ref-wrap a:hover + .lw-icon { border-color: var(--accent); right: -20%; }
-[data-theme="dark"] .ref-wrap a:hover { color: #1c1c1e; }
+.btn-atualizar:hover { background: var(--blue-d); }
 
 /* GRUPOS */
 .grupo { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
@@ -524,33 +574,20 @@ tr:hover td { background: rgba(52,131,250,.04); }
 .jok { font-size: 11px; color: var(--ok); font-weight: 700; }
 
 /* botão justificar animado */
-.just-wrap { position: relative; display: inline-block; }
-.just-wrap a {
-  display: flex; align-items: center; justify-content: center;
-  width: 90px; height: 28px;
-  font-weight: 700; font-size: 10px;
-  text-decoration: none;
+.btn-just {
   background: var(--blue);
   color: #fff;
-  text-transform: uppercase;
-  letter-spacing: .8px;
-  border: 2px solid var(--blue);
-  border-radius: 4px;
-  transition: all .3s;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  position: relative; z-index: 1;
+  white-space: nowrap;
+  transition: background .15s;
+  font-family: var(--font);
 }
-.just-wrap .lw-icon {
-  width: 28px; height: 28px;
-  border: 2px solid transparent;
-  position: absolute;
-  transform: rotate(45deg);
-  right: 0; top: 0; z-index: 0;
-  transition: all .3s; border-radius: 4px;
-}
-.just-wrap .lw-icon svg { width: 11px; position: absolute; top: calc(50% - 5.5px); left: calc(50% - 5.5px); transform: rotate(-45deg); fill: var(--ok); transition: all .3s; }
-.just-wrap a:hover { width: 70px; border-color: var(--ok); background: transparent; color: var(--ok); }
-.just-wrap a:hover + .lw-icon { border-color: var(--ok); right: -25%; }
+.btn-just:hover { background: var(--blue-d); }
 
 .dt { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text2); font-size: 11px; }
 .dc { font-size: 11px; font-weight: 700; }
@@ -576,27 +613,20 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 .bcancel:hover { border-color: var(--text); color: var(--text); }
 
 /* botão salvar animado */
-.save-wrap { position: relative; display: inline-block; }
-.save-wrap a {
-  display: flex; align-items: center; justify-content: center;
-  width: 160px; height: 36px;
-  font-weight: 700; font-size: 12px;
-  text-decoration: none;
+.btn-salvar-just {
   background: var(--blue);
   color: #fff;
-  text-transform: uppercase;
-  letter-spacing: .8px;
-  border: 2px solid var(--blue);
-  border-radius: 5px;
-  transition: all .3s;
+  border: none;
+  padding: 9px 22px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  position: relative; z-index: 1;
+  transition: background .15s;
+  font-family: var(--font);
 }
-.save-wrap .lw-icon { width: 36px; height: 36px; border: 2px solid transparent; position: absolute; transform: rotate(45deg); right: 0; top: 0; z-index: 0; transition: all .3s; border-radius: 5px; }
-.save-wrap .lw-icon svg { width: 14px; position: absolute; top: calc(50% - 7px); left: calc(50% - 7px); transform: rotate(-45deg); fill: var(--ok); transition: all .3s; }
-.save-wrap a:hover { width: 130px; border-color: var(--ok); background: transparent; color: var(--ok); }
-.save-wrap a:hover + .lw-icon { border-color: var(--ok); right: -10%; }
-.save-wrap a.disabled { opacity: .5; pointer-events: none; }
+.btn-salvar-just:hover { background: var(--blue-d); }
+.btn-salvar-just.disabled { opacity: .5; pointer-events: none; }
 
 /* HISTÓRICO */
 .htable { width: 100%; font-size: 12px; border-collapse: collapse; min-width: 600px; }
@@ -629,30 +659,42 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <span></span><span></span><span></span>
     </button>
     <div id="loboContainer"></div>
-    <div class="logo-txt" id="logoTexto">SPR5 Controle de ID</div>
+    <div class="logo-txt" id="logoTexto">SPR5 controle lideranças</div>
   </div>
   <div class="header-right">
 
     <!-- dark mode toggle -->
-    <label class="dark-toggle" title="Modo noturno">
+    <label class="switch" title="Modo noturno">
       <input type="checkbox" id="darkToggle" onchange="toggleDark()">
-      <div class="dark-track"></div>
-      <span class="dark-icon sun">☀️</span>
-      <span class="dark-icon moon">🌙</span>
+      <div class="slider round">
+        <div class="sun-moon">
+          <svg id="moon-dot-1" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="moon-dot-2" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="moon-dot-3" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="light-ray-1" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="light-ray-2" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="light-ray-3" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-1" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-2" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-3" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-4" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-5" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-6" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+        </div>
+        <div class="stars">
+          <svg id="star-1" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+          <svg id="star-2" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+          <svg id="star-3" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+          <svg id="star-4" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+        </div>
+      </div>
     </label>
 
     <!-- user info + sair -->
     <div class="header-user" id="headerUser">
       <span class="header-transp" id="hTransp"></span>
       <span class="header-nome" id="hNome"></span>
-      <div class="link_wrapper">
-        <a onclick="sair()">Sair</a>
-        <div class="lw-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268.832 268.832">
-            <path d="M265.17 125.577l-80-80c-4.88-4.88-12.796-4.88-17.677 0-4.882 4.882-4.882 12.796 0 17.678l58.66 58.66H12.5c-6.903 0-12.5 5.598-12.5 12.5 0 6.903 5.597 12.5 12.5 12.5h213.654l-58.66 58.662c-4.88 4.882-4.88 12.796 0 17.678 2.44 2.44 5.64 3.66 8.84 3.66s6.398-1.22 8.84-3.66l79.997-80c4.883-4.882 4.883-12.796 0-17.678z"/>
-          </svg>
-        </div>
-      </div>
+      <button class="btn-sair" onclick="sair()">Sair</button>
     </div>
 
   </div>
@@ -671,10 +713,12 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
   </div>
   <nav class="sidebar-nav">
     <button class="nav-item ativo" data-view="pacotes" onclick="abrirView('pacotes')">
-      <span class="nav-icon">📦</span> Pacotes Faltantes
+      <div class="dots_border"></div>
+      <span class="nav-icon">📦</span> <span>Pacotes Faltantes</span>
     </button>
     <button class="nav-item" data-view="yms" onclick="abrirView('yms')">
-      <span class="nav-icon">🚚</span> Monitoramento de Pátio
+      <div class="dots_border"></div>
+      <span class="nav-icon">🚚</span> <span>Monitoramento de Pátio</span>
     </button>
   </nav>
 </aside>
@@ -684,7 +728,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
   <div class="login-card">
     <div class="login-header">
       <div class="login-logo"><span id="logoFlip">#TodoMundoJunto</span></div>
-      <p>Controle de Pacotes Faltantes 📦</p>
+      <p class="dica-menu">Clique no botão <span class="ico-menu"><span></span><span></span><span></span></span> para conferir todas as opções!</p>
     </div>
 
     <div class="login-field">
@@ -734,6 +778,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
   <div class="page-header">
     <div class="page-title">Pacotes Faltantes</div>
     <div class="page-sub" id="pageSub">Carregando...</div>
+    <div class="page-sub dica-menu-app">Clique no botão <span class="ico-menu"><span></span><span></span><span></span></span> para conferir todas as opções!</div>
   </div>
 
   <div class="kpi-bar">
@@ -763,14 +808,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         <option value="nao">Pendentes</option>
         <option value="sim">Justificados</option>
       </select>
-      <div class="ref-wrap">
-        <a onclick="carregar()">↻ Atualizar</a>
-        <div class="lw-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268.832 268.832">
-            <path d="M265.17 125.577l-80-80c-4.88-4.88-12.796-4.88-17.677 0-4.882 4.882-4.882 12.796 0 17.678l58.66 58.66H12.5c-6.903 0-12.5 5.598-12.5 12.5 0 6.903 5.597 12.5 12.5 12.5h213.654l-58.66 58.662c-4.88 4.882-4.88 12.796 0 17.678 2.44 2.44 5.64 3.66 8.84 3.66s6.398-1.22 8.84-3.66l79.997-80c4.883-4.882 4.883-12.796 0-17.678z"/>
-          </svg>
-        </div>
-      </div>
+      <button class="btn-atualizar" onclick="carregar()">↻ Atualizar</button>
     </div>
     <div id="listaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
   </div>
@@ -798,14 +836,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     </div>
     <div class="mactions">
       <button class="bcancel" onclick="fecharModal()">Cancelar</button>
-      <div class="save-wrap">
-        <a id="bSave" onclick="salvar()">Salvar</a>
-        <div class="lw-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268.832 268.832">
-            <path d="M265.17 125.577l-80-80c-4.88-4.88-12.796-4.88-17.677 0-4.882 4.882-4.882 12.796 0 17.678l58.66 58.66H12.5c-6.903 0-12.5 5.598-12.5 12.5 0 6.903 5.597 12.5 12.5 12.5h213.654l-58.66 58.662c-4.88 4.882-4.88 12.796 0 17.678 2.44 2.44 5.64 3.66 8.84 3.66s6.398-1.22 8.84-3.66l79.997-80c4.883-4.882 4.883-12.796 0-17.678z"/>
-          </svg>
-        </div>
-      </div>
+      <button class="btn-salvar-just" id="bSave" onclick="salvar()">Salvar</button>
     </div>
   </div>
 </div>
@@ -845,18 +876,9 @@ function recolorirTitulo() {
   var letras = el.querySelectorAll('.ltr');
   if (!letras.length) return;
   var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  var cores = dark
-    ? [[93,202,165],[105,172,222],[126,145,193],[170,158,205]]
-    : [[53,138,158],[83,177,218],[98,106,177],[76,59,151]];
-  function corNa(t) {
-    var seg = t * (cores.length - 1);
-    var i = Math.min(Math.floor(seg), cores.length - 2);
-    var f = seg - i;
-    var a = cores[i], b = cores[i + 1];
-    return 'rgb(' + Math.round(a[0]+(b[0]-a[0])*f) + ',' + Math.round(a[1]+(b[1]-a[1])*f) + ',' + Math.round(a[2]+(b[2]-a[2])*f) + ')';
-  }
-  var n = letras.length;
-  letras.forEach(function(s, i) { s.style.color = corNa(n > 1 ? i/(n-1) : 0); });
+  // modo escuro: amarelo Mercado Livre; modo claro: escuro (header já é amarelo)
+  var cor = dark ? '#ffe600' : '#1c1c1e';
+  letras.forEach(function(s) { s.style.color = cor; });
 }
 
 window.addEventListener('load', function() {
@@ -1024,10 +1046,6 @@ function routeLink(id) {
   return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener">' + e(id) + '</a>';
 }
 
-function arrowSvg() {
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268.832 268.832"><path d="M265.17 125.577l-80-80c-4.88-4.88-12.796-4.88-17.677 0-4.882 4.882-4.882 12.796 0 17.678l58.66 58.66H12.5c-6.903 0-12.5 5.598-12.5 12.5 0 6.903 5.597 12.5 12.5 12.5h213.654l-58.66 58.662c-4.88 4.882-4.88 12.796 0 17.678 2.44 2.44 5.64 3.66 8.84 3.66s6.398-1.22 8.84-3.66l79.997-80c4.883-4.882 4.883-12.796 0-17.678z"/></svg>';
-}
-
 // Define o nome do grupo de exibição de um pacote.
 // A BLD LOGÍSTICA é dividida: XPT -> "BLD XPT", demais tramos -> "BLD SVC".
 function grupoDoPacote(p) {
@@ -1141,7 +1159,7 @@ function render() {
       if (p.justificado) {
         h += '<td><span class="jok">✓ Justificado</span></td>';
       } else {
-        h += '<td><div class="just-wrap"><a onclick="abrirModal(\''+e(p.shipment_id)+'\')">Justificar</a><div class="lw-icon">'+arrowSvg()+'</div></div></td>';
+        h += '<td><button class="btn-just" onclick="abrirModal(\''+e(p.shipment_id)+'\')">Justificar</button></td>';
       }
       h += '</tr>';
     });
@@ -1305,22 +1323,9 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModa
     var el = document.getElementById('logoTexto');
     if (!el) return;
 
-    // paleta do lobo — clara ou escura conforme o tema
+    // cor: amarelo ML no escuro; escuro no claro (header já é amarelo)
     var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    var cores = dark
-      ? [[93,202,165],[105,172,222],[126,145,193],[170,158,205]]   // teal→azul→roxo→violeta (claros)
-      : [[53,138,158],[83,177,218],[98,106,177],[76,59,151]];       // teal→azul→roxo→violeta (fortes)
-
-    function corNa(t) { // t de 0 a 1
-      var seg = t * (cores.length - 1);
-      var i = Math.min(Math.floor(seg), cores.length - 2);
-      var f = seg - i;
-      var a = cores[i], b = cores[i + 1];
-      var r = Math.round(a[0] + (b[0] - a[0]) * f);
-      var g = Math.round(a[1] + (b[1] - a[1]) * f);
-      var bl = Math.round(a[2] + (b[2] - a[2]) * f);
-      return 'rgb(' + r + ',' + g + ',' + bl + ')';
-    }
+    var cor = dark ? '#ffe600' : '#1c1c1e';
 
     var texto = el.textContent;
     el.textContent = '';
@@ -1330,7 +1335,7 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModa
       var s = document.createElement('span');
       s.className = texto[i] === ' ' ? 'ltr sp' : 'ltr';
       s.textContent = texto[i] === ' ' ? '\u00A0' : texto[i];
-      s.style.color = corNa(n > 1 ? i / (n - 1) : 0);
+      s.style.color = cor;
       s.style.animationDelay = (0.15 + i * 0.05) + 's';
       frag.appendChild(s);
     }
