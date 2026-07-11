@@ -1046,6 +1046,12 @@ function routeLink(id) {
   return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener">' + e(id) + '</a>';
 }
 
+function shipmentLink(id) {
+  if (!id) return '<span style="color:var(--text2);font-size:11px">—</span>';
+  var url = 'https://envios.adminml.com/logistics/package-management/package/' + id;
+  return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener" style="font-family:monospace;font-weight:700">' + e(id) + '</a>';
+}
+
 // Define o nome do grupo de exibição de um pacote.
 // A BLD LOGÍSTICA é dividida: XPT -> "BLD XPT", demais tramos -> "BLD SVC".
 function grupoDoPacote(p) {
@@ -1148,7 +1154,7 @@ function render() {
       var vc  = val*USD_BRL >= 100 ? 'valor-brl valor-alto' : 'valor-brl';
 
       h += '<tr>';
-      h += '<td><span class="sid">'+e(p.shipment_id)+'</span></td>';
+      h += '<td>'+shipmentLink(p.shipment_id)+'</td>';
       h += '<td><span class="sb status-'+p.status_negocio+'">'+p.status_negocio+'</span></td>';
       h += '<td style="font-size:11px">'+e(p.tramo)+'</td>';
       h += '<td><span class="dc '+dc+'">'+d+'d</span></td>';
@@ -1177,7 +1183,7 @@ function renderHis(registros) {
   registros.forEach(function(r) {
     h += '<tr>';
     h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
-    h += '<td style="font-family:monospace;color:var(--blue);font-weight:700">'+e(r.shipment_id)+'</td>';
+    h += '<td>'+shipmentLink(r.shipment_id)+'</td>';
     h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
     h += '<td>'+routeLink(r.rota)+'</td>';
     h += '<td>'+e(r.tramo||'—')+'</td>';
