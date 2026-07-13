@@ -844,39 +844,38 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 
     <div class="tabs">
       <div class="tab ativo" data-otab="painel">Painel</div>
-      <div class="tab" data-otab="tabela">Tabela</div>
+      <div class="tab" data-otab="tabela">Rotas</div>
       <div class="tab" data-otab="just">Justificativas</div>
     </div>
 
     <!-- PAINEL -->
     <div id="oPanePainel">
       <div class="kpi-bar">
-        <div class="kpi"><div class="kpi-label">Total ORH</div><div class="kpi-val b" id="oTotal">—</div></div>
-        <div class="kpi"><div class="kpi-label">Stale</div><div class="kpi-val w" id="oStale">—</div></div>
-        <div class="kpi"><div class="kpi-label">Missing</div><div class="kpi-val d" id="oMissing">—</div></div>
-        <div class="kpi"><div class="kpi-label">Risco Alto</div><div class="kpi-val d" id="oAlto">—</div></div>
-        <div class="kpi"><div class="kpi-label">Média dias</div><div class="kpi-val" id="oMediaDias">—</div></div>
-        <div class="kpi"><div class="kpi-label">Valor (R$)</div><div class="kpi-val b" id="oValor" style="font-size:15px;padding-top:4px">—</div></div>
+        <div class="kpi"><div class="kpi-label">Total de rotas</div><div class="kpi-val b" id="oTotal">—</div></div>
+        <div class="kpi"><div class="kpi-label">Dentro do ORH</div><div class="kpi-val g" id="oDentro">—</div></div>
+        <div class="kpi"><div class="kpi-label">Ofensoras (&gt; contrato)</div><div class="kpi-val d" id="oOfensoras">—</div></div>
+        <div class="kpi"><div class="kpi-label">% Adesão</div><div class="kpi-val" id="oAdesao">—</div></div>
+        <div class="kpi"><div class="kpi-label">ORH médio real</div><div class="kpi-val" id="oMedioReal">—</div></div>
+        <div class="kpi"><div class="kpi-label">Pendentes de justif.</div><div class="kpi-val w" id="oPend">—</div></div>
       </div>
 
       <div class="orh-charts">
-        <div class="chart-box"><div class="chart-title">Por status</div><canvas id="chStatus"></canvas></div>
-        <div class="chart-box"><div class="chart-title">Por tramo</div><canvas id="chTramo"></canvas></div>
-        <div class="chart-box"><div class="chart-title">Por transportadora</div><canvas id="chTransp"></canvas></div>
-        <div class="chart-box"><div class="chart-title">Por faixa de dias no SVC</div><canvas id="chDias"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Adesão geral (dentro × ofensora)</div><canvas id="chAdesao"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Ofensoras por transportadora</div><canvas id="chOfTransp"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Rotas por transportadora</div><canvas id="chRotasTransp"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Excedente de ORH (min) — top ofensoras</div><canvas id="chExcedente"></canvas></div>
       </div>
     </div>
 
-    <!-- TABELA -->
+    <!-- ROTAS -->
     <div id="oPaneTabela" style="display:none">
       <div class="filtros">
-        <input type="text" id="oBusca" placeholder="Buscar shipment ID, rota, produto...">
-        <select id="oStatusF">
-          <option value="">Todos os status</option>
-          <option value="stale">Stale</option>
-          <option value="missing">Missing</option>
+        <input type="text" id="oBusca" placeholder="Buscar rota, prefixo, motorista, placa...">
+        <select id="oOfensoraF">
+          <option value="">Todas as rotas</option>
+          <option value="sim">Só ofensoras (&gt; contrato)</option>
+          <option value="nao">Só dentro do ORH</option>
         </select>
-        <select id="oTramoF"><option value="">Todos os tramos</option></select>
         <button class="btn-atualizar" onclick="carregarORH()">↻ Atualizar</button>
       </div>
       <div id="oListaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
@@ -1360,16 +1359,16 @@ function salvar() {
 }
 
 // ════════════════════════════════════════════════════════════
-// ANÁLISE ORH
+// ANÁLISE ORH (rotas — ORH_REAL vs ORH_CONTRATO)
 // ════════════════════════════════════════════════════════════
 function carregarORH() {
-  document.getElementById('oListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando dados ORH...</div>';
+  document.getElementById('oListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando rotas ORH...</div>';
   var cb = 'cborh' + Date.now();
   window[cb] = function(d) {
     delete window[cb];
     if (d.erro) { toast('Erro ORH: ' + d.erro, 1); return; }
-    var todos = d.pacotes || [];
-    orhCache = sessao.isMeli ? todos : todos.filter(function(p){ return perteceAoUsuario(p); });
+    var todas = d.rotas || [];
+    orhCache = sessao.isMeli ? todas : todas.filter(function(r){ return perteceAoUsuarioRota(r); });
     renderORH();
   };
   var s = document.createElement('script');
@@ -1377,54 +1376,60 @@ function carregarORH() {
   document.head.appendChild(s);
 }
 
+// Filtro por transportadora do login (mesma regra do resto do hub).
+// Rotas ORH usam a coluna TRANSPORTADORA direto; BLD vira BLD LOGÍSTICA.
+function perteceAoUsuarioRota(r) {
+  var t = (r.transportadora || '').trim();
+  if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
+    return t === 'BLD LOGÍSTICA';
+  }
+  return t === sessao.transp;
+}
+
+function minParaHhmm(min) {
+  if (min === null || min === undefined || isNaN(min)) return '—';
+  var neg = min < 0;
+  var m = Math.round(Math.abs(min));
+  var h = Math.floor(m / 60);
+  var mm = m % 60;
+  return (neg ? '-' : '') + h + 'h' + (mm < 10 ? '0' : '') + mm;
+}
+
 function orhFiltrar() {
   var b  = (document.getElementById('oBusca').value || '').toLowerCase();
-  var st = document.getElementById('oStatusF').value;
-  var tr = document.getElementById('oTramoF').value;
-  return orhCache.filter(function(p) {
-    if (st && p.status_negocio !== st) return false;
-    if (tr && (p.tramo||'').trim() !== tr) return false;
-    if (b) { var t=[p.shipment_id,p.route_id,p.route_name,p.descricao,p.transportadora,p.acao].join(' ').toLowerCase(); if(!t.includes(b)) return false; }
+  var of = document.getElementById('oOfensoraF').value;
+  return orhCache.filter(function(r) {
+    if (of === 'sim' && !r.ofensora) return false;
+    if (of === 'nao' && r.ofensora) return false;
+    if (b) {
+      var t = [r.id_rota, r.prefixo_rota, r.id_driver, r.placa, r.transportadora, r.veiculo_real].join(' ').toLowerCase();
+      if (!t.includes(b)) return false;
+    }
     return true;
   });
 }
 
 function renderORH() {
-  var tot   = orhCache.length;
-  var stale = orhCache.filter(function(p){return p.status_negocio==='stale';}).length;
-  var miss  = orhCache.filter(function(p){return p.status_negocio==='missing';}).length;
-  var alto  = orhCache.filter(function(p){return p.risco==='ALTO';}).length;
-  var somaDias = orhCache.reduce(function(a,p){ return a+(parseInt(p.dias_no_svc)||0); },0);
-  var mediaDias = tot ? (somaDias/tot).toFixed(1) : 0;
-  var valor = orhCache.reduce(function(a,p){ return a+(parseFloat(String(p.custo_usd).replace(',','.'))||0); },0)*USD_BRL;
+  var tot = orhCache.length;
+  var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; });
+  var ofensoras = orhCache.filter(function(r){ return r.ofensora; });
+  var dentro = comReal.length - ofensoras.length;
+  var adesao = comReal.length ? Math.round((dentro / comReal.length) * 100) : 0;
+  var pend = ofensoras.filter(function(r){ return !r.justificado; }).length;
+
+  var somaReal = comReal.reduce(function(a,r){ return a + r.orh_real_min; }, 0);
+  var medioReal = comReal.length ? somaReal / comReal.length : null;
 
   document.getElementById('oTotal').textContent     = tot;
-  document.getElementById('oStale').textContent     = stale;
-  document.getElementById('oMissing').textContent   = miss;
-  document.getElementById('oAlto').textContent      = alto;
-  document.getElementById('oMediaDias').textContent = mediaDias;
-  document.getElementById('oValor').textContent     = valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-  document.getElementById('orhSub').textContent     = tot + ' pacote' + (tot!==1?'s':'') + ' ORH' + (sessao ? ' — ' + sessao.transp : '');
-
-  // preenche filtro de tramos
-  var tramos = {};
-  orhCache.forEach(function(p){ var t=(p.tramo||'').trim(); if(t) tramos[t]=1; });
-  var selT = document.getElementById('oTramoF');
-  var atual = selT.value;
-  selT.innerHTML = '<option value="">Todos os tramos</option>' + Object.keys(tramos).sort().map(function(t){ return '<option value="'+e(t)+'">'+e(t)+'</option>'; }).join('');
-  selT.value = atual;
+  document.getElementById('oDentro').textContent    = dentro;
+  document.getElementById('oOfensoras').textContent = ofensoras.length;
+  document.getElementById('oAdesao').textContent    = adesao + '%';
+  document.getElementById('oMedioReal').textContent = minParaHhmm(medioReal);
+  document.getElementById('oPend').textContent      = pend;
+  document.getElementById('orhSub').textContent     = tot + ' rota' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '') + ' · meta ' + (orhCache[0] ? minParaHhmm(orhCache[0].orh_contrato_min) : '8h47');
 
   desenharGraficosORH();
   renderORHTabela();
-}
-
-function contarPor(campo, transform) {
-  var m = {};
-  orhCache.forEach(function(p){
-    var k = transform ? transform(p) : ((p[campo]||'').toString().trim() || '—');
-    m[k] = (m[k]||0)+1;
-  });
-  return m;
 }
 
 function desenharGraficosORH() {
@@ -1435,62 +1440,64 @@ function desenharGraficosORH() {
   Chart.defaults.color = cor;
   Chart.defaults.font.family = 'Roboto, sans-serif';
 
-  var paleta = ['#3483fa','#e05252','#f0a800','#00a650','#7e91c1','#603163','#358a9e','#ff9900'];
-
-  // destrói gráficos antigos
   Object.keys(orhCharts).forEach(function(k){ if(orhCharts[k]) orhCharts[k].destroy(); });
 
-  // status
-  var st = contarPor('status_negocio');
-  orhCharts.status = new Chart(document.getElementById('chStatus'), {
+  var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; });
+  var ofensoras = comReal.filter(function(r){ return r.ofensora; });
+  var dentro = comReal.length - ofensoras.length;
+
+  // 1) Adesão geral (dentro x ofensora)
+  orhCharts.adesao = new Chart(document.getElementById('chAdesao'), {
     type: 'doughnut',
-    data: { labels: Object.keys(st), datasets: [{ data: Object.values(st), backgroundColor: paleta }] },
+    data: { labels: ['Dentro do ORH','Ofensoras'], datasets: [{ data: [dentro, ofensoras.length], backgroundColor: ['#00a650','#e05252'] }] },
     options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
   });
 
-  // tramo
-  var tr = contarPor('tramo');
-  orhCharts.tramo = new Chart(document.getElementById('chTramo'), {
+  // 2) Ofensoras por transportadora
+  var ofPorT = {};
+  ofensoras.forEach(function(r){ var t=(r.transportadora||'—').trim()||'—'; ofPorT[t]=(ofPorT[t]||0)+1; });
+  var ofKeys = Object.keys(ofPorT).sort(function(a,b){ return ofPorT[b]-ofPorT[a]; });
+  orhCharts.ofTransp = new Chart(document.getElementById('chOfTransp'), {
     type: 'bar',
-    data: { labels: Object.keys(tr), datasets: [{ data: Object.values(tr), backgroundColor: '#3483fa' }] },
-    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true } } }
-  });
-
-  // transportadora
-  var tp = contarPor('transportadora', function(p){ return (p.transportadora||'').trim() || '— Sem transp —'; });
-  var tpOrd = Object.keys(tp).sort(function(a,b){ return tp[b]-tp[a]; });
-  orhCharts.transp = new Chart(document.getElementById('chTransp'), {
-    type: 'bar',
-    data: { labels: tpOrd, datasets: [{ data: tpOrd.map(function(k){return tp[k];}), backgroundColor: '#603163' }] },
+    data: { labels: ofKeys, datasets: [{ data: ofKeys.map(function(k){return ofPorT[k];}), backgroundColor: '#e05252' }] },
     options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } }
   });
 
-  // faixa de dias
-  var faixas = { '0-5':0, '6-10':0, '11-20':0, '21-30':0, '30+':0 };
-  orhCache.forEach(function(p){
-    var d = parseInt(p.dias_no_svc)||0;
-    if (d<=5) faixas['0-5']++;
-    else if (d<=10) faixas['6-10']++;
-    else if (d<=20) faixas['11-20']++;
-    else if (d<=30) faixas['21-30']++;
-    else faixas['30+']++;
-  });
-  orhCharts.dias = new Chart(document.getElementById('chDias'), {
+  // 3) Rotas por transportadora (total)
+  var totPorT = {};
+  orhCache.forEach(function(r){ var t=(r.transportadora||'—').trim()||'—'; totPorT[t]=(totPorT[t]||0)+1; });
+  var tKeys = Object.keys(totPorT).sort(function(a,b){ return totPorT[b]-totPorT[a]; });
+  orhCharts.rotasTransp = new Chart(document.getElementById('chRotasTransp'), {
     type: 'bar',
-    data: { labels: Object.keys(faixas), datasets: [{ data: Object.values(faixas), backgroundColor: ['#00a650','#7e91c1','#f0a800','#ff9900','#e05252'] }] },
+    data: { labels: tKeys, datasets: [{ data: tKeys.map(function(k){return totPorT[k];}), backgroundColor: '#3483fa' }] },
+    options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } }
+  });
+
+  // 4) Top ofensoras por excedente (min acima do contrato)
+  var topEx = ofensoras.slice().sort(function(a,b){ return (b.excedente_min||0) - (a.excedente_min||0); }).slice(0, 12);
+  orhCharts.excedente = new Chart(document.getElementById('chExcedente'), {
+    type: 'bar',
+    data: {
+      labels: topEx.map(function(r){ return r.prefixo_rota || r.id_rota; }),
+      datasets: [{ label:'min acima', data: topEx.map(function(r){ return Math.round(r.excedente_min); }), backgroundColor: '#ff9900' }]
+    },
     options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true } } }
   });
 }
 
 function renderORHTabela() {
   var f = orhFiltrar();
-  if (!f.length) { document.getElementById('oListaGrupos').innerHTML='<div class="empty">Nenhum pacote encontrado.</div>'; return; }
+  if (!f.length) { document.getElementById('oListaGrupos').innerHTML='<div class="empty">Nenhuma rota encontrada.</div>'; return; }
 
-  f.sort(function(a,b){ return (parseInt(b.dias_no_svc)||0) - (parseInt(a.dias_no_svc)||0); });
+  // ofensoras primeiro, depois maior excedente
+  f.sort(function(a,b){
+    if (a.ofensora !== b.ofensora) return a.ofensora ? -1 : 1;
+    return (b.excedente_min||0) - (a.excedente_min||0);
+  });
 
   var grupos = {};
   if (sessao.isMeli) {
-    f.forEach(function(p){ var k=grupoDoPacote(p); if(!grupos[k]) grupos[k]=[]; grupos[k].push(p); });
+    f.forEach(function(r){ var k=(r.transportadora||'— Sem transp —').trim()||'— Sem transp —'; if(!grupos[k]) grupos[k]=[]; grupos[k].push(r); });
   } else {
     grupos[sessao.transp] = f;
   }
@@ -1498,32 +1505,38 @@ function renderORHTabela() {
   var keys = Object.keys(grupos).sort(function(a,b){ return grupos[b].length - grupos[a].length; });
   var h = '';
   keys.forEach(function(tr) {
-    var ps = grupos[tr];
-    var pend = ps.filter(function(p){return !p.justificado;}).length;
+    var rs = grupos[tr];
+    var ofs = rs.filter(function(r){return r.ofensora;}).length;
+    var pend = rs.filter(function(r){return r.ofensora && !r.justificado;}).length;
     h += '<div class="grupo open">';
     h += '<div class="gh" onclick="tog(this)"><div class="gh-left">';
-    h += '<span>'+e(tr)+'</span><span class="bt">'+ps.length+' pct</span>';
+    h += '<span>'+e(tr)+'</span><span class="bt">'+rs.length+' rota'+(rs.length>1?'s':'')+'</span>';
+    if(ofs) h += '<span class="bp">'+ofs+' ofensora'+(ofs>1?'s':'')+'</span>';
     if(pend) h += '<span class="bp">'+pend+' pendente'+(pend>1?'s':'')+'</span>';
     h += '</div><span class="chev">▾</span></div>';
     h += '<div class="gb"><table><thead><tr>';
-    h += '<th>Shipment ID</th><th>Status</th><th>Tramo</th><th>Dias</th><th>Rota</th><th>Facility</th><th>Produto</th><th>Ação</th><th></th>';
+    h += '<th>Rota</th><th>Prefixo</th><th>Motorista</th><th>Placa</th><th>Paradas</th><th>ORH real</th><th>Contrato</th><th>Excedente</th><th></th>';
     h += '</tr></thead><tbody>';
-    ps.forEach(function(p) {
-      var d = parseInt(p.dias_no_svc)||0;
-      var dc = d>=20?'crit':(d>=10?'alto':'ok');
+    rs.forEach(function(r) {
+      var badge = r.ofensora
+        ? '<span class="sb status-missing">ofensora</span>'
+        : (r.orh_real_min===null ? '<span class="sb status-stale">sem ORH</span>' : '<span class="jok">no prazo</span>');
+      var exc = r.ofensora ? '<span class="dc crit">+'+minParaHhmm(r.excedente_min)+'</span>' : '—';
       h += '<tr>';
-      h += '<td>'+shipmentLink(p.shipment_id)+'</td>';
-      h += '<td><span class="sb status-'+p.status_negocio+'">'+e(p.status_negocio)+'</span></td>';
-      h += '<td style="font-size:11px">'+e(p.tramo)+'</td>';
-      h += '<td><span class="dc '+dc+'">'+d+'d</span></td>';
-      h += '<td>'+routeLink(p.route_id)+'</td>';
-      h += '<td style="font-size:11px">'+e(p.ultima_facility||'—')+'</td>';
-      h += '<td><div class="dt" title="'+e(p.descricao)+'">'+e(p.descricao||'—')+'</div></td>';
-      h += '<td style="font-size:11px;color:var(--text2);max-width:150px">'+e((p.acao||'').split('|')[0].trim())+'</td>';
-      if (p.justificado) {
-        h += '<td><span class="jok">✓ Justificado</span></td>';
+      h += '<td class="sid">'+e(r.id_rota)+'</td>';
+      h += '<td style="font-size:11px">'+e(r.prefixo_rota||'—')+'</td>';
+      h += '<td style="font-size:11px">'+e(r.id_driver||'—')+'</td>';
+      h += '<td style="font-size:11px">'+e(r.placa||'—')+'</td>';
+      h += '<td style="text-align:center">'+e(String(r.paradas||'—'))+'</td>';
+      h += '<td class="dc '+(r.ofensora?'crit':'ok')+'">'+e(r.orh_real_txt||minParaHhmm(r.orh_real_min))+'</td>';
+      h += '<td style="font-size:11px;color:var(--text2)">'+e(r.orh_contrato_txt||minParaHhmm(r.orh_contrato_min))+'</td>';
+      h += '<td>'+exc+'</td>';
+      if (!r.ofensora) {
+        h += '<td>'+badge+'</td>';
+      } else if (r.justificado) {
+        h += '<td><span class="jok">✓ Justificada</span></td>';
       } else {
-        h += '<td><button class="btn-just" onclick="abrirModalORH(\''+e(p.shipment_id)+'\')">Justificar</button></td>';
+        h += '<td><button class="btn-just" onclick="abrirModalORH(\''+e(r.id_rota)+'\')">Justificar</button></td>';
       }
       h += '</tr>';
     });
@@ -1539,7 +1552,11 @@ function carregarHisORH() {
     delete window[cb];
     if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
     var hist = d.historico || [];
-    if (!sessao.isMeli) hist = hist.filter(function(r){ return perteceAoUsuarioHist(r); });
+    if (!sessao.isMeli) hist = hist.filter(function(r){
+      var t = (r.transportadora||'').trim();
+      if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') return t === 'BLD LOGÍSTICA';
+      return t === sessao.transp;
+    });
     renderHisORH(hist);
   };
   var s = document.createElement('script');
@@ -1549,17 +1566,17 @@ function carregarHisORH() {
 
 function renderHisORH(registros) {
   if (!registros.length) { document.getElementById('oTabelaHis').innerHTML='<div class="empty">Nenhuma justificativa ORH registrada ainda.</div>'; return; }
-  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Shipment ID</th><th>Transportadora</th><th>Rota</th><th>Tramo</th><th>Dias</th><th>Motivo</th><th>Dispatcher</th></tr></thead><tbody>';
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Rota</th><th>Prefixo</th><th>Transportadora</th><th>ORH real</th><th>Contrato</th><th>Motivo</th><th>Responsável</th></tr></thead><tbody>';
   registros.forEach(function(r) {
     h += '<tr>';
     h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
-    h += '<td>'+shipmentLink(r.shipment_id)+'</td>';
+    h += '<td class="sid">'+e(r.id_rota)+'</td>';
+    h += '<td>'+e(r.prefixo_rota||'—')+'</td>';
     h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
-    h += '<td>'+routeLink(r.rota)+'</td>';
-    h += '<td>'+e(r.tramo||'—')+'</td>';
-    h += '<td style="text-align:center">'+e(r.dias_no_svc)+'d</td>';
+    h += '<td>'+e(r.orh_real||'—')+'</td>';
+    h += '<td style="color:var(--text2)">'+e(r.orh_contrato||'—')+'</td>';
     h += '<td><div class="mcell">'+e(r.motivo_justificativa)+'</div></td>';
-    h += '<td style="color:var(--text2)">'+e(r.nome_dispatcher||r.email_dispatcher)+'</td>';
+    h += '<td style="color:var(--text2)">'+e(r.nome_dispatcher)+'</td>';
     h += '</tr>';
   });
   h += '</tbody></table></div>';
@@ -1568,23 +1585,21 @@ function renderHisORH(registros) {
 
 // modal ORH (reaproveita o mesmo modal visual)
 var orhSel = null;
-function abrirModalORH(id) {
-  orhSel = orhCache.find(function(p){return p.shipment_id===id;});
+function abrirModalORH(idRota) {
+  orhSel = orhCache.find(function(r){return r.id_rota===idRota;});
   if (!orhSel) return;
-  var p = orhSel;
-  var valBrl = ((parseFloat(String(p.custo_usd).replace(',','.'))||0)*USD_BRL).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  var r = orhSel;
   document.getElementById('mInfo').innerHTML =
-    mi('Shipment ID',p.shipment_id)+mi('Transportadora',p.transportadora||'—')+
-    mi('Rota (ID)',p.route_id||'—')+mi('Status',p.status_negocio)+
-    mi('Tramo',p.tramo)+mi('Dias no SVC',p.dias_no_svc+'d')+
-    mi('Valor',valBrl)+mi('Facility',p.ultima_facility||'—')+
-    '<div class="mi" style="grid-column:1/-1"><label>Ação</label><span style="font-size:11px;font-weight:400;color:var(--text2)">'+e(p.acao)+'</span></div>'+
-    '<div class="mi" style="grid-column:1/-1"><label>Produto</label><span style="font-size:11px;font-weight:400">'+e(p.descricao||'—')+'</span></div>';
+    mi('ID Rota', r.id_rota) + mi('Prefixo', r.prefixo_rota||'—') +
+    mi('Transportadora', r.transportadora||'—') + mi('Motorista', r.id_driver||'—') +
+    mi('Placa', r.placa||'—') + mi('Paradas', r.paradas||'—') +
+    mi('ORH real', r.orh_real_txt||minParaHhmm(r.orh_real_min)) + mi('Contrato', r.orh_contrato_txt||minParaHhmm(r.orh_contrato_min)) +
+    '<div class="mi" style="grid-column:1/-1"><label>Excedente sobre o contrato</label><span style="font-weight:700;color:var(--danger)">+'+minParaHhmm(r.excedente_min)+'</span></div>';
   document.getElementById('mMotivo').value = '';
   var bs = document.getElementById('bSave');
   bs.classList.remove('disabled'); bs.textContent = 'Salvar';
-  // marca que o modal está em modo ORH
   document.getElementById('modalJust').setAttribute('data-modo', 'orh');
+  document.querySelector('#modalJust h3').textContent = 'Justificar rota ofensora';
   document.getElementById('modalJust').classList.add('open');
   setTimeout(function(){document.getElementById('mMotivo').focus();},100);
 }
@@ -1595,14 +1610,15 @@ function salvarORH() {
   if (!orhSel) return;
   var btn = document.getElementById('bSave');
   btn.classList.add('disabled'); btn.textContent = 'Salvando...';
-  var p = orhSel;
+  var r = orhSel;
 
   var params = {
     action: 'salvarJustificativaORH',
-    shipment_id: p.shipment_id, transportadora: p.transportadora,
-    route_name: p.route_id, risco: p.risco, tramo: p.tramo,
-    dias_no_svc: p.dias_no_svc, motivo: motivo,
-    email_dispatcher: '', nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
+    id_rota: r.id_rota, transportadora: r.transportadora,
+    prefixo_rota: r.prefixo_rota, data_dia: r.data_dia,
+    orh_real: r.orh_real_txt || minParaHhmm(r.orh_real_min),
+    orh_contrato: r.orh_contrato_txt || minParaHhmm(r.orh_contrato_min),
+    motivo: motivo, nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
   };
   var cb = 'cbsorh_' + Date.now();
   var timeout = setTimeout(function () {
@@ -1612,9 +1628,9 @@ function salvarORH() {
     clearTimeout(timeout); delete window[cb];
     btn.classList.remove('disabled'); btn.textContent = 'Salvar';
     if (d && d.ok) {
-      var i = orhCache.findIndex(function (x) { return x.shipment_id === orhSel.shipment_id; });
+      var i = orhCache.findIndex(function (x) { return x.id_rota === orhSel.id_rota; });
       if (i !== -1) orhCache[i].justificado = true;
-      fecharModal(); renderORH(); toast('Justificativa ORH salva!');
+      fecharModal(); renderORH(); toast('Justificativa da rota salva!');
     } else { toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1); }
   };
   var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
@@ -1638,7 +1654,7 @@ document.querySelectorAll('[data-otab]').forEach(function(t){
   });
 });
 
-['oBusca','oStatusF','oTramoF'].forEach(function(id){
+['oBusca','oOfensoraF'].forEach(function(id){
   var el=document.getElementById(id);
   if(el){ el.addEventListener('input',renderORHTabela); el.addEventListener('change',renderORHTabela); }
 });
