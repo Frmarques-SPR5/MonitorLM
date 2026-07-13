@@ -1395,6 +1395,21 @@ function minParaHhmm(min) {
   return (neg ? '-' : '') + h + 'h' + (mm < 10 ? '0' : '') + mm;
 }
 
+// Limpa textos de hora feios (ex: "Sat Dec 30 1899 09:50:00 GMT...") -> "9h50".
+// Se já vier limpo (ex: "8h47" ou "08:47"), mantém.
+function limparHora(txt) {
+  if (!txt) return '—';
+  var s = String(txt).trim();
+  if (/^\d{1,2}h\d{2}$/.test(s)) return s;          // já está "9h50"
+  var hm = s.match(/(\d{1,2}):(\d{2})/);            // pega hh:mm de qualquer texto
+  if (hm) {
+    var h = parseInt(hm[1], 10) || 0;
+    var mm = hm[2];
+    return h + 'h' + mm;
+  }
+  return s;
+}
+
 function orhFiltrar() {
   var b  = (document.getElementById('oBusca').value || '').toLowerCase();
   var of = document.getElementById('oOfensoraF').value;
@@ -1573,8 +1588,8 @@ function renderHisORH(registros) {
     h += '<td>'+routeLink(r.id_rota)+'</td>';
     h += '<td>'+e(r.prefixo_rota||'—')+'</td>';
     h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
-    h += '<td>'+e(r.orh_real||'—')+'</td>';
-    h += '<td style="color:var(--text2)">'+e(r.orh_contrato||'—')+'</td>';
+    h += '<td>'+e(limparHora(r.orh_real))+'</td>';
+    h += '<td style="color:var(--text2)">'+e(limparHora(r.orh_contrato))+'</td>';
     h += '<td><div class="mcell">'+e(r.motivo_justificativa)+'</div></td>';
     h += '<td style="color:var(--text2)">'+e(r.nome_dispatcher)+'</td>';
     h += '</tr>';
