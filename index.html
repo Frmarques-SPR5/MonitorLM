@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* ── TOKENS ── */
 :root {
@@ -637,6 +638,13 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 .mcell { max-width: 240px; color: var(--text2); font-size: 11px; word-break: break-word; }
 .hist-wrap { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); overflow-x: auto; }
 
+/* ORH charts */
+.orh-charts { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media(min-width:700px){ .orh-charts { grid-template-columns: 1fr 1fr; } }
+.chart-box { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+.chart-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.chart-box canvas { max-height: 240px; }
+
 /* misc */
 .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -719,6 +727,10 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <button class="nav-item" data-view="yms" onclick="abrirView('yms')">
       <div class="dots_border"></div>
       <span class="nav-icon">🚚</span> <span>Monitoramento de Pátio</span>
+    </button>
+    <button class="nav-item" data-view="orh" onclick="abrirView('orh')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">📊</span> <span>Análise ORH</span>
     </button>
   </nav>
 </aside>
@@ -821,6 +833,59 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
   <!-- VIEW: YMS (iframe) -->
   <div class="view" id="viewYms" style="margin:-16px">
     <iframe class="frame-tool" id="frameYms" title="Monitoramento de Pátio"></iframe>
+  </div>
+
+  <!-- VIEW: ANÁLISE ORH -->
+  <div class="view" id="viewOrh">
+    <div class="page-header">
+      <div class="page-title">📊 Análise ORH</div>
+      <div class="page-sub" id="orhSub">Carregando...</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab ativo" data-otab="painel">Painel</div>
+      <div class="tab" data-otab="tabela">Tabela</div>
+      <div class="tab" data-otab="just">Justificativas</div>
+    </div>
+
+    <!-- PAINEL -->
+    <div id="oPanePainel">
+      <div class="kpi-bar">
+        <div class="kpi"><div class="kpi-label">Total ORH</div><div class="kpi-val b" id="oTotal">—</div></div>
+        <div class="kpi"><div class="kpi-label">Stale</div><div class="kpi-val w" id="oStale">—</div></div>
+        <div class="kpi"><div class="kpi-label">Missing</div><div class="kpi-val d" id="oMissing">—</div></div>
+        <div class="kpi"><div class="kpi-label">Risco Alto</div><div class="kpi-val d" id="oAlto">—</div></div>
+        <div class="kpi"><div class="kpi-label">Média dias</div><div class="kpi-val" id="oMediaDias">—</div></div>
+        <div class="kpi"><div class="kpi-label">Valor (R$)</div><div class="kpi-val b" id="oValor" style="font-size:15px;padding-top:4px">—</div></div>
+      </div>
+
+      <div class="orh-charts">
+        <div class="chart-box"><div class="chart-title">Por status</div><canvas id="chStatus"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Por tramo</div><canvas id="chTramo"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Por transportadora</div><canvas id="chTransp"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Por faixa de dias no SVC</div><canvas id="chDias"></canvas></div>
+      </div>
+    </div>
+
+    <!-- TABELA -->
+    <div id="oPaneTabela" style="display:none">
+      <div class="filtros">
+        <input type="text" id="oBusca" placeholder="Buscar shipment ID, rota, produto...">
+        <select id="oStatusF">
+          <option value="">Todos os status</option>
+          <option value="stale">Stale</option>
+          <option value="missing">Missing</option>
+        </select>
+        <select id="oTramoF"><option value="">Todos os tramos</option></select>
+        <button class="btn-atualizar" onclick="carregarORH()">↻ Atualizar</button>
+      </div>
+      <div id="oListaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- JUSTIFICATIVAS -->
+    <div id="oPaneJust" style="display:none">
+      <div id="oTabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
   </div>
 
 </div>
@@ -963,6 +1028,9 @@ function sair() {
 // URL base do YMS (Monitoramento de Pátio)
 var YMS_URL = 'https://frmarques-spr5.github.io/yms-spr5/';
 var ymsCarregado = false;
+var orhCarregado = false;
+var orhCache = [];
+var orhCharts = {};
 
 function abrirMenu() {
   document.getElementById('sidebar').classList.add('aberto');
@@ -981,6 +1049,7 @@ function abrirView(nome, semFechar) {
   // mostra a view
   document.getElementById('viewPacotes').classList.toggle('ativa', nome === 'pacotes');
   document.getElementById('viewYms').classList.toggle('ativa', nome === 'yms');
+  document.getElementById('viewOrh').classList.toggle('ativa', nome === 'orh');
 
   // carrega o iframe do YMS só na primeira vez, já filtrado pela transportadora
   if (nome === 'yms' && !ymsCarregado && sessao) {
@@ -993,6 +1062,12 @@ function abrirView(nome, semFechar) {
     }
     document.getElementById('frameYms').src = url;
     ymsCarregado = true;
+  }
+
+  // carrega o ORH na primeira vez que abre
+  if (nome === 'orh' && !orhCarregado && sessao) {
+    carregarORH();
+    orhCarregado = true;
   }
 
   if (!semFechar) fecharMenu();
@@ -1212,6 +1287,7 @@ function abrirModal(id) {
   document.getElementById('mMotivo').value = '';
   document.getElementById('bSave').classList.remove('disabled');
   document.getElementById('bSave').textContent = 'Salvar';
+  document.getElementById('modalJust').setAttribute('data-modo', 'pacotes');
   document.getElementById('modalJust').classList.add('open');
   setTimeout(function(){document.getElementById('mMotivo').focus();},100);
 }
@@ -1221,6 +1297,10 @@ function fecharModal() { document.getElementById('modalJust').classList.remove('
 
 // ── SALVAR ────────────────────────────────────────────────────
 function salvar() {
+  // se o modal está em modo ORH, chama o salvar do ORH
+  if (document.getElementById('modalJust').getAttribute('data-modo') === 'orh') {
+    return salvarORH();
+  }
   var motivo = document.getElementById('mMotivo').value.trim();
   if (!motivo) { toast('Informe o motivo.',1); return; }
   if (!pacSel) return;
@@ -1278,6 +1358,290 @@ function salvar() {
   };
   document.head.appendChild(s);
 }
+
+// ════════════════════════════════════════════════════════════
+// ANÁLISE ORH
+// ════════════════════════════════════════════════════════════
+function carregarORH() {
+  document.getElementById('oListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando dados ORH...</div>';
+  var cb = 'cborh' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro ORH: ' + d.erro, 1); return; }
+    var todos = d.pacotes || [];
+    orhCache = sessao.isMeli ? todos : todos.filter(function(p){ return perteceAoUsuario(p); });
+    renderORH();
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getORH&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function orhFiltrar() {
+  var b  = (document.getElementById('oBusca').value || '').toLowerCase();
+  var st = document.getElementById('oStatusF').value;
+  var tr = document.getElementById('oTramoF').value;
+  return orhCache.filter(function(p) {
+    if (st && p.status_negocio !== st) return false;
+    if (tr && (p.tramo||'').trim() !== tr) return false;
+    if (b) { var t=[p.shipment_id,p.route_id,p.route_name,p.descricao,p.transportadora,p.acao].join(' ').toLowerCase(); if(!t.includes(b)) return false; }
+    return true;
+  });
+}
+
+function renderORH() {
+  var tot   = orhCache.length;
+  var stale = orhCache.filter(function(p){return p.status_negocio==='stale';}).length;
+  var miss  = orhCache.filter(function(p){return p.status_negocio==='missing';}).length;
+  var alto  = orhCache.filter(function(p){return p.risco==='ALTO';}).length;
+  var somaDias = orhCache.reduce(function(a,p){ return a+(parseInt(p.dias_no_svc)||0); },0);
+  var mediaDias = tot ? (somaDias/tot).toFixed(1) : 0;
+  var valor = orhCache.reduce(function(a,p){ return a+(parseFloat(String(p.custo_usd).replace(',','.'))||0); },0)*USD_BRL;
+
+  document.getElementById('oTotal').textContent     = tot;
+  document.getElementById('oStale').textContent     = stale;
+  document.getElementById('oMissing').textContent   = miss;
+  document.getElementById('oAlto').textContent      = alto;
+  document.getElementById('oMediaDias').textContent = mediaDias;
+  document.getElementById('oValor').textContent     = valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  document.getElementById('orhSub').textContent     = tot + ' pacote' + (tot!==1?'s':'') + ' ORH' + (sessao ? ' — ' + sessao.transp : '');
+
+  // preenche filtro de tramos
+  var tramos = {};
+  orhCache.forEach(function(p){ var t=(p.tramo||'').trim(); if(t) tramos[t]=1; });
+  var selT = document.getElementById('oTramoF');
+  var atual = selT.value;
+  selT.innerHTML = '<option value="">Todos os tramos</option>' + Object.keys(tramos).sort().map(function(t){ return '<option value="'+e(t)+'">'+e(t)+'</option>'; }).join('');
+  selT.value = atual;
+
+  desenharGraficosORH();
+  renderORHTabela();
+}
+
+function contarPor(campo, transform) {
+  var m = {};
+  orhCache.forEach(function(p){
+    var k = transform ? transform(p) : ((p[campo]||'').toString().trim() || '—');
+    m[k] = (m[k]||0)+1;
+  });
+  return m;
+}
+
+function desenharGraficosORH() {
+  if (typeof Chart === 'undefined') return;
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var cor = dark ? '#8888aa' : '#6c757d';
+  var grid = dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  Chart.defaults.color = cor;
+  Chart.defaults.font.family = 'Roboto, sans-serif';
+
+  var paleta = ['#3483fa','#e05252','#f0a800','#00a650','#7e91c1','#603163','#358a9e','#ff9900'];
+
+  // destrói gráficos antigos
+  Object.keys(orhCharts).forEach(function(k){ if(orhCharts[k]) orhCharts[k].destroy(); });
+
+  // status
+  var st = contarPor('status_negocio');
+  orhCharts.status = new Chart(document.getElementById('chStatus'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(st), datasets: [{ data: Object.values(st), backgroundColor: paleta }] },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+
+  // tramo
+  var tr = contarPor('tramo');
+  orhCharts.tramo = new Chart(document.getElementById('chTramo'), {
+    type: 'bar',
+    data: { labels: Object.keys(tr), datasets: [{ data: Object.values(tr), backgroundColor: '#3483fa' }] },
+    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true } } }
+  });
+
+  // transportadora
+  var tp = contarPor('transportadora', function(p){ return (p.transportadora||'').trim() || '— Sem transp —'; });
+  var tpOrd = Object.keys(tp).sort(function(a,b){ return tp[b]-tp[a]; });
+  orhCharts.transp = new Chart(document.getElementById('chTransp'), {
+    type: 'bar',
+    data: { labels: tpOrd, datasets: [{ data: tpOrd.map(function(k){return tp[k];}), backgroundColor: '#603163' }] },
+    options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } }
+  });
+
+  // faixa de dias
+  var faixas = { '0-5':0, '6-10':0, '11-20':0, '21-30':0, '30+':0 };
+  orhCache.forEach(function(p){
+    var d = parseInt(p.dias_no_svc)||0;
+    if (d<=5) faixas['0-5']++;
+    else if (d<=10) faixas['6-10']++;
+    else if (d<=20) faixas['11-20']++;
+    else if (d<=30) faixas['21-30']++;
+    else faixas['30+']++;
+  });
+  orhCharts.dias = new Chart(document.getElementById('chDias'), {
+    type: 'bar',
+    data: { labels: Object.keys(faixas), datasets: [{ data: Object.values(faixas), backgroundColor: ['#00a650','#7e91c1','#f0a800','#ff9900','#e05252'] }] },
+    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true } } }
+  });
+}
+
+function renderORHTabela() {
+  var f = orhFiltrar();
+  if (!f.length) { document.getElementById('oListaGrupos').innerHTML='<div class="empty">Nenhum pacote encontrado.</div>'; return; }
+
+  f.sort(function(a,b){ return (parseInt(b.dias_no_svc)||0) - (parseInt(a.dias_no_svc)||0); });
+
+  var grupos = {};
+  if (sessao.isMeli) {
+    f.forEach(function(p){ var k=grupoDoPacote(p); if(!grupos[k]) grupos[k]=[]; grupos[k].push(p); });
+  } else {
+    grupos[sessao.transp] = f;
+  }
+
+  var keys = Object.keys(grupos).sort(function(a,b){ return grupos[b].length - grupos[a].length; });
+  var h = '';
+  keys.forEach(function(tr) {
+    var ps = grupos[tr];
+    var pend = ps.filter(function(p){return !p.justificado;}).length;
+    h += '<div class="grupo open">';
+    h += '<div class="gh" onclick="tog(this)"><div class="gh-left">';
+    h += '<span>'+e(tr)+'</span><span class="bt">'+ps.length+' pct</span>';
+    if(pend) h += '<span class="bp">'+pend+' pendente'+(pend>1?'s':'')+'</span>';
+    h += '</div><span class="chev">▾</span></div>';
+    h += '<div class="gb"><table><thead><tr>';
+    h += '<th>Shipment ID</th><th>Status</th><th>Tramo</th><th>Dias</th><th>Rota</th><th>Facility</th><th>Produto</th><th>Ação</th><th></th>';
+    h += '</tr></thead><tbody>';
+    ps.forEach(function(p) {
+      var d = parseInt(p.dias_no_svc)||0;
+      var dc = d>=20?'crit':(d>=10?'alto':'ok');
+      h += '<tr>';
+      h += '<td>'+shipmentLink(p.shipment_id)+'</td>';
+      h += '<td><span class="sb status-'+p.status_negocio+'">'+e(p.status_negocio)+'</span></td>';
+      h += '<td style="font-size:11px">'+e(p.tramo)+'</td>';
+      h += '<td><span class="dc '+dc+'">'+d+'d</span></td>';
+      h += '<td>'+routeLink(p.route_id)+'</td>';
+      h += '<td style="font-size:11px">'+e(p.ultima_facility||'—')+'</td>';
+      h += '<td><div class="dt" title="'+e(p.descricao)+'">'+e(p.descricao||'—')+'</div></td>';
+      h += '<td style="font-size:11px;color:var(--text2);max-width:150px">'+e((p.acao||'').split('|')[0].trim())+'</td>';
+      if (p.justificado) {
+        h += '<td><span class="jok">✓ Justificado</span></td>';
+      } else {
+        h += '<td><button class="btn-just" onclick="abrirModalORH(\''+e(p.shipment_id)+'\')">Justificar</button></td>';
+      }
+      h += '</tr>';
+    });
+    h += '</tbody></table></div></div>';
+  });
+  document.getElementById('oListaGrupos').innerHTML = h;
+}
+
+function carregarHisORH() {
+  document.getElementById('oTabelaHis').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando justificativas...</div>';
+  var cb = 'cbhorh' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
+    var hist = d.historico || [];
+    if (!sessao.isMeli) hist = hist.filter(function(r){ return perteceAoUsuarioHist(r); });
+    renderHisORH(hist);
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getHistoricoORH&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function renderHisORH(registros) {
+  if (!registros.length) { document.getElementById('oTabelaHis').innerHTML='<div class="empty">Nenhuma justificativa ORH registrada ainda.</div>'; return; }
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Shipment ID</th><th>Transportadora</th><th>Rota</th><th>Tramo</th><th>Dias</th><th>Motivo</th><th>Dispatcher</th></tr></thead><tbody>';
+  registros.forEach(function(r) {
+    h += '<tr>';
+    h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
+    h += '<td>'+shipmentLink(r.shipment_id)+'</td>';
+    h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
+    h += '<td>'+routeLink(r.rota)+'</td>';
+    h += '<td>'+e(r.tramo||'—')+'</td>';
+    h += '<td style="text-align:center">'+e(r.dias_no_svc)+'d</td>';
+    h += '<td><div class="mcell">'+e(r.motivo_justificativa)+'</div></td>';
+    h += '<td style="color:var(--text2)">'+e(r.nome_dispatcher||r.email_dispatcher)+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('oTabelaHis').innerHTML = h;
+}
+
+// modal ORH (reaproveita o mesmo modal visual)
+var orhSel = null;
+function abrirModalORH(id) {
+  orhSel = orhCache.find(function(p){return p.shipment_id===id;});
+  if (!orhSel) return;
+  var p = orhSel;
+  var valBrl = ((parseFloat(String(p.custo_usd).replace(',','.'))||0)*USD_BRL).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  document.getElementById('mInfo').innerHTML =
+    mi('Shipment ID',p.shipment_id)+mi('Transportadora',p.transportadora||'—')+
+    mi('Rota (ID)',p.route_id||'—')+mi('Status',p.status_negocio)+
+    mi('Tramo',p.tramo)+mi('Dias no SVC',p.dias_no_svc+'d')+
+    mi('Valor',valBrl)+mi('Facility',p.ultima_facility||'—')+
+    '<div class="mi" style="grid-column:1/-1"><label>Ação</label><span style="font-size:11px;font-weight:400;color:var(--text2)">'+e(p.acao)+'</span></div>'+
+    '<div class="mi" style="grid-column:1/-1"><label>Produto</label><span style="font-size:11px;font-weight:400">'+e(p.descricao||'—')+'</span></div>';
+  document.getElementById('mMotivo').value = '';
+  var bs = document.getElementById('bSave');
+  bs.classList.remove('disabled'); bs.textContent = 'Salvar';
+  // marca que o modal está em modo ORH
+  document.getElementById('modalJust').setAttribute('data-modo', 'orh');
+  document.getElementById('modalJust').classList.add('open');
+  setTimeout(function(){document.getElementById('mMotivo').focus();},100);
+}
+
+function salvarORH() {
+  var motivo = document.getElementById('mMotivo').value.trim();
+  if (!motivo) { toast('Informe o motivo.',1); return; }
+  if (!orhSel) return;
+  var btn = document.getElementById('bSave');
+  btn.classList.add('disabled'); btn.textContent = 'Salvando...';
+  var p = orhSel;
+
+  var params = {
+    action: 'salvarJustificativaORH',
+    shipment_id: p.shipment_id, transportadora: p.transportadora,
+    route_name: p.route_id, risco: p.risco, tramo: p.tramo,
+    dias_no_svc: p.dias_no_svc, motivo: motivo,
+    email_dispatcher: '', nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
+  };
+  var cb = 'cbsorh_' + Date.now();
+  var timeout = setTimeout(function () {
+    if (window[cb]) { delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão. Tente novamente.',1); }
+  }, 12000);
+  window[cb] = function (d) {
+    clearTimeout(timeout); delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+    if (d && d.ok) {
+      var i = orhCache.findIndex(function (x) { return x.shipment_id === orhSel.shipment_id; });
+      if (i !== -1) orhCache[i].justificado = true;
+      fecharModal(); renderORH(); toast('Justificativa ORH salva!');
+    } else { toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1); }
+  };
+  var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
+  var s = document.createElement('script');
+  s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now();
+  s.onerror = function () { clearTimeout(timeout); delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão. Tente novamente.',1); s.remove(); };
+  document.head.appendChild(s);
+}
+
+// abas internas do ORH
+document.querySelectorAll('[data-otab]').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('[data-otab]').forEach(function(x){x.classList.remove('ativo');});
+    t.classList.add('ativo');
+    var n = t.getAttribute('data-otab');
+    document.getElementById('oPanePainel').style.display = n==='painel'?'block':'none';
+    document.getElementById('oPaneTabela').style.display = n==='tabela'?'block':'none';
+    document.getElementById('oPaneJust').style.display   = n==='just'?'block':'none';
+    if (n==='just') carregarHisORH();
+    if (n==='painel') desenharGraficosORH();
+  });
+});
+
+['oBusca','oStatusF','oTramoF'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el){ el.addEventListener('input',renderORHTabela); el.addEventListener('change',renderORHTabela); }
+});
 
 // ── ABAS ─────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(function(t){
