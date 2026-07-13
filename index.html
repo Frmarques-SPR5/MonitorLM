@@ -864,6 +864,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         <div class="chart-box"><div class="chart-title">Ofensoras por transportadora</div><canvas id="chOfTransp"></canvas></div>
         <div class="chart-box"><div class="chart-title">Rotas por transportadora</div><canvas id="chRotasTransp"></canvas></div>
         <div class="chart-box"><div class="chart-title">Excedente de ORH (min) — top ofensoras</div><canvas id="chExcedente"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Ofensoras por motivo do atraso</div><canvas id="chMotivo"></canvas></div>
       </div>
     </div>
 
@@ -894,8 +895,25 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
   <div class="mcard">
     <h3>Justificar pacote</h3>
     <div class="minfo" id="mInfo"></div>
+    <div id="mMotivoPadraoWrap" style="display:none">
+      <label class="flabel">Motivo do atraso *</label>
+      <select id="mMotivoPadrao" onchange="onMotivoPadraoChange()"
+        style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;margin-bottom:12px">
+        <option value="">Selecione o motivo...</option>
+        <option value="Número alto de paradas">Número alto de paradas</option>
+        <option value="Cidades dispersas">Cidades dispersas</option>
+        <option value="Retorno de insucessos">Retorno de insucessos</option>
+        <option value="Coleta fantasma">Coleta fantasma (informe o ID)</option>
+        <option value="Outras">Outras</option>
+      </select>
+      <div id="mColetaIdWrap" style="display:none;margin-bottom:12px">
+        <label class="flabel">ID da coleta fantasma *</label>
+        <input type="text" id="mColetaId" placeholder="Digite o ID da coleta"
+          style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none">
+      </div>
+    </div>
     <div>
-      <label class="flabel">Motivo da justificativa *</label>
+      <label class="flabel" id="mMotivoLabel">Motivo da justificativa *</label>
       <textarea id="mMotivo" placeholder="Descreva o que está acontecendo com este pacote..."></textarea>
     </div>
     <div class="mactions">
@@ -1287,6 +1305,9 @@ function abrirModal(id) {
   document.getElementById('bSave').classList.remove('disabled');
   document.getElementById('bSave').textContent = 'Salvar';
   document.getElementById('modalJust').setAttribute('data-modo', 'pacotes');
+  // esconde o bloco de motivo padrão (é exclusivo do ORH) e restaura rótulo
+  document.getElementById('mMotivoPadraoWrap').style.display = 'none';
+  document.getElementById('mMotivoLabel').textContent = 'Motivo da justificativa *';
   document.getElementById('modalJust').classList.add('open');
   setTimeout(function(){document.getElementById('mMotivo').focus();},100);
 }
@@ -1498,6 +1519,23 @@ function desenharGraficosORH() {
     },
     options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true } } }
   });
+
+  // 5) Ofensoras por motivo do atraso (só as já justificadas)
+  var motivos = {};
+  ofensoras.forEach(function(r){
+    if (r.justificado && r.just_motivo_padrao) {
+      var m = r.just_motivo_padrao;
+      motivos[m] = (motivos[m]||0) + 1;
+    }
+  });
+  var mKeys = Object.keys(motivos).sort(function(a,b){ return motivos[b]-motivos[a]; });
+  var semJust = ofensoras.filter(function(r){ return !r.justificado; }).length;
+  if (semJust > 0) { mKeys.push('(sem justificativa)'); motivos['(sem justificativa)'] = semJust; }
+  orhCharts.motivo = new Chart(document.getElementById('chMotivo'), {
+    type: 'doughnut',
+    data: { labels: mKeys, datasets: [{ data: mKeys.map(function(k){return motivos[k];}), backgroundColor: ['#e05252','#ff9900','#f0a800','#603163','#358a9e','#8888aa'] }] },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
 }
 
 function renderORHTabela() {
@@ -1549,7 +1587,7 @@ function renderORHTabela() {
       if (!r.ofensora) {
         h += '<td>'+badge+'</td>';
       } else if (r.justificado) {
-        h += '<td><span class="jok">✓ Justificada</span></td>';
+        h += '<td><span class="jok" title="'+e(r.just_motivo||'')+'">✓ Justificada</span> <button class="btn-just" style="background:transparent;color:var(--blue);border:1px solid var(--blue);padding:3px 9px" onclick="abrirModalORH(\''+e(r.id_rota)+'\')">Reeditar</button></td>';
       } else {
         h += '<td><button class="btn-just" onclick="abrirModalORH(\''+e(r.id_rota)+'\')">Justificar</button></td>';
       }
@@ -1583,9 +1621,13 @@ function renderHisORH(registros) {
   if (!registros.length) { document.getElementById('oTabelaHis').innerHTML='<div class="empty">Nenhuma justificativa ORH registrada ainda.</div>'; return; }
   var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Rota</th><th>Prefixo</th><th>Transportadora</th><th>ORH real</th><th>Contrato</th><th>Motivo</th><th>Responsável</th></tr></thead><tbody>';
   registros.forEach(function(r) {
-    h += '<tr>';
+    var vig = r._vigente
+      ? ' <span style="background:rgba(0,166,80,.15);color:var(--ok);font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px">vigente</span>'
+      : ' <span style="color:var(--text2);font-size:10px">(anterior)</span>';
+    var estilo = r._vigente ? '' : 'opacity:.6';
+    h += '<tr style="'+estilo+'">';
     h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
-    h += '<td>'+routeLink(r.id_rota)+'</td>';
+    h += '<td>'+routeLink(r.id_rota)+vig+'</td>';
     h += '<td>'+e(r.prefixo_rota||'—')+'</td>';
     h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
     h += '<td>'+e(limparHora(r.orh_real))+'</td>';
@@ -1600,6 +1642,23 @@ function renderHisORH(registros) {
 
 // modal ORH (reaproveita o mesmo modal visual)
 var orhSel = null;
+
+// mostra/esconde o campo de ID quando o motivo é "Coleta fantasma"
+function onMotivoPadraoChange() {
+  var v = document.getElementById('mMotivoPadrao').value;
+  document.getElementById('mColetaIdWrap').style.display = (v === 'Coleta fantasma') ? 'block' : 'none';
+  // ajusta o rótulo do texto livre: obrigatório em "Outras", opcional no resto
+  var lbl = document.getElementById('mMotivoLabel');
+  var ta  = document.getElementById('mMotivo');
+  if (v === 'Outras') {
+    lbl.textContent = 'Descreva o motivo *';
+    ta.placeholder = 'Descreva o motivo do atraso...';
+  } else {
+    lbl.textContent = 'Observações (opcional)';
+    ta.placeholder = 'Detalhes adicionais (opcional)...';
+  }
+}
+
 function abrirModalORH(idRota) {
   orhSel = orhCache.find(function(r){return r.id_rota===idRota;});
   if (!orhSel) return;
@@ -1610,19 +1669,40 @@ function abrirModalORH(idRota) {
     mi('Placa', r.placa||'—') + mi('Paradas', r.paradas||'—') +
     mi('ORH real', r.orh_real_txt||minParaHhmm(r.orh_real_min)) + mi('Contrato', r.orh_contrato_txt||minParaHhmm(r.orh_contrato_min)) +
     '<div class="mi" style="grid-column:1/-1"><label>Excedente sobre o contrato</label><span style="font-weight:700;color:var(--danger)">+'+minParaHhmm(r.excedente_min)+'</span></div>';
-  document.getElementById('mMotivo').value = '';
+  // exibe o bloco de motivo padrão (só no ORH)
+  document.getElementById('mMotivoPadraoWrap').style.display = 'block';
+
+  var jaTem = r.justificado && (r.just_motivo || r.just_motivo_padrao);
+  // pré-preenche campos estruturados ao reeditar
+  document.getElementById('mMotivoPadrao').value = jaTem ? (r.just_motivo_padrao || '') : '';
+  document.getElementById('mColetaId').value = jaTem ? (r.just_coleta_id || '') : '';
+  document.getElementById('mMotivo').value = jaTem ? (r.just_obs || '') : '';
+  onMotivoPadraoChange(); // ajusta visibilidade do ID e rótulos
+
   var bs = document.getElementById('bSave');
   bs.classList.remove('disabled'); bs.textContent = 'Salvar';
   document.getElementById('modalJust').setAttribute('data-modo', 'orh');
-  document.querySelector('#modalJust h3').textContent = 'Justificar rota ofensora';
+  document.querySelector('#modalJust h3').textContent = jaTem ? 'Reeditar justificativa da rota' : 'Justificar rota ofensora';
   document.getElementById('modalJust').classList.add('open');
-  setTimeout(function(){document.getElementById('mMotivo').focus();},100);
+  setTimeout(function(){document.getElementById('mMotivoPadrao').focus();},100);
 }
 
 function salvarORH() {
-  var motivo = document.getElementById('mMotivo').value.trim();
-  if (!motivo) { toast('Informe o motivo.',1); return; }
+  var motivoPadrao = document.getElementById('mMotivoPadrao').value;
+  var coletaId = document.getElementById('mColetaId').value.trim();
+  var obs = document.getElementById('mMotivo').value.trim();
+
+  // validações
+  if (!motivoPadrao) { toast('Selecione o motivo do atraso.', 1); return; }
+  if (motivoPadrao === 'Coleta fantasma' && !coletaId) { toast('Informe o ID da coleta fantasma.', 1); return; }
+  if (motivoPadrao === 'Outras' && !obs) { toast('Descreva o motivo.', 1); return; }
   if (!orhSel) return;
+
+  // monta o texto final do motivo para exibição/histórico
+  var motivoFinal = motivoPadrao;
+  if (motivoPadrao === 'Coleta fantasma') motivoFinal += ' (ID: ' + coletaId + ')';
+  if (obs) motivoFinal += (motivoPadrao === 'Outras' ? ': ' : ' — ') + obs;
+
   var btn = document.getElementById('bSave');
   btn.classList.add('disabled'); btn.textContent = 'Salvando...';
   var r = orhSel;
@@ -1633,7 +1713,11 @@ function salvarORH() {
     prefixo_rota: r.prefixo_rota, data_dia: r.data_dia,
     orh_real: r.orh_real_txt || minParaHhmm(r.orh_real_min),
     orh_contrato: r.orh_contrato_txt || minParaHhmm(r.orh_contrato_min),
-    motivo: motivo, nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
+    motivo: motivoFinal,
+    motivo_padrao: motivoPadrao,
+    coleta_id: coletaId,
+    observacao: obs,
+    nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
   };
   var cb = 'cbsorh_' + Date.now();
   var timeout = setTimeout(function () {
@@ -1644,7 +1728,14 @@ function salvarORH() {
     btn.classList.remove('disabled'); btn.textContent = 'Salvar';
     if (d && d.ok) {
       var i = orhCache.findIndex(function (x) { return x.id_rota === orhSel.id_rota; });
-      if (i !== -1) orhCache[i].justificado = true;
+      if (i !== -1) {
+        orhCache[i].justificado = true;
+        orhCache[i].just_motivo = motivoFinal;
+        orhCache[i].just_motivo_padrao = motivoPadrao;
+        orhCache[i].just_coleta_id = coletaId;
+        orhCache[i].just_obs = obs;
+        orhCache[i].just_responsavel = sessao.nome + ' (' + sessao.transp + ')';
+      }
       fecharModal(); renderORH(); toast('Justificativa da rota salva!');
     } else { toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1); }
   };
