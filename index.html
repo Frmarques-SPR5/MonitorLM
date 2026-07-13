@@ -1523,7 +1523,7 @@ function renderORHTabela() {
         : (r.orh_real_min===null ? '<span class="sb status-stale">sem ORH</span>' : '<span class="jok">no prazo</span>');
       var exc = r.ofensora ? '<span class="dc crit">+'+minParaHhmm(r.excedente_min)+'</span>' : '—';
       h += '<tr>';
-      h += '<td class="sid">'+e(r.id_rota)+'</td>';
+      h += '<td>'+routeLink(r.id_rota)+'</td>';
       h += '<td style="font-size:11px">'+e(r.prefixo_rota||'—')+'</td>';
       h += '<td style="font-size:11px">'+e(r.id_driver||'—')+'</td>';
       h += '<td style="font-size:11px">'+e(r.placa||'—')+'</td>';
@@ -1570,7 +1570,7 @@ function renderHisORH(registros) {
   registros.forEach(function(r) {
     h += '<tr>';
     h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
-    h += '<td class="sid">'+e(r.id_rota)+'</td>';
+    h += '<td>'+routeLink(r.id_rota)+'</td>';
     h += '<td>'+e(r.prefixo_rota||'—')+'</td>';
     h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
     h += '<td>'+e(r.orh_real||'—')+'</td>';
