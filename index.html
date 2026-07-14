@@ -840,21 +840,44 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <div class="tabs">
       <div class="tab ativo" data-otab="painel">Painel</div>
       <div class="tab" data-otab="tabela">Rotas</div>
+      <div class="tab" data-otab="drivers">Drivers ofensores</div>
+      <div class="tab" data-otab="transp">Transportadoras</div>
       <div class="tab" data-otab="just">Justificativas</div>
     </div>
 
     <!-- PAINEL -->
     <div id="oPanePainel">
+      <!-- filtro de período -->
+      <div class="filtros">
+        <select id="oPeriodoTipo">
+          <option value="tudo">Todos os dias</option>
+          <option value="dia">Filtrar por dia</option>
+          <option value="semana">Filtrar por semana</option>
+        </select>
+        <select id="oPeriodoValor" style="display:none"><option value="">—</option></select>
+        <button class="btn-atualizar" onclick="carregarORH()">↻ Atualizar</button>
+      </div>
+
       <div class="kpi-bar">
         <div class="kpi"><div class="kpi-label">Total de rotas</div><div class="kpi-val b" id="oTotal">—</div></div>
         <div class="kpi"><div class="kpi-label">Dentro do ORH</div><div class="kpi-val g" id="oDentro">—</div></div>
         <div class="kpi"><div class="kpi-label">Ofensoras (&gt; contrato)</div><div class="kpi-val d" id="oOfensoras">—</div></div>
         <div class="kpi"><div class="kpi-label">% Adesão</div><div class="kpi-val" id="oAdesao">—</div></div>
         <div class="kpi"><div class="kpi-label">ORH médio real</div><div class="kpi-val" id="oMedioReal">—</div></div>
-        <div class="kpi"><div class="kpi-label">Pendentes de justif.</div><div class="kpi-val w" id="oPend">—</div></div>
+        <div class="kpi" style="border-color:var(--danger)"><div class="kpi-label" style="color:var(--danger)">🚨 Acima de 12h</div><div class="kpi-val d" id="o12h">—</div></div>
+      </div>
+
+      <!-- card: rotas acima de 12h -->
+      <div class="grupo open" id="oCard12h" style="margin-bottom:16px;border-color:var(--danger)">
+        <div class="gh" style="background:rgba(224,82,82,.10);cursor:default">
+          <div class="gh-left"><span style="color:var(--danger)">🚨 Rotas que passaram de 12 horas</span><span class="bp" id="o12hBadge">0</span></div>
+        </div>
+        <div class="gb" style="display:block"><div id="o12hLista"><div class="empty">—</div></div></div>
       </div>
 
       <div class="orh-charts">
+        <div class="chart-box"><div class="chart-title">Comparativo dia a dia — Adesão %</div><canvas id="chEvoAdesao"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Comparativo dia a dia — Ofensoras & ORH médio</div><canvas id="chEvoOfensoras"></canvas></div>
         <div class="chart-box"><div class="chart-title">Adesão geral (dentro × ofensora)</div><canvas id="chAdesao"></canvas></div>
         <div class="chart-box"><div class="chart-title">Ofensoras por transportadora</div><canvas id="chOfTransp"></canvas></div>
         <div class="chart-box"><div class="chart-title">Rotas por transportadora</div><canvas id="chRotasTransp"></canvas></div>
@@ -871,10 +894,21 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
           <option value="">Todas as rotas</option>
           <option value="sim">Só ofensoras (&gt; contrato)</option>
           <option value="nao">Só dentro do ORH</option>
+          <option value="12h">Só acima de 12h</option>
         </select>
         <button class="btn-atualizar" onclick="carregarORH()">↻ Atualizar</button>
       </div>
       <div id="oListaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- DRIVERS OFENSORES -->
+    <div id="oPaneDrivers" style="display:none">
+      <div id="oDriversLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- TRANSPORTADORAS: pendentes vs justificadas -->
+    <div id="oPaneTransp" style="display:none">
+      <div id="oTranspLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
 
     <!-- JUSTIFICATIVAS -->
@@ -1144,6 +1178,7 @@ var YMS_URL = 'https://frmarques-spr5.github.io/yms-spr5/';
 var ymsCarregado = false;
 var orhCarregado = false;
 var orhCache = [];
+var orhCacheFull = [];
 var orhCharts = {};
 var pendCarregado = false;
 var pendCache = [];
@@ -1517,12 +1552,58 @@ function carregarORH() {
     delete window[cb];
     if (d.erro) { toast('Erro ORH: ' + d.erro, 1); return; }
     var todas = d.rotas || [];
-    orhCache = sessao.isMeli ? todas : todas.filter(function(r){ return perteceAoUsuarioRota(r); });
-    renderORH();
+    orhCacheFull = sessao.isMeli ? todas : todas.filter(function(r){ return perteceAoUsuarioRota(r); });
+    popularFiltroPeriodo();
+    aplicarPeriodo();
   };
   var s = document.createElement('script');
   s.src = API + '?action=getORH&callback=' + cb + '&t=' + Date.now();
   document.head.appendChild(s);
+}
+
+// Converte "dd/mm/aaaa" (ou "dd/mm/aaaa hh:mm") num valor ordenável aaaammdd
+function dataChave(txt) {
+  var m = String(txt||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!m) return '';
+  var d = m[1].padStart(2,'0'), mo = m[2].padStart(2,'0'), a = m[3];
+  if (a.length === 2) a = '20' + a;
+  return a + mo + d; // ex: 20260711
+}
+function dataLabel(txt) {
+  var m = String(txt||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  return m ? (m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')) : (txt||'—');
+}
+
+// Preenche o dropdown de dias/semanas a partir dos dados carregados
+function popularFiltroPeriodo() {
+  var tipo = document.getElementById('oPeriodoTipo').value;
+  var sel = document.getElementById('oPeriodoValor');
+  if (tipo === 'tudo') { sel.style.display = 'none'; return; }
+  sel.style.display = '';
+
+  var vals = {};
+  orhCacheFull.forEach(function(r){
+    if (tipo === 'dia') { var k = dataChave(r.data_dia); if (k) vals[k] = dataLabel(r.data_dia); }
+    else { var s = String(r.numero_semana||'').trim(); if (s) vals[s] = 'Semana ' + s; }
+  });
+  var keys = Object.keys(vals).sort().reverse(); // mais recente primeiro
+  var h = '';
+  keys.forEach(function(k){ h += '<option value="'+e(k)+'">'+e(vals[k])+'</option>'; });
+  sel.innerHTML = h || '<option value="">—</option>';
+}
+
+// Aplica o período selecionado sobre o cache completo -> orhCache (usado por tudo)
+function aplicarPeriodo() {
+  var tipo = document.getElementById('oPeriodoTipo').value;
+  var val  = document.getElementById('oPeriodoValor').value;
+  if (tipo === 'tudo' || !val) {
+    orhCache = orhCacheFull.slice();
+  } else if (tipo === 'dia') {
+    orhCache = orhCacheFull.filter(function(r){ return dataChave(r.data_dia) === val; });
+  } else {
+    orhCache = orhCacheFull.filter(function(r){ return String(r.numero_semana||'').trim() === val; });
+  }
+  renderORH();
 }
 
 // Filtro por transportadora do login (mesma regra do resto do hub).
@@ -1559,12 +1640,15 @@ function limparHora(txt) {
   return s;
 }
 
+var ORH_12H_MIN = 12 * 60; // 720 min
+
 function orhFiltrar() {
   var b  = (document.getElementById('oBusca').value || '').toLowerCase();
   var of = document.getElementById('oOfensoraF').value;
   return orhCache.filter(function(r) {
     if (of === 'sim' && !r.ofensora) return false;
     if (of === 'nao' && r.ofensora) return false;
+    if (of === '12h' && !(r.orh_real_min !== null && r.orh_real_min > ORH_12H_MIN)) return false;
     if (b) {
       var t = [r.id_rota, r.prefixo_rota, r.id_driver, r.placa, r.transportadora, r.veiculo_real].join(' ').toLowerCase();
       if (!t.includes(b)) return false;
@@ -1579,7 +1663,7 @@ function renderORH() {
   var ofensoras = orhCache.filter(function(r){ return r.ofensora; });
   var dentro = comReal.length - ofensoras.length;
   var adesao = comReal.length ? Math.round((dentro / comReal.length) * 100) : 0;
-  var pend = ofensoras.filter(function(r){ return !r.justificado; }).length;
+  var acima12 = comReal.filter(function(r){ return r.orh_real_min > ORH_12H_MIN; });
 
   var somaReal = comReal.reduce(function(a,r){ return a + r.orh_real_min; }, 0);
   var medioReal = comReal.length ? somaReal / comReal.length : null;
@@ -1589,11 +1673,38 @@ function renderORH() {
   document.getElementById('oOfensoras').textContent = ofensoras.length;
   document.getElementById('oAdesao').textContent    = adesao + '%';
   document.getElementById('oMedioReal').textContent = minParaHhmm(medioReal);
-  document.getElementById('oPend').textContent      = pend;
-  document.getElementById('orhSub').textContent     = tot + ' rota' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '') + ' · meta ' + (orhCache[0] ? minParaHhmm(orhCache[0].orh_contrato_min) : '8h47');
+  document.getElementById('o12h').textContent       = acima12.length;
 
+  var per = document.getElementById('oPeriodoTipo').value;
+  var perTxt = per === 'tudo' ? 'todos os dias' :
+    (per === 'dia' ? 'dia ' + (document.getElementById('oPeriodoValor').selectedOptions[0]||{}).text :
+                     (document.getElementById('oPeriodoValor').selectedOptions[0]||{}).text || '');
+  document.getElementById('orhSub').textContent = tot + ' rota' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '') + ' · ' + perTxt + ' · meta 8h47';
+
+  renderCard12h(acima12);
   desenharGraficosORH();
   renderORHTabela();
+}
+
+// Card de rotas acima de 12h
+function renderCard12h(lista) {
+  document.getElementById('o12hBadge').textContent = lista.length + (lista.length===1?' rota':' rotas');
+  if (!lista.length) { document.getElementById('o12hLista').innerHTML = '<div class="empty" style="padding:20px">Nenhuma rota acima de 12h neste período. 👏</div>'; return; }
+  lista.sort(function(a,b){ return b.orh_real_min - a.orh_real_min; });
+  var h = '<div style="overflow-x:auto"><table><thead><tr><th>Rota</th><th>Data</th><th>Transportadora</th><th>Motorista</th><th>ORH real</th><th>Excedente</th><th>Justif.</th></tr></thead><tbody>';
+  lista.forEach(function(r){
+    h += '<tr>';
+    h += '<td>'+routeLink(r.id_rota)+'</td>';
+    h += '<td style="font-size:11px;color:var(--text2);white-space:nowrap">'+e(dataLabel(r.data_dia))+'</td>';
+    h += '<td style="font-size:11px">'+e(r.transportadora||'—')+'</td>';
+    h += '<td style="font-size:11px">'+e(r.id_driver||'—')+'</td>';
+    h += '<td class="dc crit">'+e(r.orh_real_txt||minParaHhmm(r.orh_real_min))+'</td>';
+    h += '<td class="dc crit">+'+minParaHhmm(r.excedente_min)+'</td>';
+    h += '<td>'+(r.justificado?'<span class="jok">✓</span>':'<span class="sb status-missing">pendente</span>')+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('o12hLista').innerHTML = h;
 }
 
 function desenharGraficosORH() {
@@ -1605,6 +1716,45 @@ function desenharGraficosORH() {
   Chart.defaults.font.family = 'Roboto, sans-serif';
 
   Object.keys(orhCharts).forEach(function(k){ if(orhCharts[k]) orhCharts[k].destroy(); });
+
+  // ── COMPARATIVO DIA A DIA (usa o cache completo, todos os dias) ──
+  var porDia = {};
+  orhCacheFull.forEach(function(r){
+    if (r.orh_real_min === null) return;
+    var k = dataChave(r.data_dia);
+    if (!k) return;
+    if (!porDia[k]) porDia[k] = { label: dataLabel(r.data_dia), total:0, ofens:0, soma:0 };
+    porDia[k].total++;
+    porDia[k].soma += r.orh_real_min;
+    if (r.ofensora) porDia[k].ofens++;
+  });
+  var diasKeys = Object.keys(porDia).sort(); // cronológico
+  var diasLabels = diasKeys.map(function(k){ return porDia[k].label; });
+  var serieAdesao = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(((d.total-d.ofens)/d.total)*100) : 0; });
+  var serieOfens  = diasKeys.map(function(k){ return porDia[k].ofens; });
+  var serieMedio  = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(d.soma/d.total) : 0; }); // min
+
+  // Gráfico evolução da adesão %
+  orhCharts.evoAdesao = new Chart(document.getElementById('chEvoAdesao'), {
+    type: 'line',
+    data: { labels: diasLabels, datasets: [{ label:'Adesão %', data: serieAdesao, borderColor:'#00a650', backgroundColor:'rgba(0,166,80,.12)', fill:true, tension:.3, pointRadius:4, pointBackgroundColor:'#00a650' }] },
+    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true, max:100, ticks:{ callback:function(v){return v+'%';} } } } }
+  });
+
+  // Gráfico evolução ofensoras (barra) + ORH médio (linha), eixos duplos
+  orhCharts.evoOfensoras = new Chart(document.getElementById('chEvoOfensoras'), {
+    data: {
+      labels: diasLabels,
+      datasets: [
+        { type:'bar', label:'Ofensoras', data: serieOfens, backgroundColor:'#e05252', yAxisID:'y' },
+        { type:'line', label:'ORH médio (h)', data: serieMedio.map(function(m){return +(m/60).toFixed(2);}), borderColor:'#ff9900', backgroundColor:'#ff9900', tension:.3, pointRadius:3, yAxisID:'y1' }
+      ]
+    },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } },
+      scales:{ x:{ grid:{ color:grid } },
+        y:{ position:'left', grid:{ color:grid }, beginAtZero:true, title:{display:true,text:'Ofensoras'} },
+        y1:{ position:'right', grid:{ display:false }, beginAtZero:true, title:{display:true,text:'ORH médio (h)'} } } }
+  });
 
   var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; });
   var ofensoras = comReal.filter(function(r){ return r.ofensora; });
@@ -1724,6 +1874,86 @@ function renderORHTabela() {
     h += '</tbody></table></div></div>';
   });
   document.getElementById('oListaGrupos').innerHTML = h;
+}
+
+// ── DRIVERS OFENSORES ──────────────────────────────────────────
+// Agrupa por motorista (id_driver), conta ofensoras e soma o excedente.
+function renderDrivers() {
+  var drv = {};
+  orhCache.forEach(function(r){
+    if (r.orh_real_min === null) return;
+    var id = (r.id_driver||'—').trim() || '—';
+    if (!drv[id]) drv[id] = { id:id, rotas:0, ofens:0, excedente:0, transp:r.transportadora||'—', max:0 };
+    drv[id].rotas++;
+    if (r.ofensora) { drv[id].ofens++; drv[id].excedente += (r.excedente_min||0); }
+    if (r.orh_real_min > drv[id].max) drv[id].max = r.orh_real_min;
+  });
+  var lista = Object.keys(drv).map(function(k){ return drv[k]; })
+    .filter(function(d){ return d.ofens > 0; })
+    .sort(function(a,b){ return b.ofens - a.ofens || b.excedente - a.excedente; });
+
+  if (!lista.length) { document.getElementById('oDriversLista').innerHTML = '<div class="empty">Nenhum driver ofensor neste período. 👏</div>'; return; }
+
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>#</th><th>Motorista (ID)</th><th>Transportadora</th><th>Rotas</th><th>Ofensoras</th><th>% ofensa</th><th>Excedente total</th><th>Maior ORH</th></tr></thead><tbody>';
+  lista.forEach(function(d, i){
+    var pct = d.rotas ? Math.round((d.ofens/d.rotas)*100) : 0;
+    h += '<tr>';
+    h += '<td style="color:var(--text2)">'+(i+1)+'</td>';
+    h += '<td class="sid">'+e(d.id)+'</td>';
+    h += '<td style="font-size:11px">'+e(d.transp)+'</td>';
+    h += '<td style="text-align:center">'+d.rotas+'</td>';
+    h += '<td style="text-align:center"><span class="dc crit">'+d.ofens+'</span></td>';
+    h += '<td style="text-align:center">'+pct+'%</td>';
+    h += '<td class="dc crit">+'+minParaHhmm(d.excedente)+'</td>';
+    h += '<td class="dc '+(d.max>ORH_12H_MIN?'crit':'alto')+'">'+minParaHhmm(d.max)+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('oDriversLista').innerHTML = h;
+}
+
+// ── TRANSPORTADORAS: pendentes vs justificadas ─────────────────
+function renderTranspStatus() {
+  var t = {};
+  orhCache.forEach(function(r){
+    if (!r.ofensora) return; // só ofensoras precisam de justificativa
+    var k = (r.transportadora||'—').trim() || '—';
+    if (!t[k]) t[k] = { nome:k, ofens:0, just:0, pend:0 };
+    t[k].ofens++;
+    if (r.justificado) t[k].just++; else t[k].pend++;
+  });
+  var lista = Object.keys(t).map(function(k){ return t[k]; }).sort(function(a,b){ return b.pend - a.pend; });
+
+  if (!lista.length) { document.getElementById('oTranspLista').innerHTML = '<div class="empty">Nenhuma ofensora neste período. 👏</div>'; return; }
+
+  var h = '';
+  // cards resumo
+  var totPend = lista.reduce(function(a,x){return a+x.pend;},0);
+  var totJust = lista.reduce(function(a,x){return a+x.just;},0);
+  h += '<div class="kpi-bar" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">';
+  h += '<div class="kpi"><div class="kpi-label">Transportadoras c/ ofensoras</div><div class="kpi-val b">'+lista.length+'</div></div>';
+  h += '<div class="kpi"><div class="kpi-label">Justificadas</div><div class="kpi-val g">'+totJust+'</div></div>';
+  h += '<div class="kpi" style="border-color:var(--warn)"><div class="kpi-label" style="color:var(--warn)">Pendentes</div><div class="kpi-val w">'+totPend+'</div></div>';
+  h += '</div>';
+
+  h += '<div class="hist-wrap"><table class="htable"><thead><tr><th>Transportadora</th><th>Ofensoras</th><th>Justificadas</th><th>Pendentes</th><th>Progresso</th><th>Status</th></tr></thead><tbody>';
+  lista.forEach(function(x){
+    var pct = x.ofens ? Math.round((x.just/x.ofens)*100) : 0;
+    var barCor = pct===100 ? 'var(--ok)' : (pct>=50 ? 'var(--warn)' : 'var(--danger)');
+    var status = x.pend===0
+      ? '<span class="jok">✓ Tudo justificado</span>'
+      : '<span class="sb status-missing">'+x.pend+' pendente'+(x.pend>1?'s':'')+'</span>';
+    h += '<tr>';
+    h += '<td style="font-weight:700">'+e(x.nome)+'</td>';
+    h += '<td style="text-align:center">'+x.ofens+'</td>';
+    h += '<td style="text-align:center"><span class="jok">'+x.just+'</span></td>';
+    h += '<td style="text-align:center">'+(x.pend?'<span class="dc crit">'+x.pend+'</span>':'0')+'</td>';
+    h += '<td style="min-width:120px"><div style="background:var(--border);border-radius:8px;height:8px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+barCor+'"></div></div><div style="font-size:10px;color:var(--text2);margin-top:2px">'+pct+'%</div></td>';
+    h += '<td>'+status+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('oTranspLista').innerHTML = h;
 }
 
 function carregarHisORH() {
@@ -1880,11 +2110,15 @@ document.querySelectorAll('[data-otab]').forEach(function(t){
     document.querySelectorAll('[data-otab]').forEach(function(x){x.classList.remove('ativo');});
     t.classList.add('ativo');
     var n = t.getAttribute('data-otab');
-    document.getElementById('oPanePainel').style.display = n==='painel'?'block':'none';
-    document.getElementById('oPaneTabela').style.display = n==='tabela'?'block':'none';
-    document.getElementById('oPaneJust').style.display   = n==='just'?'block':'none';
-    if (n==='just') carregarHisORH();
-    if (n==='painel') desenharGraficosORH();
+    document.getElementById('oPanePainel').style.display  = n==='painel'?'block':'none';
+    document.getElementById('oPaneTabela').style.display  = n==='tabela'?'block':'none';
+    document.getElementById('oPaneDrivers').style.display = n==='drivers'?'block':'none';
+    document.getElementById('oPaneTransp').style.display  = n==='transp'?'block':'none';
+    document.getElementById('oPaneJust').style.display    = n==='just'?'block':'none';
+    if (n==='just')     carregarHisORH();
+    if (n==='painel')   desenharGraficosORH();
+    if (n==='drivers')  renderDrivers();
+    if (n==='transp')   renderTranspStatus();
   });
 });
 
@@ -1892,6 +2126,14 @@ document.querySelectorAll('[data-otab]').forEach(function(t){
   var el=document.getElementById(id);
   if(el){ el.addEventListener('input',renderORHTabela); el.addEventListener('change',renderORHTabela); }
 });
+
+// Filtro de período (dia / semana) do painel ORH
+(function(){
+  var tipo = document.getElementById('oPeriodoTipo');
+  var valor = document.getElementById('oPeriodoValor');
+  if (tipo) tipo.addEventListener('change', function(){ popularFiltroPeriodo(); aplicarPeriodo(); });
+  if (valor) valor.addEventListener('change', aplicarPeriodo);
+})();
 
 
 // ════════════════════════════════════════════════════════════
