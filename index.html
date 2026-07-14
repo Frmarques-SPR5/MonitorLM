@@ -1610,10 +1610,23 @@ function aplicarPeriodo() {
 // Rotas ORH usam a coluna TRANSPORTADORA direto; BLD vira BLD LOGÍSTICA.
 function perteceAoUsuarioRota(r) {
   var t = normTransp(r.transportadora);
+  // BLD LOGÍSTICA é dividida por SERVICO: "ROTAS XPT" = XPT, o resto = SVC
   if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
-    return t === normTransp('BLD LOGÍSTICA');
+    if (t !== normTransp('BLD LOGÍSTICA')) return false;
+    var ehXpt = normTransp(r.servico).indexOf('XPT') !== -1;
+    return sessao.transp === 'BLD XPT' ? ehXpt : !ehXpt;
   }
   return t === normTransp(sessao.transp);
+}
+
+// Nome do grupo de exibição de uma rota ORH.
+// A BLD LOGÍSTICA é dividida em BLD XPT / BLD SVC conforme o SERVICO.
+function grupoDaRota(r) {
+  var t = normTransp(r.transportadora);
+  if (t === normTransp('BLD LOGÍSTICA')) {
+    return normTransp(r.servico).indexOf('XPT') !== -1 ? 'BLD XPT' : 'BLD SVC';
+  }
+  return (r.transportadora || '— Sem transp —').trim() || '— Sem transp —';
 }
 
 function minParaHhmm(min) {
@@ -1769,7 +1782,7 @@ function desenharGraficosORH() {
 
   // 2) Ofensoras por transportadora
   var ofPorT = {};
-  ofensoras.forEach(function(r){ var t=(r.transportadora||'—').trim()||'—'; ofPorT[t]=(ofPorT[t]||0)+1; });
+  ofensoras.forEach(function(r){ var t=grupoDaRota(r); ofPorT[t]=(ofPorT[t]||0)+1; });
   var ofKeys = Object.keys(ofPorT).sort(function(a,b){ return ofPorT[b]-ofPorT[a]; });
   orhCharts.ofTransp = new Chart(document.getElementById('chOfTransp'), {
     type: 'bar',
@@ -1779,7 +1792,7 @@ function desenharGraficosORH() {
 
   // 3) Rotas por transportadora (total)
   var totPorT = {};
-  orhCache.forEach(function(r){ var t=(r.transportadora||'—').trim()||'—'; totPorT[t]=(totPorT[t]||0)+1; });
+  orhCache.forEach(function(r){ var t=grupoDaRota(r); totPorT[t]=(totPorT[t]||0)+1; });
   var tKeys = Object.keys(totPorT).sort(function(a,b){ return totPorT[b]-totPorT[a]; });
   orhCharts.rotasTransp = new Chart(document.getElementById('chRotasTransp'), {
     type: 'bar',
@@ -1828,7 +1841,7 @@ function renderORHTabela() {
 
   var grupos = {};
   if (sessao.isMeli) {
-    f.forEach(function(r){ var k=(r.transportadora||'— Sem transp —').trim()||'— Sem transp —'; if(!grupos[k]) grupos[k]=[]; grupos[k].push(r); });
+    f.forEach(function(r){ var k=grupoDaRota(r); if(!grupos[k]) grupos[k]=[]; grupos[k].push(r); });
   } else {
     grupos[sessao.transp] = f;
   }
@@ -1883,7 +1896,7 @@ function renderDrivers() {
   orhCache.forEach(function(r){
     if (r.orh_real_min === null) return;
     var id = (r.id_driver||'—').trim() || '—';
-    if (!drv[id]) drv[id] = { id:id, rotas:0, ofens:0, excedente:0, transp:r.transportadora||'—', max:0 };
+    if (!drv[id]) drv[id] = { id:id, rotas:0, ofens:0, excedente:0, transp:grupoDaRota(r), max:0 };
     drv[id].rotas++;
     if (r.ofensora) { drv[id].ofens++; drv[id].excedente += (r.excedente_min||0); }
     if (r.orh_real_min > drv[id].max) drv[id].max = r.orh_real_min;
@@ -1917,7 +1930,7 @@ function renderTranspStatus() {
   var t = {};
   orhCache.forEach(function(r){
     if (!r.ofensora) return; // só ofensoras precisam de justificativa
-    var k = (r.transportadora||'—').trim() || '—';
+    var k = grupoDaRota(r);
     if (!t[k]) t[k] = { nome:k, ofens:0, just:0, pend:0 };
     t[k].ofens++;
     if (r.justificado) t[k].just++; else t[k].pend++;
