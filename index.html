@@ -2170,7 +2170,15 @@ function carregarPend() {
 // filtro por transportadora do login; BLD SVC/XPT -> BLD LOGÍSTICA
 function perteceAoUsuarioPend(p) {
   var t = normTransp(p.transportadora);
-  if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') return t === normTransp('BLD LOGÍSTICA');
+  // Na aba "faltantes", a BLD vem separada no próprio texto da coluna:
+  // "BLD XPT" para XPT e "BLD LOGÍSTICA" (ou "BLD") para SVC.
+  if (sessao.transp === 'BLD XPT') {
+    return t === normTransp('BLD XPT');
+  }
+  if (sessao.transp === 'BLD SVC') {
+    // SVC = tudo que é BLD mas NÃO é "BLD XPT"
+    return (t === normTransp('BLD LOGÍSTICA') || t === 'BLD') && t !== normTransp('BLD XPT');
+  }
   return t === normTransp(sessao.transp);
 }
 
@@ -2278,7 +2286,8 @@ function carregarHisPend() {
     var hist = d.historico || [];
     if (!sessao.isMeli) hist = hist.filter(function(r){
       var t = normTransp(r.transportadora);
-      if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') return t === normTransp('BLD LOGÍSTICA');
+      if (sessao.transp === 'BLD XPT') return t === normTransp('BLD XPT');
+      if (sessao.transp === 'BLD SVC') return (t === normTransp('BLD LOGÍSTICA') || t === 'BLD') && t !== normTransp('BLD XPT');
       return t === normTransp(sessao.transp);
     });
     renderHisPend(hist);
