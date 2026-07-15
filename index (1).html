@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPR5 CONTROLE LIDERANÇAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:       #f0f2f5;
+  --surface:  #ffffff;
+  --card:     #ffffff;
+  --border:   #e0e3e8;
+  --blue:     #3483fa;
+  --blue-d:   #2968c8;
+  --accent:   #ffe600;
+  --danger:   #e05252;
+  --warn:     #f0a800;
+  --ok:       #00a650;
+  --text:     #1c1c1e;
+  --text2:    #6c757d;
+  --radius:   8px;
+  --font:     'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --shadow:   0 2px 8px rgba(0,0,0,.10);
+  --header-h: 56px;
+}
+
+[data-theme="dark"] {
+  --bg:      #0f0f1a;
+  --surface: #1a1a2e;
+  --card:    #22223b;
+  --border:  #2d2d4e;
+  --text:    #e8e8f0;
+  --text2:   #8888aa;
+  --shadow:  0 2px 8px rgba(0,0,0,.35);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
+
+/* ── SCROLLBAR discreta ── */
+.gb, .hist-wrap, .tabs { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.gb::-webkit-scrollbar, .hist-wrap::-webkit-scrollbar, .tabs::-webkit-scrollbar { height: 6px; width: 6px; }
+.gb::-webkit-scrollbar-track, .hist-wrap::-webkit-scrollbar-track, .tabs::-webkit-scrollbar-track { background: transparent; }
+.gb::-webkit-scrollbar-thumb, .hist-wrap::-webkit-scrollbar-thumb, .tabs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.gb::-webkit-scrollbar-thumb:hover, .hist-wrap::-webkit-scrollbar-thumb:hover, .tabs::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+/* ── HEADER ── */
+header {
+  background: var(--accent);
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: var(--shadow);
+}
+
+[data-theme="dark"] header { background: #1a1a2e; border-bottom: 1px solid var(--border); }
+
+.logo-wrap { display: flex; align-items: center; gap: 10px; }
+
+.logo-txt {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: .2px;
+  color: #ffe600;
+  white-space: nowrap;
+}
+[data-theme="dark"] .logo-txt { color: #ffe600; }
+
+/* SPR5 sempre amarelo; CONTROLE LIDERANÇAS acompanha o tema */
+.logo-txt .logo-spr5 { color: #ffe600; font-weight: 700; }
+.logo-txt .logo-cl   { color: #1c1c1e; font-weight: 600; }
+[data-theme="dark"] .logo-txt .logo-cl { color: #ffe600; }
+
+.logo-txt .ltr {
+  display: inline-block;
+  opacity: 0;
+  animation: ltrUp .35s ease-out forwards;
+}
+.logo-txt .ltr.sp { width: .28em; }
+@keyframes ltrUp {
+  from { opacity: 0; transform: translateY(-14px) scale(.6); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* lobo animado */
+.lobo { width: 34px; height: 44px; flex-shrink: 0; overflow: visible; }
+.lobo #Izquierda, .lobo #Derecha { visibility: hidden; }
+.lobo #Ojo-izquierdo { animation: lobo-opacidad 1s 3.9s forwards; }
+.lobo #Ojo-derecho   { animation: lobo-opacidad 1s 3.9s forwards; }
+.lobo [id^="poligono"] { animation: lobo-montar .5s forwards; opacity: 0; }
+.lobo #Izquierda [id^="poligono"] { animation-name: lobo-slide-izq; }
+.lobo #Derecha [id^="poligono"]   { animation-name: lobo-slide-der; }
+
+@keyframes lobo-opacidad { from { visibility: hidden; } to { visibility: visible; } }
+@keyframes lobo-slide-izq {
+  from { transform: translate(-80px,-60px); opacity: 0; }
+  to   { transform: translate(0,0); opacity: 1; visibility: visible; }
+}
+@keyframes lobo-slide-der {
+  from { transform: translate(80px,-60px); opacity: 0; }
+  to   { transform: translate(0,0); opacity: 1; visibility: visible; }
+}
+@keyframes lobo-montar { to { opacity: 1; } }
+
+/* stagger dos polígonos — atraso progressivo */
+.lobo g[id] { animation: lobo-reveal .1s forwards; }
+@keyframes lobo-reveal { to { visibility: visible; } }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+/* toggle dark mode estilo iPhone */
+/* toggle sol/lua animado */
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; flex-shrink: 0; transform: scale(.8); transform-origin: center; margin: 0 -6px; }
+.switch #darkToggle { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background-color: #2196f3;
+  transition: .4s; z-index: 0; overflow: hidden;
+}
+.sun-moon {
+  position: absolute; height: 26px; width: 26px; left: 4px; bottom: 4px;
+  background-color: yellow; transition: .4s;
+}
+#darkToggle:checked + .slider { background-color: black; }
+#darkToggle:focus + .slider { box-shadow: 0 0 1px #2196f3; }
+#darkToggle:checked + .slider .sun-moon {
+  transform: translateX(26px); background-color: white;
+  animation: rotate-center 0.6s ease-in-out both;
+}
+.moon-dot { opacity: 0; transition: .4s; fill: gray; }
+#darkToggle:checked + .slider .sun-moon .moon-dot { opacity: 1; }
+.slider.round { border-radius: 34px; }
+.slider.round .sun-moon { border-radius: 50%; }
+#moon-dot-1 { left: 10px; top: 3px; position: absolute; width: 6px; height: 6px; z-index: 4; }
+#moon-dot-2 { left: 2px; top: 10px; position: absolute; width: 10px; height: 10px; z-index: 4; }
+#moon-dot-3 { left: 16px; top: 18px; position: absolute; width: 3px; height: 3px; z-index: 4; }
+#light-ray-1 { left: -8px; top: -8px; position: absolute; width: 43px; height: 43px; z-index: -1; fill: white; opacity: .1; }
+#light-ray-2 { left: -50%; top: -50%; position: absolute; width: 55px; height: 55px; z-index: -1; fill: white; opacity: .1; }
+#light-ray-3 { left: -18px; top: -18px; position: absolute; width: 60px; height: 60px; z-index: -1; fill: white; opacity: .1; }
+.cloud-light { position: absolute; fill: #eee; animation: cloud-move 6s infinite; }
+.cloud-dark { position: absolute; fill: #ccc; animation: cloud-move 6s infinite; animation-delay: 1s; }
+#cloud-1 { left: 30px; top: 15px; width: 40px; }
+#cloud-2 { left: 44px; top: 10px; width: 20px; }
+#cloud-3 { left: 18px; top: 24px; width: 30px; }
+#cloud-4 { left: 36px; top: 18px; width: 40px; }
+#cloud-5 { left: 48px; top: 14px; width: 20px; }
+#cloud-6 { left: 22px; top: 26px; width: 30px; }
+@keyframes cloud-move {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(4px); }
+  80% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+.stars { transform: translateY(-32px); opacity: 0; transition: .4s; }
+.star { fill: white; position: absolute; transition: .4s; animation: star-twinkle 2s infinite; }
+#darkToggle:checked + .slider .stars { transform: translateY(0); opacity: 1; }
+#star-1 { width: 20px; top: 2px; left: 3px; animation-delay: .3s; }
+#star-2 { width: 6px; top: 16px; left: 3px; }
+#star-3 { width: 12px; top: 20px; left: 10px; animation-delay: .6s; }
+#star-4 { width: 18px; top: 0; left: 18px; animation-delay: 1.3s; }
+@keyframes star-twinkle {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  80% { transform: scale(.8); }
+  100% { transform: scale(1); }
+}
+@keyframes rotate-center {
+  0% { transform: translateX(26px) rotate(0); }
+  100% { transform: translateX(26px) rotate(360deg); }
+}
+
+.header-user { display: none; align-items: center; gap: 8px; font-size: 13px; }
+.header-user.show { display: flex; }
+.header-transp { color: var(--blue); font-weight: 700; background: rgba(52,131,250,.12); border-radius: 5px; padding: 2px 9px; font-size: 12px; white-space: nowrap; }
+.header-nome { color: var(--text2); font-size: 12px; display: none; }
+@media(min-width:640px){ .header-nome { display: inline; } }
+
+/* botão sair animado */
+.btn-sair {
+  background: var(--accent);
+  color: #1c1c1e;
+  border: 1px solid var(--accent);
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  font-family: var(--font);
+}
+.btn-sair:hover { background: #e6cf00; color: #1c1c1e; border-color: #e6cf00; }
+[data-theme="dark"] .btn-sair { background: var(--accent); color: #1c1c1e; border-color: var(--accent); }
+[data-theme="dark"] .btn-sair:hover { background: #e6cf00; color: #1c1c1e; border-color: #e6cf00; }
+
+/* ── LOGIN ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 400;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.overlay.oculto { display: none; }
+
+.login-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.2);
+}
+
+.login-header { text-align: center; }
+.login-logo { font-size: 18px; font-weight: 900; color: #1c1c1e; background: var(--accent); display: inline-block; padding: 7px 18px; border-radius: 8px; margin-bottom: 8px; letter-spacing: -.3px; overflow: hidden; min-width: 90px; text-align: center; }
+#logoFlip { display: inline-block; }
+#logoFlip.flip-out { animation: logoOut .35s ease-in forwards; }
+#logoFlip.flip-in  { animation: logoIn  .35s ease-out forwards; }
+@keyframes logoOut {
+  from { transform: translateY(0) rotateX(0); opacity: 1; }
+  to   { transform: translateY(-100%) rotateX(90deg); opacity: 0; }
+}
+@keyframes logoIn {
+  from { transform: translateY(100%) rotateX(-90deg); opacity: 0; }
+  to   { transform: translateY(0) rotateX(0); opacity: 1; }
+}
+.login-header p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+/* dica do menu */
+.dica-menu, .dica-menu-app {
+  font-size: 12px !important;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.dica-menu-app { margin-top: 6px; justify-content: flex-start; }
+.ico-menu {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  width: 18px;
+  height: 15px;
+  padding: 3px;
+  background: var(--accent);
+  border-radius: 4px;
+  vertical-align: middle;
+}
+.ico-menu span { display: block; height: 1.5px; width: 100%; background: #1c1c1e; border-radius: 1px; }
+
+.login-field { display: flex; flex-direction: column; gap: 5px; }
+.login-field label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.login-field select,
+.login-field input[type=text],
+.login-field input[type=password] {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 13px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .15s, background .15s;
+  width: 100%;
+}
+.login-field select:focus,
+.login-field input:focus { border-color: var(--blue); background: var(--surface); }
+[data-theme="dark"] .login-field select option { background: var(--card); }
+
+.input-senha { position: relative; }
+.input-senha input { padding-right: 42px; }
+.toggle-senha { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text2); font-size: 15px; padding: 0; line-height: 1; }
+
+/* botão entrar animado */
+/* botão entrar — borda animada */
+.btn-entrar-svg {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  margin-top: 4px;
+  cursor: pointer;
+  background: var(--blue);
+  border: 1px solid #91C9FF;
+  outline: none;
+  transition: background 1s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.btn-entrar-svg svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  fill: none;
+  stroke: #fff;
+  stroke-dasharray: 150 480;
+  stroke-dashoffset: 150;
+  transition: stroke-dashoffset 1s ease-in-out;
+}
+.btn-entrar-svg:hover { background: var(--blue-d); }
+.btn-entrar-svg:hover svg { stroke-dashoffset: -480; }
+.btn-entrar-svg span {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-erro { background: #fff0f0; border: 1px solid #fcc; border-radius: 6px; padding: 9px 13px; font-size: 13px; color: var(--danger); display: none; text-align: center; }
+[data-theme="dark"] .login-erro { background: rgba(224,82,82,.1); border-color: rgba(224,82,82,.3); }
+.login-erro.show { display: block; }
+
+/* ── MENU LATERAL ── */
+.hamburguer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 34px;
+  height: 34px;
+  padding: 7px;
+  background: rgba(0,0,0,.06);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .hamburguer { background: rgba(255,255,255,.08); }
+.hamburguer span { display: block; height: 2.5px; width: 100%; background: #1c1c1e; border-radius: 2px; transition: .3s; }
+[data-theme="dark"] .hamburguer span { background: var(--accent); }
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 270px;
+  max-width: 82vw;
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 350;
+  transform: translateX(-100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 24px rgba(0,0,0,.15);
+}
+.sidebar.aberto { transform: translateX(0); }
+
+.sidebar-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-title { font-family: 'Poppins', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
+.sidebar-close { background: none; border: none; color: var(--text2); font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
+.sidebar-close:hover { color: var(--text); }
+
+.sidebar-user {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.sidebar-user .su-transp { color: var(--blue); font-weight: 700; }
+.sidebar-user .su-nome { color: var(--text2); font-size: 12px; margin-top: 2px; }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 12px; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  transition: background .15s, transform .2s;
+  margin-bottom: 8px;
+  border: none;
+  background: var(--bg);
+  width: 100%;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  background: var(--bg);
+  border-radius: 9px;
+  z-index: -1;
+  transition: background .15s;
+}
+/* borda girando */
+.nav-item .dots_border {
+  display: none; /* borda azul girando removida */
+}
+@keyframes navrotate { to { transform: rotate(360deg); } }
+.nav-item:hover { transform: translateX(2px); }
+.nav-item.ativo { color: var(--blue); }
+.nav-item.ativo::before { background: rgba(52,131,250,.12); }
+.nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; position: relative; z-index: 1; }
+.nav-item span:not(.nav-icon) { position: relative; z-index: 1; }
+
+.sidebar-footer { padding: 14px 20px; border-top: 1px solid var(--border); }
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 340;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s;
+}
+.backdrop.aberto { opacity: 1; pointer-events: auto; }
+
+/* views */
+.view { display: none; }
+.view.ativa { display: block; }
+
+.frame-tool {
+  width: 100%;
+  height: calc(100vh - var(--header-h));
+  border: none;
+  background: var(--card);
+  display: block;
+}
+
+/* ── APP ── */
+#app { padding: 16px; max-width: 1200px; margin: 0 auto; }
+@media(min-width:768px){ #app { padding: 20px 24px; } }
+
+.page-header { margin-bottom: 16px; }
+.page-title { font-size: 16px; font-weight: 700; }
+.page-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+@media(min-width:640px){ .page-title { font-size: 18px; } }
+
+/* KPI */
+.kpi-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+@media(min-width:640px){ .kpi-bar { grid-template-columns: repeat(3, 1fr); } }
+@media(min-width:900px){ .kpi-bar { grid-template-columns: repeat(6, 1fr); } }
+
+.kpi { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+.kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); margin-bottom: 5px; font-weight: 700; }
+.kpi-val { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+@media(min-width:640px){ .kpi-val { font-size: 26px; } }
+.kpi-val.d { color: var(--danger); }
+.kpi-val.w { color: var(--warn); }
+.kpi-val.g { color: var(--ok); }
+.kpi-val.b { color: var(--blue); }
+
+/* TABS */
+.tabs { display: flex; margin-bottom: 16px; border-bottom: 2px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { padding: 9px 16px; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all .15s; font-weight: 600; white-space: nowrap; }
+.tab:hover { color: var(--blue); }
+.tab.ativo { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* FILTROS */
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.filtros input,
+.filtros select {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 11px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color .15s;
+  font-family: var(--font);
+  width: 100%;
+}
+@media(min-width:500px){ .filtros input { width: 200px; } .filtros select { width: auto; } }
+.filtros input:focus, .filtros select:focus { border-color: var(--blue); }
+
+/* botão atualizar animado */
+.btn-atualizar {
+  margin-left: auto;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+  font-family: var(--font);
+}
+.btn-atualizar:hover { background: var(--blue-d); }
+
+/* GRUPOS */
+.grupo { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.gh { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; user-select: none; background: var(--bg); border-bottom: 1.5px solid var(--border); transition: background .15s; }
+.gh:hover { filter: brightness(.97); }
+[data-theme="dark"] .gh:hover { filter: brightness(1.1); }
+.gh-left { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; flex-wrap: wrap; }
+.bt { background: var(--border); color: var(--text2); border-radius: 20px; padding: 1px 9px; font-size: 11px; font-weight: 700; }
+.bp { background: rgba(224,82,82,.12); color: var(--danger); border-radius: 20px; padding: 1px 9px; font-size: 11px; font-weight: 700; }
+.gv { font-size: 11px; color: var(--text2); font-weight: 500; }
+.chev { color: var(--text2); transition: transform .2s; font-size: 13px; flex-shrink: 0; }
+.grupo.open .chev { transform: rotate(180deg); }
+.gb { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.grupo.open .gb { display: block; }
+
+/* TABELA */
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 680px; }
+@media(min-width:900px){ table { font-size: 13px; } }
+th { background: var(--bg); padding: 7px 11px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); border-bottom: 1.5px solid var(--border); font-weight: 700; white-space: nowrap; }
+td { padding: 8px 11px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(52,131,250,.04); }
+
+.sid { font-family: monospace; font-size: 11px; color: var(--blue); font-weight: 700; }
+
+.route-link { color: var(--blue); font-weight: 600; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+.route-link:hover { text-decoration: underline; }
+.route-link::after { content: '↗'; font-size: 10px; opacity: .7; }
+
+.sb { display: inline-block; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; }
+.status-missing { background: rgba(224,82,82,.12); color: var(--danger); }
+.status-stale   { background: rgba(240,168,0,.12); color: #b07800; }
+[data-theme="dark"] .status-stale { color: var(--warn); }
+
+.jok { font-size: 11px; color: var(--ok); font-weight: 700; }
+
+/* botão justificar animado */
+.btn-just {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+  font-family: var(--font);
+}
+.btn-just:hover { background: var(--blue-d); }
+
+.dt { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text2); font-size: 11px; }
+.dc { font-size: 11px; font-weight: 700; }
+.dc.crit { color: var(--danger); }
+.dc.alto { color: var(--warn); }
+.dc.ok   { color: var(--ok); }
+.valor-brl { font-weight: 700; font-size: 12px; white-space: nowrap; }
+.valor-alto { color: var(--danger); }
+
+/* MODAL */
+.moverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 300; align-items: center; justify-content: center; padding: 16px; }
+.moverlay.open { display: flex; }
+.mcard { background: var(--card); border-radius: 12px; padding: 24px; width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.2); max-height: 90vh; overflow-y: auto; }
+.mcard h3 { font-size: 16px; font-weight: 700; }
+.minfo { background: var(--bg); border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; font-size: 12px; border: 1px solid var(--border); }
+.mi label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); margin-bottom: 2px; font-weight: 700; }
+.mi span { font-weight: 600; }
+.flabel { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 600; }
+textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 13px; resize: vertical; min-height: 80px; font-family: var(--font); outline: none; transition: border-color .15s; }
+textarea:focus { border-color: var(--blue); background: var(--surface); }
+.mactions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.bcancel { background: none; border: 1.5px solid var(--border); border-radius: 6px; padding: 8px 16px; color: var(--text2); font-size: 13px; cursor: pointer; font-weight: 600; }
+.bcancel:hover { border-color: var(--text); color: var(--text); }
+
+/* botão salvar animado */
+.btn-salvar-just {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 9px 22px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  font-family: var(--font);
+}
+.btn-salvar-just:hover { background: var(--blue-d); }
+.btn-salvar-just.disabled { opacity: .5; pointer-events: none; }
+
+/* HISTÓRICO */
+.htable { width: 100%; font-size: 12px; border-collapse: collapse; min-width: 600px; }
+.htable th { background: var(--bg); padding: 7px 11px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); border-bottom: 1.5px solid var(--border); font-weight: 700; }
+.htable td { padding: 8px 11px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.htable tr:last-child td { border-bottom: none; }
+.htable tr:hover td { background: rgba(52,131,250,.04); }
+.mcell { max-width: 240px; color: var(--text2); font-size: 11px; word-break: break-word; }
+.hist-wrap { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); overflow-x: auto; }
+
+/* ORH charts */
+.orh-charts { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media(min-width:700px){ .orh-charts { grid-template-columns: 1fr 1fr; } }
+.chart-box { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+.chart-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.chart-box canvas { max-height: 240px; }
+
+/* misc */
+.spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 48px 16px; color: var(--text2); font-size: 14px; }
+
+.toast { position: fixed; bottom: 20px; right: 20px; left: 20px; background: var(--ok); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; z-index: 500; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,.2); text-align: center; }
+@media(min-width:500px){ .toast { left: auto; width: auto; min-width: 220px; text-align: left; } }
+.toast.err { background: var(--danger); }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* SVG helper */
+.arrow-svg { display: inline-block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <button class="hamburguer" id="btnMenu" onclick="abrirMenu()" style="display:none">
+      <span></span><span></span><span></span>
+    </button>
+    <div id="loboContainer"></div>
+    <div class="logo-txt" id="logoTexto"><span class="logo-spr5">SPR5</span> <span class="logo-cl">CONTROLE LIDERANÇAS</span></div>
+  </div>
+  <div class="header-right">
+
+    <!-- dark mode toggle -->
+    <label class="switch" title="Modo noturno">
+      <input type="checkbox" id="darkToggle" onchange="toggleDark()">
+      <div class="slider round">
+        <div class="sun-moon">
+          <svg id="moon-dot-1" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="moon-dot-2" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="moon-dot-3" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="light-ray-1" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="light-ray-2" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="light-ray-3" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-1" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-2" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-3" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-4" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-5" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-6" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+        </div>
+        <div class="stars">
+          <svg id="star-1" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+          <svg id="star-2" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+          <svg id="star-3" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+          <svg id="star-4" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+        </div>
+      </div>
+    </label>
+
+    <!-- user info + sair -->
+    <div class="header-user" id="headerUser">
+      <span class="header-transp" id="hTransp"></span>
+      <span class="header-nome" id="hNome"></span>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+
+  </div>
+</header>
+
+<!-- MENU LATERAL -->
+<div class="backdrop" id="backdrop" onclick="fecharMenu()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span class="sidebar-title">Ferramentas</span>
+    <button class="sidebar-close" onclick="fecharMenu()">×</button>
+  </div>
+  <div class="sidebar-user">
+    <div class="su-transp" id="suTransp"></div>
+    <div class="su-nome" id="suNome"></div>
+  </div>
+  <nav class="sidebar-nav">
+    <!-- Pacotes Faltantes desativado (código mantido para reativação futura). Para reativar: remover style display:none e a lógica em iniciarApp/sair. -->
+    <button class="nav-item" data-view="pacotes" data-oculto="1" onclick="abrirView('pacotes')" style="display:none">
+      <div class="dots_border"></div>
+      <span class="nav-icon">📦</span> <span>Pacotes Faltantes</span>
+    </button>
+    <button class="nav-item ativo" data-view="pendentes" onclick="abrirView('pendentes')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">📥</span> <span>Pendentes</span>
+    </button>
+    <button class="nav-item" data-view="yms" onclick="abrirView('yms')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">🚚</span> <span>Monitoramento de Pátio</span>
+    </button>
+    <button class="nav-item" data-view="orh" onclick="abrirView('orh')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">📊</span> <span>Análise ORH</span>
+    </button>
+    <button class="nav-item" data-view="briefing" onclick="abrirView('briefing')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">✅</span> <span>Presenteísmo Briefing</span>
+    </button>
+  </nav>
+</aside>
+
+<!-- LOGIN -->
+<div class="overlay" id="overlayLogin">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo"><span id="logoFlip">#TodoMundoJunto</span></div>
+      <p class="dica-menu">Clique no botão <span class="ico-menu"><span></span><span></span><span></span></span> para conferir todas as opções!</p>
+    </div>
+
+    <div class="login-field">
+      <label>Transportadora</label>
+      <select id="selTransp">
+        <option value="">Selecione...</option>
+        <option value="MELI">Meli</option>
+        <option value="BLD SVC">BLD LOGÍSTICA (SVC)</option>
+        <option value="BLD XPT">BLD LOGÍSTICA (XPT)</option>
+        <option value="ALTOVALE">ALTOVALE</option>
+        <option value="BRAVOX">BRAVOX</option>
+        <option value="RodaCoop">RodaCoop</option>
+        <option value="Kangu Logistics">Kangu Logistics</option>
+        <option value="KN">KN</option>
+      </select>
+    </div>
+
+    <div class="login-field">
+      <label>Senha</label>
+      <div class="input-senha">
+        <input type="password" id="inputSenha" placeholder="Digite a senha" autocomplete="off">
+        <button class="toggle-senha" onclick="toggleSenha()" tabindex="-1">👁</button>
+      </div>
+    </div>
+
+    <div class="login-field">
+      <label>Seu nome</label>
+      <input type="text" id="inputNome" placeholder="Nome" maxlength="60" autocomplete="off">
+    </div>
+
+    <div class="login-erro" id="loginErro"></div>
+
+    <button class="btn-entrar-svg" type="button" onclick="fazerLogin()">
+      <svg width="100%" height="48" viewBox="0 0 180 48" preserveAspectRatio="none" class="border">
+        <polyline points="179,1 179,47 1,47 1,1 179,1" class="bg-line" />
+        <polyline points="179,1 179,47 1,47 1,1 179,1" class="hl-line" />
+      </svg>
+      <span>Entrar</span>
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- VIEW: PACOTES FALTANTES -->
+  <div class="view ativa" id="viewPacotes">
+  <div class="page-header">
+    <div class="page-title">Pacotes Faltantes</div>
+    <div class="page-sub" id="pageSub">Carregando...</div>
+    <div class="page-sub dica-menu-app">Clique no botão <span class="ico-menu"><span></span><span></span><span></span></span> para conferir todas as opções!</div>
+  </div>
+
+  <div class="kpi-bar">
+    <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-val b" id="kTotal">—</div></div>
+    <div class="kpi"><div class="kpi-label">Críticos</div><div class="kpi-val d" id="kCrit">—</div></div>
+    <div class="kpi"><div class="kpi-label">Altos</div><div class="kpi-val w" id="kAlto">—</div></div>
+    <div class="kpi"><div class="kpi-label">Justificados</div><div class="kpi-val g" id="kJust">—</div></div>
+    <div class="kpi"><div class="kpi-label">Pendentes</div><div class="kpi-val d" id="kPend">—</div></div>
+    <div class="kpi"><div class="kpi-label">Valor (R$)</div><div class="kpi-val b" id="kValor" style="font-size:15px;padding-top:4px">—</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab ativo" data-tab="pac">Pacotes faltantes</div>
+    <div class="tab" data-tab="his">Histórico de justificativas</div>
+  </div>
+
+  <div id="panePac">
+    <div class="filtros">
+      <input type="text" id="fBusca" placeholder="Buscar shipment ID, rota, produto...">
+      <select id="fStatus">
+        <option value="">Todos os status</option>
+        <option value="missing">Missing</option>
+        <option value="stale">Stale</option>
+      </select>
+      <select id="fJust">
+        <option value="">Todos</option>
+        <option value="nao">Pendentes</option>
+        <option value="sim">Justificados</option>
+      </select>
+      <button class="btn-atualizar" onclick="carregar()">↻ Atualizar</button>
+    </div>
+    <div id="listaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+  </div>
+
+  <div id="paneHis" style="display:none">
+    <div id="tabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+  </div>
+  </div><!-- /viewPacotes -->
+
+  <!-- VIEW: YMS (iframe) -->
+  <div class="view" id="viewYms" style="margin:-16px">
+    <iframe class="frame-tool" id="frameYms" title="Monitoramento de Pátio"></iframe>
+  </div>
+
+  <!-- VIEW: ANÁLISE ORH -->
+  <div class="view" id="viewOrh">
+    <div class="page-header">
+      <div class="page-title">📊 Análise ORH</div>
+      <div class="page-sub" id="orhSub">Carregando...</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab ativo" data-otab="painel">Painel</div>
+      <div class="tab" data-otab="tabela">Rotas</div>
+      <div class="tab" data-otab="drivers">Drivers ofensores</div>
+      <div class="tab" data-otab="transp">Transportadoras</div>
+      <div class="tab" data-otab="just">Justificativas</div>
+    </div>
+
+    <!-- PAINEL -->
+    <div id="oPanePainel">
+      <!-- filtro de período -->
+      <div class="filtros">
+        <select id="oPeriodoTipo">
+          <option value="tudo">Todos os dias</option>
+          <option value="dia">Filtrar por dia</option>
+          <option value="semana">Filtrar por semana</option>
+        </select>
+        <select id="oPeriodoValor" style="display:none"><option value="">—</option></select>
+        <button class="btn-atualizar" onclick="carregarORH()">↻ Atualizar</button>
+      </div>
+
+      <div class="kpi-bar">
+        <div class="kpi"><div class="kpi-label">Total de rotas</div><div class="kpi-val b" id="oTotal">—</div></div>
+        <div class="kpi"><div class="kpi-label">Dentro do ORH</div><div class="kpi-val g" id="oDentro">—</div></div>
+        <div class="kpi"><div class="kpi-label">Ofensoras (&gt; contrato)</div><div class="kpi-val d" id="oOfensoras">—</div></div>
+        <div class="kpi"><div class="kpi-label">% Adesão</div><div class="kpi-val" id="oAdesao">—</div></div>
+        <div class="kpi"><div class="kpi-label">ORH médio real</div><div class="kpi-val" id="oMedioReal">—</div></div>
+        <div class="kpi" style="border-color:var(--danger)"><div class="kpi-label" style="color:var(--danger)">🚨 Acima de 12h</div><div class="kpi-val d" id="o12h">—</div></div>
+      </div>
+
+      <!-- card: rotas acima de 12h -->
+      <div class="grupo open" id="oCard12h" style="margin-bottom:16px;border-color:var(--danger)">
+        <div class="gh" style="background:rgba(224,82,82,.10);cursor:default">
+          <div class="gh-left"><span style="color:var(--danger)">🚨 Rotas que passaram de 12 horas</span><span class="bp" id="o12hBadge">0</span></div>
+        </div>
+        <div class="gb" style="display:block"><div id="o12hLista"><div class="empty">—</div></div></div>
+      </div>
+
+      <div class="orh-charts">
+        <div class="chart-box"><div class="chart-title">Comparativo dia a dia — Adesão %</div><canvas id="chEvoAdesao"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Comparativo dia a dia — Ofensoras & ORH médio</div><canvas id="chEvoOfensoras"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Adesão geral (dentro × ofensora)</div><canvas id="chAdesao"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Ofensoras por transportadora</div><canvas id="chOfTransp"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Rotas por transportadora</div><canvas id="chRotasTransp"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Excedente de ORH (min) — top ofensoras</div><canvas id="chExcedente"></canvas></div>
+        <div class="chart-box"><div class="chart-title">Ofensoras por motivo do atraso</div><canvas id="chMotivo"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ROTAS -->
+    <div id="oPaneTabela" style="display:none">
+      <div class="filtros">
+        <input type="text" id="oBusca" placeholder="Buscar rota, prefixo, motorista, placa...">
+        <select id="oOfensoraF">
+          <option value="">Todas as rotas</option>
+          <option value="sim">Só ofensoras (&gt; contrato)</option>
+          <option value="nao">Só dentro do ORH</option>
+          <option value="12h">Só acima de 12h</option>
+        </select>
+        <button class="btn-atualizar" onclick="carregarORH()">↻ Atualizar</button>
+      </div>
+      <div id="oListaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- DRIVERS OFENSORES -->
+    <div id="oPaneDrivers" style="display:none">
+      <div id="oDriversLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- TRANSPORTADORAS: pendentes vs justificadas -->
+    <div id="oPaneTransp" style="display:none">
+      <div id="oTranspLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- JUSTIFICATIVAS -->
+    <div id="oPaneJust" style="display:none">
+      <div id="oTabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- VIEW: PENDENTES (aba faltantes) -->
+  <div class="view" id="viewPendentes">
+    <div class="page-header">
+      <div class="page-title">📥 Pendentes</div>
+      <div class="page-sub" id="pendSub">Carregando...</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab ativo" data-ptab="lista">Pendentes</div>
+      <div class="tab" data-ptab="just">Justificativas</div>
+    </div>
+
+    <div id="pPaneLista">
+      <div class="filtros">
+        <input type="text" id="pBusca" placeholder="Buscar ID, rota, placa, produto...">
+        <select id="pJustF">
+          <option value="">Todos</option>
+          <option value="nao">Pendentes de justificativa</option>
+          <option value="sim">Justificados</option>
+        </select>
+        <button class="btn-atualizar" onclick="carregarPend()">↻ Atualizar</button>
+      </div>
+      <div id="pListaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <div id="pPaneJust" style="display:none">
+      <div id="pTabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- VIEW: PRESENTEÍSMO BRIEFING -->
+  <div class="view" id="viewBriefing">
+    <div class="page-header">
+      <div class="page-title">✅ Presenteísmo Briefing</div>
+      <div class="page-sub">Registre a presença dos dispatchers no briefing matinal</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab ativo" data-btab="registrar">Registrar presença</div>
+      <div class="tab" data-btab="painel">Painel</div>
+    </div>
+
+    <!-- REGISTRAR -->
+    <div id="bPaneRegistrar">
+      <div class="grupo open" style="max-width:520px">
+        <div class="gh" style="cursor:default"><div class="gh-left"><span>Novo registro de presença</span></div></div>
+        <div class="gb" style="display:block;padding:16px">
+          <div class="login-field" style="margin-bottom:12px">
+            <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Nome do dispatcher</label>
+            <input type="text" id="bNome" placeholder="Nome completo" maxlength="80"
+              style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 13px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;margin-top:5px">
+          </div>
+          <div class="login-field" style="margin-bottom:12px">
+            <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Transportadora</label>
+            <input type="text" id="bTransp" readonly
+              style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 13px;color:var(--text2);font-size:14px;font-family:var(--font);outline:none;margin-top:5px">
+          </div>
+          <div class="login-field" style="margin-bottom:16px">
+            <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Tema do briefing</label>
+            <input type="text" id="bTema" placeholder="Tema tratado hoje" maxlength="120"
+              style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 13px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;margin-top:5px">
+          </div>
+          <button class="btn-salvar-just" id="bSalvarBrief" onclick="salvarBriefing()" style="width:100%">Registrar presença</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL -->
+    <div id="bPanePainel" style="display:none">
+      <div id="bContagem"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="moverlay" id="modalJust">
+  <div class="mcard">
+    <h3>Justificar pacote</h3>
+    <div class="minfo" id="mInfo"></div>
+    <div id="mMotivoPadraoWrap" style="display:none">
+      <label class="flabel">Motivo do atraso *</label>
+      <select id="mMotivoPadrao" onchange="onMotivoPadraoChange()"
+        style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;margin-bottom:12px">
+        <option value="">Selecione o motivo...</option>
+        <option value="Número alto de paradas">Número alto de paradas</option>
+        <option value="Cidades dispersas">Cidades dispersas</option>
+        <option value="Retorno de insucessos">Retorno de insucessos</option>
+        <option value="Coleta fantasma">Coleta fantasma (informe o ID)</option>
+        <option value="Outras">Outras</option>
+      </select>
+      <div id="mColetaIdWrap" style="display:none;margin-bottom:12px">
+        <label class="flabel">ID da coleta fantasma *</label>
+        <input type="text" id="mColetaId" placeholder="Digite o ID da coleta"
+          style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none">
+      </div>
+    </div>
+    <div>
+      <label class="flabel" id="mMotivoLabel">Motivo da justificativa *</label>
+      <textarea id="mMotivo" placeholder="Descreva o que está acontecendo com este pacote..."></textarea>
+    </div>
+    <div class="mactions">
+      <button class="bcancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar-just" id="bSave" onclick="salvar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var API     = 'https://script.google.com/macros/s/AKfycbxI3Dk6Tz345aALZo-BmWLzDXrtUSOKJjQ245Ztf3_9ZBdz1BnfjvuIaPtb2QcyzUuR/exec';
+var USD_BRL = 5.75;
+
+var ACESSOS = {
+  'MELI'           : 'spr5top',
+  'BLD SVC'        : '123bld',
+  'BLD XPT'        : 'bldxpt',
+  'ALTOVALE'       : 'vale321',
+  'BRAVOX'         : '123bravo',
+  'RodaCoop'       : 'roda321',
+  'Kangu Logistics': 'kang321',
+  'KN'             : 'KN1234'
+};
+
+// Transportadoras com acesso restrito: só enxergam as ferramentas listadas.
+// (não listadas aqui = acesso completo, como as demais)
+var FERRAMENTAS_RESTRITAS = {
+  'KN': ['pendentes']
+};
+
+var cache  = [];
+var sessao = null;
+var pacSel = null;
+
+// ── DARK MODE ─────────────────────────────────────────────────
+function toggleDark() {
+  var dark = document.getElementById('darkToggle').checked;
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  localStorage.setItem('spr5theme', dark ? 'dark' : 'light');
+  recolorirTitulo();
+}
+
+// Recolore as letras do título conforme o tema atual
+function recolorirTitulo() {
+  var el = document.getElementById('logoTexto');
+  if (!el) return;
+  var letras = el.querySelectorAll('.ltr');
+  if (!letras.length) return;
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  // modo escuro: amarelo Mercado Livre; modo claro: escuro (header já é amarelo)
+  var cor = dark ? '#ffe600' : '#1c1c1e';
+  letras.forEach(function(s) { s.style.color = cor; });
+}
+
+window.addEventListener('load', function() {
+  var tema = localStorage.getItem('spr5theme') || 'dark';
+  if (tema === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('darkToggle').checked = true;
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('darkToggle').checked = false;
+  }
+
+  var s = sessionStorage.getItem('spr5sessao');
+  if (s) { sessao = JSON.parse(s); sessao.isMeli = (sessao.transp === 'MELI'); iniciarApp(); }
+
+  document.getElementById('inputSenha').addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+  document.getElementById('inputNome').addEventListener('keydown',  function(e){ if(e.key==='Enter') fazerLogin(); });
+
+  iniciarLogoFlip();
+});
+
+// ── LOGO ANIMADO (loop entre #TodoMundoJunto e SPR5) ──────────
+function iniciarLogoFlip() {
+  var el = document.getElementById('logoFlip');
+  if (!el) return;
+  var textos = ['#TodoMundoJunto', 'SPR5'];
+  var i = 0;
+  setInterval(function() {
+    el.classList.remove('flip-in');
+    el.classList.add('flip-out');
+    setTimeout(function() {
+      i = (i + 1) % textos.length;
+      el.textContent = textos[i];
+      el.classList.remove('flip-out');
+      el.classList.add('flip-in');
+    }, 350);
+  }, 2600);
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────
+function fazerLogin() {
+  var transp = document.getElementById('selTransp').value;
+  var senha  = document.getElementById('inputSenha').value;
+  var nome   = document.getElementById('inputNome').value.trim();
+  var erro   = document.getElementById('loginErro');
+  if (!transp || !senha || !nome) { erro.classList.add('show'); erro.textContent = 'Preencha todos os campos.'; return; }
+  if (ACESSOS[transp] !== senha)  { erro.classList.add('show'); erro.textContent = 'Senha incorreta.'; return; }
+  erro.classList.remove('show');
+  sessao = { transp: transp, nome: nome, isMeli: transp === 'MELI' };
+  sessionStorage.setItem('spr5sessao', JSON.stringify(sessao));
+  iniciarApp();
+}
+
+function iniciarApp() {
+  document.getElementById('overlayLogin').classList.add('oculto');
+  var hu = document.getElementById('headerUser');
+  hu.classList.add('show');
+  document.getElementById('hTransp').textContent = sessao.transp;
+  document.getElementById('hNome').textContent   = '— ' + sessao.nome;
+  // menu lateral
+  document.getElementById('btnMenu').style.display = 'flex';
+  document.getElementById('suTransp').textContent = sessao.transp;
+  document.getElementById('suNome').textContent   = sessao.nome;
+
+  // Aplica restrição de ferramentas (ex: KN só vê Pendentes)
+  var permitidas = FERRAMENTAS_RESTRITAS[sessao.transp] || null;
+  document.querySelectorAll('.nav-item').forEach(function(b){
+    var v = b.getAttribute('data-view');
+    if (b.getAttribute('data-oculto')) { b.style.display = 'none'; return; } // itens desativados ficam ocultos
+    b.style.display = (!permitidas || permitidas.indexOf(v) !== -1) ? 'flex' : 'none';
+  });
+
+  if (permitidas) {
+    // abre direto a primeira ferramenta permitida e carrega os dados dela
+    abrirView(permitidas[0], true);
+  } else {
+    // Pendentes é a tela de entrada padrão (Pacotes Faltantes foi desativado)
+    abrirView('pendentes', true);
+  }
+}
+
+function sair() {
+  sessionStorage.removeItem('spr5sessao');
+  sessao = null; cache = [];
+  // reseta flags de carregamento das ferramentas
+  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false;
+  orhCache = []; pendCache = [];
+  // restaura os itens do menu (exceto os marcados como ocultos, ex: Pacotes desativado)
+  document.querySelectorAll('.nav-item').forEach(function(b){
+    b.style.display = b.getAttribute('data-oculto') ? 'none' : 'flex';
+  });
+  document.getElementById('overlayLogin').classList.remove('oculto');
+  document.getElementById('headerUser').classList.remove('show');
+  document.getElementById('btnMenu').style.display = 'none';
+  fecharMenu();
+  abrirView('pendentes', true);
+  document.getElementById('selTransp').value = '';
+  document.getElementById('inputSenha').value = '';
+  document.getElementById('inputNome').value  = '';
+  document.getElementById('pListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+}
+
+// ── MENU LATERAL / VIEWS ──────────────────────────────────────
+// URL base do YMS (Monitoramento de Pátio)
+var YMS_URL = 'https://frmarques-spr5.github.io/yms-spr5/';
+var ymsCarregado = false;
+var orhCarregado = false;
+var orhCache = [];
+var orhCacheFull = [];
+var orhCharts = {};
+var pendCarregado = false;
+var pendCache = [];
+var briefingCarregado = false;
+
+function abrirMenu() {
+  document.getElementById('sidebar').classList.add('aberto');
+  document.getElementById('backdrop').classList.add('aberto');
+}
+function fecharMenu() {
+  document.getElementById('sidebar').classList.remove('aberto');
+  document.getElementById('backdrop').classList.remove('aberto');
+}
+
+function abrirView(nome, semFechar) {
+  // marca item ativo no menu
+  document.querySelectorAll('.nav-item').forEach(function(b){
+    b.classList.toggle('ativo', b.getAttribute('data-view') === nome);
+  });
+  // mostra a view
+  document.getElementById('viewPacotes').classList.toggle('ativa', nome === 'pacotes');
+  document.getElementById('viewYms').classList.toggle('ativa', nome === 'yms');
+  document.getElementById('viewOrh').classList.toggle('ativa', nome === 'orh');
+  document.getElementById('viewPendentes').classList.toggle('ativa', nome === 'pendentes');
+  document.getElementById('viewBriefing').classList.toggle('ativa', nome === 'briefing');
+
+  // carrega o iframe do YMS só na primeira vez, já filtrado pela transportadora
+  if (nome === 'yms' && !ymsCarregado && sessao) {
+    var url = YMS_URL;
+    if (!sessao.isMeli) {
+      // passa a transportadora do login; BLD SVC/XPT viram BLD LOGÍSTICA
+      var transpYms = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT')
+        ? 'BLD LOGÍSTICA' : sessao.transp;
+      url += '?transp=' + encodeURIComponent(transpYms);
+    }
+    document.getElementById('frameYms').src = url;
+    ymsCarregado = true;
+  }
+
+  // carrega o ORH na primeira vez que abre
+  if (nome === 'orh' && !orhCarregado && sessao) {
+    carregarORH();
+    orhCarregado = true;
+  }
+
+  // carrega Pendentes na primeira vez
+  if (nome === 'pendentes' && !pendCarregado && sessao) {
+    carregarPend();
+    pendCarregado = true;
+  }
+
+  // Briefing: trava a transportadora do login e carrega painel na 1ª vez
+  if (nome === 'briefing' && sessao) {
+    var tB = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
+    var elBT = document.getElementById('bTransp');
+    if (elBT) elBT.value = sessao.isMeli ? 'MELI' : tB;
+    if (!briefingCarregado) { briefingCarregado = true; }
+  }
+
+  if (!semFechar) fecharMenu();
+}
+
+function toggleSenha() {
+  var i = document.getElementById('inputSenha');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+// ── DADOS ─────────────────────────────────────────────────────
+function carregar() {
+  document.getElementById('listaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando pacotes...</div>';
+  var cb = 'cb' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
+    var todos = d.pacotes || [];
+    cache = sessao.isMeli ? todos : todos.filter(function(p){ return perteceAoUsuario(p); });
+    render();
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getPacotes&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function carregarHis() {
+  document.getElementById('tabelaHis').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando histórico...</div>';
+  var cb = 'cbh' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
+    var hist = d.historico || [];
+    if (!sessao.isMeli) hist = hist.filter(function(r){ return perteceAoUsuarioHist(r); });
+    renderHis(hist);
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getHistorico&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function brl(usd) {
+  var v = parseFloat(String(usd).replace(',','.')) || 0;
+  return (v * USD_BRL).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+}
+
+function routeLink(id) {
+  if (!id) return '<span style="color:var(--text2);font-size:11px">—</span>';
+  var url = 'https://envios.adminml.com/logistics/monitoring-distribution/detail/' + id + '?site=MLB';
+  return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener">' + e(id) + '</a>';
+}
+
+function shipmentLink(id) {
+  if (!id) return '<span style="color:var(--text2);font-size:11px">—</span>';
+  var url = 'https://envios.adminml.com/logistics/package-management/package/' + id;
+  return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener" style="font-family:monospace;font-weight:700">' + e(id) + '</a>';
+}
+
+// Normaliza nome de transportadora p/ comparação robusta:
+// tira acento, espaços extras e deixa maiúsculo. "BLD Logística " -> "BLD LOGISTICA"
+function normTransp(t) {
+  return String(t || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
+// Define o nome do grupo de exibição de um pacote.
+// A BLD LOGÍSTICA é dividida: XPT -> "BLD XPT", demais tramos -> "BLD SVC".
+function grupoDoPacote(p) {
+  var t = (p.transportadora || '').trim();
+  if (t === 'BLD LOGÍSTICA') {
+    return (p.tramo || '').trim().toUpperCase() === 'XPT' ? 'BLD XPT' : 'BLD SVC';
+  }
+  return t || '— Sem transportadora —';
+}
+
+// Verifica se um pacote pertence ao usuário logado (não-MELI).
+function perteceAoUsuario(p) {
+  if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
+    return grupoDoPacote(p) === sessao.transp;
+  }
+  return normTransp(p.transportadora) === normTransp(sessao.transp);
+}
+
+// Mesma verificação para registros do histórico (usa transportadora + tramo gravados).
+function perteceAoUsuarioHist(r) {
+  var t = (r.transportadora || '').trim();
+  if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
+    if (t !== 'BLD LOGÍSTICA') return false;
+    var ehXpt = (r.tramo || '').trim().toUpperCase() === 'XPT';
+    return sessao.transp === 'BLD XPT' ? ehXpt : !ehXpt;
+  }
+  return t === sessao.transp;
+}
+
+// ── RENDER PACOTES ────────────────────────────────────────────
+function filtrar() {
+  var b  = document.getElementById('fBusca').value.toLowerCase();
+  var st = document.getElementById('fStatus').value;
+  var j  = document.getElementById('fJust').value;
+  return cache.filter(function(p) {
+    if (st && p.status_negocio !== st) return false;
+    if (j === 'sim' && !p.justificado) return false;
+    if (j === 'nao' &&  p.justificado) return false;
+    if (b) { var t=[p.shipment_id,p.route_id,p.route_name,p.descricao,p.transportadora,p.acao].join(' ').toLowerCase(); if(!t.includes(b)) return false; }
+    return true;
+  });
+}
+
+function render() {
+  var tot   = cache.length;
+  var crit  = cache.filter(function(p){return p.risco==='CRITICO';}).length;
+  var alto  = cache.filter(function(p){return p.risco==='ALTO';}).length;
+  var jus   = cache.filter(function(p){return p.justificado;}).length;
+  var valor = cache.reduce(function(acc,p){ return acc+(parseFloat(String(p.custo_usd).replace(',','.')) || 0); },0)*USD_BRL;
+
+  document.getElementById('kTotal').textContent = tot;
+  document.getElementById('kCrit').textContent  = crit;
+  document.getElementById('kAlto').textContent  = alto;
+  document.getElementById('kJust').textContent  = jus;
+  document.getElementById('kPend').textContent  = tot - jus;
+  document.getElementById('kValor').textContent = valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  document.getElementById('pageSub').textContent = tot + ' pacote' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '');
+
+  var f = filtrar();
+  if (!f.length) { document.getElementById('listaGrupos').innerHTML='<div class="empty">Nenhum pacote encontrado.</div>'; return; }
+
+  f.sort(function(a,b){
+    var va = parseFloat(String(a.custo_usd).replace(',','.')) || 0;
+    var vb = parseFloat(String(b.custo_usd).replace(',','.')) || 0;
+    return vb - va;
+  });
+
+  var grupos = {};
+  if (sessao.isMeli) {
+    // MELI vê todas agrupadas; BLD aparece dividida em BLD XPT / BLD SVC
+    f.forEach(function(p){ var k=grupoDoPacote(p); if(!grupos[k]) grupos[k]=[]; grupos[k].push(p); });
+  } else {
+    // BLD SVC / BLD XPT já vêm filtrados; usa o nome do login como título
+    grupos[sessao.transp] = f;
+  }
+
+  var keys = Object.keys(grupos).sort(function(a,b){ return grupos[b].length - grupos[a].length; });
+  var h = '';
+
+  keys.forEach(function(tr) {
+    var ps   = grupos[tr];
+    var pend = ps.filter(function(p){return !p.justificado;}).length;
+    var vGr  = ps.reduce(function(acc,p){ return acc+(parseFloat(String(p.custo_usd).replace(',','.')) || 0); },0)*USD_BRL;
+
+    h += '<div class="grupo open">';
+    h += '<div class="gh" onclick="tog(this)"><div class="gh-left">';
+    h += '<span>'+e(tr)+'</span>';
+    h += '<span class="bt">'+ps.length+' pacote'+(ps.length>1?'s':'')+'</span>';
+    if(pend) h += '<span class="bp">'+pend+' pendente'+(pend>1?'s':'')+'</span>';
+    h += '<span class="gv">'+vGr.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+'</span>';
+    h += '</div><span class="chev">▾</span></div>';
+    h += '<div class="gb"><table><thead><tr>';
+    h += '<th>Shipment ID</th><th>Status</th><th>Tramo</th><th>Dias</th><th>Rota</th><th>Produto</th><th>Valor</th><th>Ação</th><th></th>';
+    h += '</tr></thead><tbody>';
+
+    ps.forEach(function(p) {
+      var d   = parseInt(p.dias_no_svc)||0;
+      var dc  = d>=20?'crit':(d>=10?'alto':'ok');
+      var val = parseFloat(String(p.custo_usd).replace(',','.')) || 0;
+      var vc  = val*USD_BRL >= 100 ? 'valor-brl valor-alto' : 'valor-brl';
+
+      h += '<tr>';
+      h += '<td>'+shipmentLink(p.shipment_id)+'</td>';
+      h += '<td><span class="sb status-'+p.status_negocio+'">'+p.status_negocio+'</span></td>';
+      h += '<td style="font-size:11px">'+e(p.tramo)+'</td>';
+      h += '<td><span class="dc '+dc+'">'+d+'d</span></td>';
+      h += '<td>'+routeLink(p.route_id)+'</td>';
+      h += '<td><div class="dt" title="'+e(p.descricao)+'">'+e(p.descricao||'—')+'</div></td>';
+      h += '<td><span class="'+vc+'">'+(val*USD_BRL).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+'</span></td>';
+      h += '<td style="font-size:11px;color:var(--text2);max-width:160px">'+e((p.acao||'').split('|')[0].trim())+'</td>';
+      if (p.justificado) {
+        h += '<td><span class="jok">✓ Justificado</span></td>';
+      } else {
+        h += '<td><button class="btn-just" onclick="abrirModal(\''+e(p.shipment_id)+'\')">Justificar</button></td>';
+      }
+      h += '</tr>';
+    });
+
+    h += '</tbody></table></div></div>';
+  });
+
+  document.getElementById('listaGrupos').innerHTML = h;
+}
+
+// ── HISTÓRICO ─────────────────────────────────────────────────
+function renderHis(registros) {
+  if (!registros.length) { document.getElementById('tabelaHis').innerHTML='<div class="empty">Nenhuma justificativa registrada ainda.</div>'; return; }
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Shipment ID</th><th>Transportadora</th><th>Rota</th><th>Tramo</th><th>Dias</th><th>Motivo</th><th>Dispatcher</th></tr></thead><tbody>';
+  registros.forEach(function(r) {
+    h += '<tr>';
+    h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
+    h += '<td>'+shipmentLink(r.shipment_id)+'</td>';
+    h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
+    h += '<td>'+routeLink(r.rota)+'</td>';
+    h += '<td>'+e(r.tramo||'—')+'</td>';
+    h += '<td style="text-align:center">'+e(r.dias_no_svc)+'d</td>';
+    h += '<td><div class="mcell">'+e(r.motivo_justificativa)+'</div></td>';
+    h += '<td style="color:var(--text2)">'+e(r.nome_dispatcher||r.email_dispatcher)+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('tabelaHis').innerHTML = h;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function abrirModal(id) {
+  pacSel = cache.find(function(p){return p.shipment_id===id;});
+  if (!pacSel) return;
+  var p = pacSel;
+  var valBrl = ((parseFloat(String(p.custo_usd).replace(',','.')) || 0)*USD_BRL).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  document.getElementById('mInfo').innerHTML =
+    mi('Shipment ID',p.shipment_id)+mi('Transportadora',p.transportadora||'—')+
+    mi('Rota (ID)',p.route_id||'—')+mi('Status',p.status_negocio)+
+    mi('Tramo',p.tramo)+mi('Dias no SVC',p.dias_no_svc+'d')+
+    mi('Valor',valBrl)+mi('Ciclo',p.ciclo_rota||'—')+
+    '<div class="mi" style="grid-column:1/-1"><label>Ação</label><span style="font-size:11px;font-weight:400;color:var(--text2)">'+e(p.acao)+'</span></div>'+
+    '<div class="mi" style="grid-column:1/-1"><label>Produto</label><span style="font-size:11px;font-weight:400">'+e(p.descricao||'—')+'</span></div>';
+  document.getElementById('mMotivo').value = '';
+  document.getElementById('bSave').classList.remove('disabled');
+  document.getElementById('bSave').textContent = 'Salvar';
+  document.getElementById('modalJust').setAttribute('data-modo', 'pacotes');
+  // esconde o bloco de motivo padrão (é exclusivo do ORH) e restaura rótulo
+  document.getElementById('mMotivoPadraoWrap').style.display = 'none';
+  document.getElementById('mMotivoLabel').textContent = 'Motivo da justificativa *';
+  document.getElementById('modalJust').classList.add('open');
+  setTimeout(function(){document.getElementById('mMotivo').focus();},100);
+}
+
+function mi(l,v){ return '<div class="mi"><label>'+l+'</label><span>'+e(String(v))+'</span></div>'; }
+function fecharModal() { document.getElementById('modalJust').classList.remove('open'); pacSel=null; }
+
+// ── SALVAR ────────────────────────────────────────────────────
+function salvar() {
+  // se o modal está em modo ORH, chama o salvar do ORH
+  if (document.getElementById('modalJust').getAttribute('data-modo') === 'orh') {
+    return salvarORH();
+  }
+  // se está em modo pendente (aba faltantes)
+  if (document.getElementById('modalJust').getAttribute('data-modo') === 'faltante') {
+    return salvarPend();
+  }
+  var motivo = document.getElementById('mMotivo').value.trim();
+  if (!motivo) { toast('Informe o motivo.',1); return; }
+  if (!pacSel) return;
+  var btn = document.getElementById('bSave');
+  btn.classList.add('disabled'); btn.textContent = 'Salvando...';
+  var p = pacSel;
+
+  var params = {
+    action: 'salvarJustificativa',
+    shipment_id: p.shipment_id,
+    transportadora: p.transportadora,
+    route_name: p.route_id,
+    risco: p.risco,
+    tramo: p.tramo,
+    dias_no_svc: p.dias_no_svc,
+    motivo: motivo,
+    email_dispatcher: '',
+    nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
+  };
+
+  var cb = 'cbsave_' + Date.now();
+  var timeout = setTimeout(function () {
+    if (window[cb]) {
+      delete window[cb];
+      btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+      toast('Erro de conexão. Tente novamente.', 1);
+    }
+  }, 12000);
+
+  window[cb] = function (d) {
+    clearTimeout(timeout);
+    delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+    if (d && d.ok) {
+      var i = cache.findIndex(function (x) { return x.shipment_id === pacSel.shipment_id; });
+      if (i !== -1) cache[i].justificado = true;
+      fecharModal(); render(); toast('Justificativa salva!');
+    } else {
+      toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1);
+    }
+  };
+
+  var qs = Object.keys(params).map(function (k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+
+  var s = document.createElement('script');
+  s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now();
+  s.onerror = function () {
+    clearTimeout(timeout);
+    delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+    toast('Erro de conexão. Tente novamente.', 1);
+    s.remove();
+  };
+  document.head.appendChild(s);
+}
+
+// ════════════════════════════════════════════════════════════
+// ANÁLISE ORH (rotas — ORH_REAL vs ORH_CONTRATO)
+// ════════════════════════════════════════════════════════════
+function carregarORH() {
+  document.getElementById('oListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando rotas ORH...</div>';
+  var cb = 'cborh' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro ORH: ' + d.erro, 1); return; }
+    var todas = d.rotas || [];
+    orhCacheFull = sessao.isMeli ? todas : todas.filter(function(r){ return perteceAoUsuarioRota(r); });
+    popularFiltroPeriodo();
+    aplicarPeriodo();
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getORH&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+// Converte "dd/mm/aaaa" (ou "dd/mm/aaaa hh:mm") num valor ordenável aaaammdd
+function dataChave(txt) {
+  var m = String(txt||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!m) return '';
+  var d = m[1].padStart(2,'0'), mo = m[2].padStart(2,'0'), a = m[3];
+  if (a.length === 2) a = '20' + a;
+  return a + mo + d; // ex: 20260711
+}
+function dataLabel(txt) {
+  var m = String(txt||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  return m ? (m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')) : (txt||'—');
+}
+
+// Preenche o dropdown de dias/semanas a partir dos dados carregados
+function popularFiltroPeriodo() {
+  var tipo = document.getElementById('oPeriodoTipo').value;
+  var sel = document.getElementById('oPeriodoValor');
+  if (tipo === 'tudo') { sel.style.display = 'none'; return; }
+  sel.style.display = '';
+
+  var vals = {};
+  orhCacheFull.forEach(function(r){
+    if (tipo === 'dia') { var k = dataChave(r.data_dia); if (k) vals[k] = dataLabel(r.data_dia); }
+    else { var s = String(r.numero_semana||'').trim(); if (s) vals[s] = 'Semana ' + s; }
+  });
+  var keys = Object.keys(vals).sort().reverse(); // mais recente primeiro
+  var h = '';
+  keys.forEach(function(k){ h += '<option value="'+e(k)+'">'+e(vals[k])+'</option>'; });
+  sel.innerHTML = h || '<option value="">—</option>';
+}
+
+// Aplica o período selecionado sobre o cache completo -> orhCache (usado por tudo)
+function aplicarPeriodo() {
+  var tipo = document.getElementById('oPeriodoTipo').value;
+  var val  = document.getElementById('oPeriodoValor').value;
+  if (tipo === 'tudo' || !val) {
+    orhCache = orhCacheFull.slice();
+  } else if (tipo === 'dia') {
+    orhCache = orhCacheFull.filter(function(r){ return dataChave(r.data_dia) === val; });
+  } else {
+    orhCache = orhCacheFull.filter(function(r){ return String(r.numero_semana||'').trim() === val; });
+  }
+  renderORH();
+}
+
+// Filtro por transportadora do login (mesma regra do resto do hub).
+// Rotas ORH usam a coluna TRANSPORTADORA direto; BLD vira BLD LOGÍSTICA.
+function perteceAoUsuarioRota(r) {
+  var t = normTransp(r.transportadora);
+  // BLD LOGÍSTICA é dividida por SERVICO: "ROTAS XPT" = XPT, o resto = SVC
+  if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
+    if (t !== normTransp('BLD LOGÍSTICA')) return false;
+    var ehXpt = normTransp(r.servico).indexOf('XPT') !== -1;
+    return sessao.transp === 'BLD XPT' ? ehXpt : !ehXpt;
+  }
+  return t === normTransp(sessao.transp);
+}
+
+// Nome do grupo de exibição de uma rota ORH.
+// A BLD LOGÍSTICA é dividida em BLD XPT / BLD SVC conforme o SERVICO.
+function grupoDaRota(r) {
+  var t = normTransp(r.transportadora);
+  if (t === normTransp('BLD LOGÍSTICA')) {
+    return normTransp(r.servico).indexOf('XPT') !== -1 ? 'BLD XPT' : 'BLD SVC';
+  }
+  return (r.transportadora || '— Sem transp —').trim() || '— Sem transp —';
+}
+
+function minParaHhmm(min) {
+  if (min === null || min === undefined || isNaN(min)) return '—';
+  var neg = min < 0;
+  var m = Math.round(Math.abs(min));
+  var h = Math.floor(m / 60);
+  var mm = m % 60;
+  return (neg ? '-' : '') + h + 'h' + (mm < 10 ? '0' : '') + mm;
+}
+
+// Limpa textos de hora feios (ex: "Sat Dec 30 1899 09:50:00 GMT...") -> "9h50".
+// Se já vier limpo (ex: "8h47" ou "08:47"), mantém.
+function limparHora(txt) {
+  if (!txt) return '—';
+  var s = String(txt).trim();
+  if (/^\d{1,2}h\d{2}$/.test(s)) return s;          // já está "9h50"
+  var hm = s.match(/(\d{1,2}):(\d{2})/);            // pega hh:mm de qualquer texto
+  if (hm) {
+    var h = parseInt(hm[1], 10) || 0;
+    var mm = hm[2];
+    return h + 'h' + mm;
+  }
+  return s;
+}
+
+var ORH_12H_MIN = 12 * 60; // 720 min
+
+function orhFiltrar() {
+  var b  = (document.getElementById('oBusca').value || '').toLowerCase();
+  var of = document.getElementById('oOfensoraF').value;
+  return orhCache.filter(function(r) {
+    if (of === 'sim' && !r.ofensora) return false;
+    if (of === 'nao' && r.ofensora) return false;
+    if (of === '12h' && !(r.orh_real_min !== null && r.orh_real_min > ORH_12H_MIN)) return false;
+    if (b) {
+      var t = [r.id_rota, r.prefixo_rota, r.id_driver, r.placa, r.transportadora, r.veiculo_real].join(' ').toLowerCase();
+      if (!t.includes(b)) return false;
+    }
+    return true;
+  });
+}
+
+function renderORH() {
+  var tot = orhCache.length;
+  var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; });
+  var ofensoras = orhCache.filter(function(r){ return r.ofensora; });
+  var dentro = comReal.length - ofensoras.length;
+  var adesao = comReal.length ? Math.round((dentro / comReal.length) * 100) : 0;
+  var acima12 = comReal.filter(function(r){ return r.orh_real_min > ORH_12H_MIN; });
+
+  var somaReal = comReal.reduce(function(a,r){ return a + r.orh_real_min; }, 0);
+  var medioReal = comReal.length ? somaReal / comReal.length : null;
+
+  document.getElementById('oTotal').textContent     = tot;
+  document.getElementById('oDentro').textContent    = dentro;
+  document.getElementById('oOfensoras').textContent = ofensoras.length;
+  document.getElementById('oAdesao').textContent    = adesao + '%';
+  document.getElementById('oMedioReal').textContent = minParaHhmm(medioReal);
+  document.getElementById('o12h').textContent       = acima12.length;
+
+  var per = document.getElementById('oPeriodoTipo').value;
+  var perTxt = per === 'tudo' ? 'todos os dias' :
+    (per === 'dia' ? 'dia ' + (document.getElementById('oPeriodoValor').selectedOptions[0]||{}).text :
+                     (document.getElementById('oPeriodoValor').selectedOptions[0]||{}).text || '');
+  document.getElementById('orhSub').textContent = tot + ' rota' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '') + ' · ' + perTxt + ' · meta 8h47';
+
+  renderCard12h(acima12);
+  desenharGraficosORH();
+  renderORHTabela();
+}
+
+// Card de rotas acima de 12h
+function renderCard12h(lista) {
+  document.getElementById('o12hBadge').textContent = lista.length + (lista.length===1?' rota':' rotas');
+  if (!lista.length) { document.getElementById('o12hLista').innerHTML = '<div class="empty" style="padding:20px">Nenhuma rota acima de 12h neste período. 👏</div>'; return; }
+  lista.sort(function(a,b){ return b.orh_real_min - a.orh_real_min; });
+  var h = '<div style="overflow-x:auto"><table><thead><tr><th>Rota</th><th>Data</th><th>Transportadora</th><th>Motorista</th><th>ORH real</th><th>Excedente</th><th>Justif.</th></tr></thead><tbody>';
+  lista.forEach(function(r){
+    h += '<tr>';
+    h += '<td>'+routeLink(r.id_rota)+'</td>';
+    h += '<td style="font-size:11px;color:var(--text2);white-space:nowrap">'+e(dataLabel(r.data_dia))+'</td>';
+    h += '<td style="font-size:11px">'+e(r.transportadora||'—')+'</td>';
+    h += '<td style="font-size:11px">'+e(r.id_driver||'—')+'</td>';
+    h += '<td class="dc crit">'+e(r.orh_real_txt||minParaHhmm(r.orh_real_min))+'</td>';
+    h += '<td class="dc crit">+'+minParaHhmm(r.excedente_min)+'</td>';
+    h += '<td>'+(r.justificado?'<span class="jok">✓</span>':'<span class="sb status-missing">pendente</span>')+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('o12hLista').innerHTML = h;
+}
+
+function desenharGraficosORH() {
+  if (typeof Chart === 'undefined') return;
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var cor = dark ? '#8888aa' : '#6c757d';
+  var grid = dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  Chart.defaults.color = cor;
+  Chart.defaults.font.family = 'Roboto, sans-serif';
+
+  Object.keys(orhCharts).forEach(function(k){ if(orhCharts[k]) orhCharts[k].destroy(); });
+
+  // ── COMPARATIVO DIA A DIA (usa o cache completo, todos os dias) ──
+  var porDia = {};
+  orhCacheFull.forEach(function(r){
+    if (r.orh_real_min === null) return;
+    var k = dataChave(r.data_dia);
+    if (!k) return;
+    if (!porDia[k]) porDia[k] = { label: dataLabel(r.data_dia), total:0, ofens:0, soma:0 };
+    porDia[k].total++;
+    porDia[k].soma += r.orh_real_min;
+    if (r.ofensora) porDia[k].ofens++;
+  });
+  var diasKeys = Object.keys(porDia).sort(); // cronológico
+  var diasLabels = diasKeys.map(function(k){ return porDia[k].label; });
+  var serieAdesao = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(((d.total-d.ofens)/d.total)*100) : 0; });
+  var serieOfens  = diasKeys.map(function(k){ return porDia[k].ofens; });
+  var serieMedio  = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(d.soma/d.total) : 0; }); // min
+
+  // Gráfico evolução da adesão %
+  orhCharts.evoAdesao = new Chart(document.getElementById('chEvoAdesao'), {
+    type: 'line',
+    data: { labels: diasLabels, datasets: [{ label:'Adesão %', data: serieAdesao, borderColor:'#00a650', backgroundColor:'rgba(0,166,80,.12)', fill:true, tension:.3, pointRadius:4, pointBackgroundColor:'#00a650' }] },
+    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true, max:100, ticks:{ callback:function(v){return v+'%';} } } } }
+  });
+
+  // Gráfico evolução ofensoras (barra) + ORH médio (linha), eixos duplos
+  orhCharts.evoOfensoras = new Chart(document.getElementById('chEvoOfensoras'), {
+    data: {
+      labels: diasLabels,
+      datasets: [
+        { type:'bar', label:'Ofensoras', data: serieOfens, backgroundColor:'#e05252', yAxisID:'y' },
+        { type:'line', label:'ORH médio (h)', data: serieMedio.map(function(m){return +(m/60).toFixed(2);}), borderColor:'#ff9900', backgroundColor:'#ff9900', tension:.3, pointRadius:3, yAxisID:'y1' }
+      ]
+    },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } },
+      scales:{ x:{ grid:{ color:grid } },
+        y:{ position:'left', grid:{ color:grid }, beginAtZero:true, title:{display:true,text:'Ofensoras'} },
+        y1:{ position:'right', grid:{ display:false }, beginAtZero:true, title:{display:true,text:'ORH médio (h)'} } } }
+  });
+
+  var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; });
+  var ofensoras = comReal.filter(function(r){ return r.ofensora; });
+  var dentro = comReal.length - ofensoras.length;
+
+  // 1) Adesão geral (dentro x ofensora)
+  orhCharts.adesao = new Chart(document.getElementById('chAdesao'), {
+    type: 'doughnut',
+    data: { labels: ['Dentro do ORH','Ofensoras'], datasets: [{ data: [dentro, ofensoras.length], backgroundColor: ['#00a650','#e05252'] }] },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+
+  // 2) Ofensoras por transportadora
+  var ofPorT = {};
+  ofensoras.forEach(function(r){ var t=grupoDaRota(r); ofPorT[t]=(ofPorT[t]||0)+1; });
+  var ofKeys = Object.keys(ofPorT).sort(function(a,b){ return ofPorT[b]-ofPorT[a]; });
+  orhCharts.ofTransp = new Chart(document.getElementById('chOfTransp'), {
+    type: 'bar',
+    data: { labels: ofKeys, datasets: [{ data: ofKeys.map(function(k){return ofPorT[k];}), backgroundColor: '#e05252' }] },
+    options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } }
+  });
+
+  // 3) Rotas por transportadora (total)
+  var totPorT = {};
+  orhCache.forEach(function(r){ var t=grupoDaRota(r); totPorT[t]=(totPorT[t]||0)+1; });
+  var tKeys = Object.keys(totPorT).sort(function(a,b){ return totPorT[b]-totPorT[a]; });
+  orhCharts.rotasTransp = new Chart(document.getElementById('chRotasTransp'), {
+    type: 'bar',
+    data: { labels: tKeys, datasets: [{ data: tKeys.map(function(k){return totPorT[k];}), backgroundColor: '#3483fa' }] },
+    options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } }
+  });
+
+  // 4) Top ofensoras por excedente (min acima do contrato)
+  var topEx = ofensoras.slice().sort(function(a,b){ return (b.excedente_min||0) - (a.excedente_min||0); }).slice(0, 12);
+  orhCharts.excedente = new Chart(document.getElementById('chExcedente'), {
+    type: 'bar',
+    data: {
+      labels: topEx.map(function(r){ return r.prefixo_rota || r.id_rota; }),
+      datasets: [{ label:'min acima', data: topEx.map(function(r){ return Math.round(r.excedente_min); }), backgroundColor: '#ff9900' }]
+    },
+    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true } } }
+  });
+
+  // 5) Ofensoras por motivo do atraso (só as já justificadas)
+  var motivos = {};
+  ofensoras.forEach(function(r){
+    if (r.justificado && r.just_motivo_padrao) {
+      var m = r.just_motivo_padrao;
+      motivos[m] = (motivos[m]||0) + 1;
+    }
+  });
+  var mKeys = Object.keys(motivos).sort(function(a,b){ return motivos[b]-motivos[a]; });
+  var semJust = ofensoras.filter(function(r){ return !r.justificado; }).length;
+  if (semJust > 0) { mKeys.push('(sem justificativa)'); motivos['(sem justificativa)'] = semJust; }
+  orhCharts.motivo = new Chart(document.getElementById('chMotivo'), {
+    type: 'doughnut',
+    data: { labels: mKeys, datasets: [{ data: mKeys.map(function(k){return motivos[k];}), backgroundColor: ['#e05252','#ff9900','#f0a800','#603163','#358a9e','#8888aa'] }] },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+}
+
+function renderORHTabela() {
+  var f = orhFiltrar();
+  if (!f.length) { document.getElementById('oListaGrupos').innerHTML='<div class="empty">Nenhuma rota encontrada.</div>'; return; }
+
+  // ofensoras primeiro, depois maior excedente
+  f.sort(function(a,b){
+    if (a.ofensora !== b.ofensora) return a.ofensora ? -1 : 1;
+    return (b.excedente_min||0) - (a.excedente_min||0);
+  });
+
+  var grupos = {};
+  if (sessao.isMeli) {
+    f.forEach(function(r){ var k=grupoDaRota(r); if(!grupos[k]) grupos[k]=[]; grupos[k].push(r); });
+  } else {
+    grupos[sessao.transp] = f;
+  }
+
+  var keys = Object.keys(grupos).sort(function(a,b){ return grupos[b].length - grupos[a].length; });
+  var h = '';
+  keys.forEach(function(tr) {
+    var rs = grupos[tr];
+    var ofs = rs.filter(function(r){return r.ofensora;}).length;
+    var pend = rs.filter(function(r){return r.ofensora && !r.justificado;}).length;
+    h += '<div class="grupo open">';
+    h += '<div class="gh" onclick="tog(this)"><div class="gh-left">';
+    h += '<span>'+e(tr)+'</span><span class="bt">'+rs.length+' rota'+(rs.length>1?'s':'')+'</span>';
+    if(ofs) h += '<span class="bp">'+ofs+' ofensora'+(ofs>1?'s':'')+'</span>';
+    if(pend) h += '<span class="bp">'+pend+' pendente'+(pend>1?'s':'')+'</span>';
+    h += '</div><span class="chev">▾</span></div>';
+    h += '<div class="gb"><table><thead><tr>';
+    h += '<th>Rota</th><th>Prefixo</th><th>Motorista</th><th>Placa</th><th>Paradas</th><th>ORH real</th><th>Contrato</th><th>Excedente</th><th></th>';
+    h += '</tr></thead><tbody>';
+    rs.forEach(function(r) {
+      var badge = r.ofensora
+        ? '<span class="sb status-missing">ofensora</span>'
+        : (r.orh_real_min===null ? '<span class="sb status-stale">sem ORH</span>' : '<span class="jok">no prazo</span>');
+      var exc = r.ofensora ? '<span class="dc crit">+'+minParaHhmm(r.excedente_min)+'</span>' : '—';
+      h += '<tr>';
+      h += '<td>'+routeLink(r.id_rota)+'</td>';
+      h += '<td style="font-size:11px">'+e(r.prefixo_rota||'—')+'</td>';
+      h += '<td style="font-size:11px">'+e(r.id_driver||'—')+'</td>';
+      h += '<td style="font-size:11px">'+e(r.placa||'—')+'</td>';
+      h += '<td style="text-align:center">'+e(String(r.paradas||'—'))+'</td>';
+      h += '<td class="dc '+(r.ofensora?'crit':'ok')+'">'+e(r.orh_real_txt||minParaHhmm(r.orh_real_min))+'</td>';
+      h += '<td style="font-size:11px;color:var(--text2)">'+e(r.orh_contrato_txt||minParaHhmm(r.orh_contrato_min))+'</td>';
+      h += '<td>'+exc+'</td>';
+      if (!r.ofensora) {
+        h += '<td>'+badge+'</td>';
+      } else if (r.justificado) {
+        h += '<td><span class="jok" title="'+e(r.just_motivo||'')+'">✓ Justificada</span> <button class="btn-just" style="background:transparent;color:var(--blue);border:1px solid var(--blue);padding:3px 9px" onclick="abrirModalORH(\''+e(r.id_rota)+'\')">Reeditar</button></td>';
+      } else {
+        h += '<td><button class="btn-just" onclick="abrirModalORH(\''+e(r.id_rota)+'\')">Justificar</button></td>';
+      }
+      h += '</tr>';
+    });
+    h += '</tbody></table></div></div>';
+  });
+  document.getElementById('oListaGrupos').innerHTML = h;
+}
+
+// ── DRIVERS OFENSORES ──────────────────────────────────────────
+// Agrupa por motorista (id_driver), conta ofensoras e soma o excedente.
+function renderDrivers() {
+  var drv = {};
+  orhCache.forEach(function(r){
+    if (r.orh_real_min === null) return;
+    var id = (r.id_driver||'—').trim() || '—';
+    if (!drv[id]) drv[id] = { id:id, rotas:0, ofens:0, excedente:0, transp:grupoDaRota(r), max:0 };
+    drv[id].rotas++;
+    if (r.ofensora) { drv[id].ofens++; drv[id].excedente += (r.excedente_min||0); }
+    if (r.orh_real_min > drv[id].max) drv[id].max = r.orh_real_min;
+  });
+  var lista = Object.keys(drv).map(function(k){ return drv[k]; })
+    .filter(function(d){ return d.ofens > 0; })
+    .sort(function(a,b){ return b.ofens - a.ofens || b.excedente - a.excedente; });
+
+  if (!lista.length) { document.getElementById('oDriversLista').innerHTML = '<div class="empty">Nenhum driver ofensor neste período. 👏</div>'; return; }
+
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>#</th><th>Motorista (ID)</th><th>Transportadora</th><th>Rotas</th><th>Ofensoras</th><th>% ofensa</th><th>Excedente total</th><th>Maior ORH</th></tr></thead><tbody>';
+  lista.forEach(function(d, i){
+    var pct = d.rotas ? Math.round((d.ofens/d.rotas)*100) : 0;
+    h += '<tr>';
+    h += '<td style="color:var(--text2)">'+(i+1)+'</td>';
+    h += '<td class="sid">'+e(d.id)+'</td>';
+    h += '<td style="font-size:11px">'+e(d.transp)+'</td>';
+    h += '<td style="text-align:center">'+d.rotas+'</td>';
+    h += '<td style="text-align:center"><span class="dc crit">'+d.ofens+'</span></td>';
+    h += '<td style="text-align:center">'+pct+'%</td>';
+    h += '<td class="dc crit">+'+minParaHhmm(d.excedente)+'</td>';
+    h += '<td class="dc '+(d.max>ORH_12H_MIN?'crit':'alto')+'">'+minParaHhmm(d.max)+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('oDriversLista').innerHTML = h;
+}
+
+// ── TRANSPORTADORAS: pendentes vs justificadas ─────────────────
+function renderTranspStatus() {
+  var t = {};
+  orhCache.forEach(function(r){
+    if (!r.ofensora) return; // só ofensoras precisam de justificativa
+    var k = grupoDaRota(r);
+    if (!t[k]) t[k] = { nome:k, ofens:0, just:0, pend:0 };
+    t[k].ofens++;
+    if (r.justificado) t[k].just++; else t[k].pend++;
+  });
+  var lista = Object.keys(t).map(function(k){ return t[k]; }).sort(function(a,b){ return b.pend - a.pend; });
+
+  if (!lista.length) { document.getElementById('oTranspLista').innerHTML = '<div class="empty">Nenhuma ofensora neste período. 👏</div>'; return; }
+
+  var h = '';
+  // cards resumo
+  var totPend = lista.reduce(function(a,x){return a+x.pend;},0);
+  var totJust = lista.reduce(function(a,x){return a+x.just;},0);
+  h += '<div class="kpi-bar" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">';
+  h += '<div class="kpi"><div class="kpi-label">Transportadoras c/ ofensoras</div><div class="kpi-val b">'+lista.length+'</div></div>';
+  h += '<div class="kpi"><div class="kpi-label">Justificadas</div><div class="kpi-val g">'+totJust+'</div></div>';
+  h += '<div class="kpi" style="border-color:var(--warn)"><div class="kpi-label" style="color:var(--warn)">Pendentes</div><div class="kpi-val w">'+totPend+'</div></div>';
+  h += '</div>';
+
+  h += '<div class="hist-wrap"><table class="htable"><thead><tr><th>Transportadora</th><th>Ofensoras</th><th>Justificadas</th><th>Pendentes</th><th>Progresso</th><th>Status</th></tr></thead><tbody>';
+  lista.forEach(function(x){
+    var pct = x.ofens ? Math.round((x.just/x.ofens)*100) : 0;
+    var barCor = pct===100 ? 'var(--ok)' : (pct>=50 ? 'var(--warn)' : 'var(--danger)');
+    var status = x.pend===0
+      ? '<span class="jok">✓ Tudo justificado</span>'
+      : '<span class="sb status-missing">'+x.pend+' pendente'+(x.pend>1?'s':'')+'</span>';
+    h += '<tr>';
+    h += '<td style="font-weight:700">'+e(x.nome)+'</td>';
+    h += '<td style="text-align:center">'+x.ofens+'</td>';
+    h += '<td style="text-align:center"><span class="jok">'+x.just+'</span></td>';
+    h += '<td style="text-align:center">'+(x.pend?'<span class="dc crit">'+x.pend+'</span>':'0')+'</td>';
+    h += '<td style="min-width:120px"><div style="background:var(--border);border-radius:8px;height:8px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+barCor+'"></div></div><div style="font-size:10px;color:var(--text2);margin-top:2px">'+pct+'%</div></td>';
+    h += '<td>'+status+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('oTranspLista').innerHTML = h;
+}
+
+function carregarHisORH() {
+  document.getElementById('oTabelaHis').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando justificativas...</div>';
+  var cb = 'cbhorh' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
+    var hist = d.historico || [];
+    if (!sessao.isMeli) hist = hist.filter(function(r){
+      var t = normTransp(r.transportadora);
+      if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') return t === normTransp('BLD LOGÍSTICA');
+      return t === normTransp(sessao.transp);
+    });
+    renderHisORH(hist);
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getHistoricoORH&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function renderHisORH(registros) {
+  if (!registros.length) { document.getElementById('oTabelaHis').innerHTML='<div class="empty">Nenhuma justificativa ORH registrada ainda.</div>'; return; }
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Rota</th><th>Prefixo</th><th>Transportadora</th><th>ORH real</th><th>Contrato</th><th>Motivo</th><th>Responsável</th></tr></thead><tbody>';
+  registros.forEach(function(r) {
+    var vig = r._vigente
+      ? ' <span style="background:rgba(0,166,80,.15);color:var(--ok);font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px">vigente</span>'
+      : ' <span style="color:var(--text2);font-size:10px">(anterior)</span>';
+    var estilo = r._vigente ? '' : 'opacity:.6';
+    h += '<tr style="'+estilo+'">';
+    h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
+    h += '<td>'+routeLink(r.id_rota)+vig+'</td>';
+    h += '<td>'+e(r.prefixo_rota||'—')+'</td>';
+    h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
+    h += '<td>'+e(limparHora(r.orh_real))+'</td>';
+    h += '<td style="color:var(--text2)">'+e(limparHora(r.orh_contrato))+'</td>';
+    h += '<td><div class="mcell">'+e(r.motivo_justificativa)+'</div></td>';
+    h += '<td style="color:var(--text2)">'+e(r.nome_dispatcher)+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('oTabelaHis').innerHTML = h;
+}
+
+// modal ORH (reaproveita o mesmo modal visual)
+var orhSel = null;
+
+// mostra/esconde o campo de ID quando o motivo é "Coleta fantasma"
+function onMotivoPadraoChange() {
+  var v = document.getElementById('mMotivoPadrao').value;
+  document.getElementById('mColetaIdWrap').style.display = (v === 'Coleta fantasma') ? 'block' : 'none';
+  // ajusta o rótulo do texto livre: obrigatório em "Outras", opcional no resto
+  var lbl = document.getElementById('mMotivoLabel');
+  var ta  = document.getElementById('mMotivo');
+  if (v === 'Outras') {
+    lbl.textContent = 'Descreva o motivo *';
+    ta.placeholder = 'Descreva o motivo do atraso...';
+  } else {
+    lbl.textContent = 'Observações (opcional)';
+    ta.placeholder = 'Detalhes adicionais (opcional)...';
+  }
+}
+
+function abrirModalORH(idRota) {
+  orhSel = orhCache.find(function(r){return r.id_rota===idRota;});
+  if (!orhSel) return;
+  var r = orhSel;
+  document.getElementById('mInfo').innerHTML =
+    mi('ID Rota', r.id_rota) + mi('Prefixo', r.prefixo_rota||'—') +
+    mi('Transportadora', r.transportadora||'—') + mi('Motorista', r.id_driver||'—') +
+    mi('Placa', r.placa||'—') + mi('Paradas', r.paradas||'—') +
+    mi('ORH real', r.orh_real_txt||minParaHhmm(r.orh_real_min)) + mi('Contrato', r.orh_contrato_txt||minParaHhmm(r.orh_contrato_min)) +
+    '<div class="mi" style="grid-column:1/-1"><label>Excedente sobre o contrato</label><span style="font-weight:700;color:var(--danger)">+'+minParaHhmm(r.excedente_min)+'</span></div>';
+  // exibe o bloco de motivo padrão (só no ORH)
+  document.getElementById('mMotivoPadraoWrap').style.display = 'block';
+
+  var jaTem = r.justificado && (r.just_motivo || r.just_motivo_padrao);
+  // pré-preenche campos estruturados ao reeditar
+  document.getElementById('mMotivoPadrao').value = jaTem ? (r.just_motivo_padrao || '') : '';
+  document.getElementById('mColetaId').value = jaTem ? (r.just_coleta_id || '') : '';
+  document.getElementById('mMotivo').value = jaTem ? (r.just_obs || '') : '';
+  onMotivoPadraoChange(); // ajusta visibilidade do ID e rótulos
+
+  var bs = document.getElementById('bSave');
+  bs.classList.remove('disabled'); bs.textContent = 'Salvar';
+  document.getElementById('modalJust').setAttribute('data-modo', 'orh');
+  document.querySelector('#modalJust h3').textContent = jaTem ? 'Reeditar justificativa da rota' : 'Justificar rota ofensora';
+  document.getElementById('modalJust').classList.add('open');
+  setTimeout(function(){document.getElementById('mMotivoPadrao').focus();},100);
+}
+
+function salvarORH() {
+  var motivoPadrao = document.getElementById('mMotivoPadrao').value;
+  var coletaId = document.getElementById('mColetaId').value.trim();
+  var obs = document.getElementById('mMotivo').value.trim();
+
+  // validações
+  if (!motivoPadrao) { toast('Selecione o motivo do atraso.', 1); return; }
+  if (motivoPadrao === 'Coleta fantasma' && !coletaId) { toast('Informe o ID da coleta fantasma.', 1); return; }
+  if (motivoPadrao === 'Outras' && !obs) { toast('Descreva o motivo.', 1); return; }
+  if (!orhSel) return;
+
+  // monta o texto final do motivo para exibição/histórico
+  var motivoFinal = motivoPadrao;
+  if (motivoPadrao === 'Coleta fantasma') motivoFinal += ' (ID: ' + coletaId + ')';
+  if (obs) motivoFinal += (motivoPadrao === 'Outras' ? ': ' : ' — ') + obs;
+
+  var btn = document.getElementById('bSave');
+  btn.classList.add('disabled'); btn.textContent = 'Salvando...';
+  var r = orhSel;
+
+  var params = {
+    action: 'salvarJustificativaORH',
+    id_rota: r.id_rota, transportadora: r.transportadora,
+    prefixo_rota: r.prefixo_rota, data_dia: r.data_dia,
+    orh_real: r.orh_real_txt || minParaHhmm(r.orh_real_min),
+    orh_contrato: r.orh_contrato_txt || minParaHhmm(r.orh_contrato_min),
+    motivo: motivoFinal,
+    motivo_padrao: motivoPadrao,
+    coleta_id: coletaId,
+    observacao: obs,
+    nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
+  };
+  var cb = 'cbsorh_' + Date.now();
+  var timeout = setTimeout(function () {
+    if (window[cb]) { delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão. Tente novamente.',1); }
+  }, 12000);
+  window[cb] = function (d) {
+    clearTimeout(timeout); delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+    if (d && d.ok) {
+      var i = orhCache.findIndex(function (x) { return x.id_rota === orhSel.id_rota; });
+      if (i !== -1) {
+        orhCache[i].justificado = true;
+        orhCache[i].just_motivo = motivoFinal;
+        orhCache[i].just_motivo_padrao = motivoPadrao;
+        orhCache[i].just_coleta_id = coletaId;
+        orhCache[i].just_obs = obs;
+        orhCache[i].just_responsavel = sessao.nome + ' (' + sessao.transp + ')';
+      }
+      fecharModal(); renderORH(); toast('Justificativa da rota salva!');
+    } else { toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1); }
+  };
+  var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
+  var s = document.createElement('script');
+  s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now();
+  s.onerror = function () { clearTimeout(timeout); delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão. Tente novamente.',1); s.remove(); };
+  document.head.appendChild(s);
+}
+
+// abas internas do ORH
+document.querySelectorAll('[data-otab]').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('[data-otab]').forEach(function(x){x.classList.remove('ativo');});
+    t.classList.add('ativo');
+    var n = t.getAttribute('data-otab');
+    document.getElementById('oPanePainel').style.display  = n==='painel'?'block':'none';
+    document.getElementById('oPaneTabela').style.display  = n==='tabela'?'block':'none';
+    document.getElementById('oPaneDrivers').style.display = n==='drivers'?'block':'none';
+    document.getElementById('oPaneTransp').style.display  = n==='transp'?'block':'none';
+    document.getElementById('oPaneJust').style.display    = n==='just'?'block':'none';
+    if (n==='just')     carregarHisORH();
+    if (n==='painel')   desenharGraficosORH();
+    if (n==='drivers')  renderDrivers();
+    if (n==='transp')   renderTranspStatus();
+  });
+});
+
+['oBusca','oOfensoraF'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el){ el.addEventListener('input',renderORHTabela); el.addEventListener('change',renderORHTabela); }
+});
+
+// Filtro de período (dia / semana) do painel ORH
+(function(){
+  var tipo = document.getElementById('oPeriodoTipo');
+  var valor = document.getElementById('oPeriodoValor');
+  if (tipo) tipo.addEventListener('change', function(){ popularFiltroPeriodo(); aplicarPeriodo(); });
+  if (valor) valor.addEventListener('change', aplicarPeriodo);
+})();
+
+
+// ════════════════════════════════════════════════════════════
+// PENDENTES (aba "faltantes")
+// ════════════════════════════════════════════════════════════
+function carregarPend() {
+  document.getElementById('pListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando pendentes...</div>';
+  var cb = 'cbpend' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro Pendentes: ' + d.erro, 1); return; }
+    var todos = d.pacotes || [];
+    pendCache = sessao.isMeli ? todos : todos.filter(function(p){ return perteceAoUsuarioPend(p); });
+    renderPend();
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getFaltantes&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+// filtro por transportadora do login; BLD SVC/XPT -> BLD LOGÍSTICA
+function perteceAoUsuarioPend(p) {
+  var t = normTransp(p.transportadora);
+  // Na aba "faltantes", a BLD vem separada no próprio texto da coluna:
+  // "BLD XPT" para XPT e "BLD LOGÍSTICA" (ou "BLD") para SVC.
+  if (sessao.transp === 'BLD XPT') {
+    return t === normTransp('BLD XPT');
+  }
+  if (sessao.transp === 'BLD SVC') {
+    // SVC = tudo que é BLD mas NÃO é "BLD XPT"
+    return (t === normTransp('BLD LOGÍSTICA') || t === 'BLD') && t !== normTransp('BLD XPT');
+  }
+  return t === normTransp(sessao.transp);
+}
+
+// link "logistics" que abre o pacote no adminml
+function pkgLink(id) {
+  if (!id) return '';
+  var url = 'https://envios.adminml.com/logistics/package-management/package/' + id;
+  return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener" style="font-size:11px">logistics</a>';
+}
+
+// copia o ID do pacote pra área de transferência
+function copiarId(id) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(id).then(function(){ toast('ID ' + id + ' copiado!'); },
+      function(){ copiarFallback(id); });
+  } else { copiarFallback(id); }
+}
+function copiarFallback(id) {
+  var ta = document.createElement('textarea');
+  ta.value = id; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('ID ' + id + ' copiado!'); }
+  catch(e){ toast('Não consegui copiar', 1); }
+  ta.remove();
+}
+
+function pendFiltrar() {
+  var b = (document.getElementById('pBusca').value || '').toLowerCase();
+  var j = document.getElementById('pJustF').value;
+  return pendCache.filter(function(p) {
+    if (j === 'sim' && !p.justificado) return false;
+    if (j === 'nao' && p.justificado) return false;
+    if (b) {
+      var t = [p.id_pacote, p.rota, p.placa, p.produto, p.transportadora].join(' ').toLowerCase();
+      if (!t.includes(b)) return false;
+    }
+    return true;
+  });
+}
+
+function renderPend() {
+  var tot = pendCache.length;
+  var just = pendCache.filter(function(p){return p.justificado;}).length;
+  document.getElementById('pendSub').textContent =
+    tot + ' pendente' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '') +
+    ' · ' + (tot-just) + ' sem justificativa';
+  renderPendTabela();
+}
+
+function renderPendTabela() {
+  var f = pendFiltrar();
+  if (!f.length) { document.getElementById('pListaGrupos').innerHTML='<div class="empty">Nenhum pendente encontrado.</div>'; return; }
+
+  // pendentes de justificativa primeiro
+  f.sort(function(a,b){ if(a.justificado!==b.justificado) return a.justificado?1:-1; return 0; });
+
+  var grupos = {};
+  if (sessao.isMeli) {
+    f.forEach(function(p){ var k=(p.transportadora||'— Sem transp —').trim()||'— Sem transp —'; if(!grupos[k]) grupos[k]=[]; grupos[k].push(p); });
+  } else {
+    grupos[sessao.transp] = f;
+  }
+
+  var keys = Object.keys(grupos).sort(function(a,b){ return grupos[b].length - grupos[a].length; });
+  var h = '';
+  keys.forEach(function(tr) {
+    var ps = grupos[tr];
+    var pend = ps.filter(function(p){return !p.justificado;}).length;
+    h += '<div class="grupo open">';
+    h += '<div class="gh" onclick="tog(this)"><div class="gh-left">';
+    h += '<span>'+e(tr)+'</span><span class="bt">'+ps.length+' pacote'+(ps.length>1?'s':'')+'</span>';
+    if(pend) h += '<span class="bp">'+pend+' pendente'+(pend>1?'s':'')+'</span>';
+    h += '</div><span class="chev">▾</span></div>';
+    h += '<div class="gb"><table><thead><tr>';
+    h += '<th>ID Pacote</th><th>Rota</th><th>Placa</th><th>Produto</th><th>Valor</th><th>Insucesso</th><th>Últ. atualização</th><th></th>';
+    h += '</tr></thead><tbody>';
+    ps.forEach(function(p) {
+      h += '<tr>';
+      // ID copiável + link logistics ao lado
+      h += '<td style="white-space:nowrap"><span class="sid" style="cursor:pointer" title="Clique para copiar" onclick="copiarId(\''+e(p.id_pacote)+'\')">'+e(p.id_pacote)+' ⧉</span> '+pkgLink(p.id_pacote)+'</td>';
+      h += '<td>'+routeLink(p.rota)+'</td>';
+      h += '<td style="font-size:11px">'+e(p.placa||'—')+'</td>';
+      h += '<td><div class="dt" title="'+e(p.produto)+'">'+e(p.produto||'—')+'</div></td>';
+      h += '<td style="font-size:11px;white-space:nowrap">'+e(String(p.valor||'—'))+'</td>';
+      h += '<td style="font-size:11px;white-space:nowrap;color:var(--text2)">'+e(p.data_insucesso||'—')+'</td>';
+      h += '<td style="font-size:11px;white-space:nowrap;color:var(--text2)">'+e(p.ult_atualizacao||'—')+'</td>';
+      if (p.justificado) {
+        h += '<td><span class="jok">✓ Justificado</span> <button class="btn-just" style="background:transparent;color:var(--blue);border:1px solid var(--blue);padding:3px 9px" onclick="abrirModalPend(\''+e(p.id_pacote)+'\')">Reeditar</button></td>';
+      } else {
+        h += '<td><button class="btn-just" onclick="abrirModalPend(\''+e(p.id_pacote)+'\')">Justificar</button></td>';
+      }
+      h += '</tr>';
+    });
+    h += '</tbody></table></div></div>';
+  });
+  document.getElementById('pListaGrupos').innerHTML = h;
+}
+
+function carregarHisPend() {
+  document.getElementById('pTabelaHis').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando justificativas...</div>';
+  var cb = 'cbhpend' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
+    var hist = d.historico || [];
+    if (!sessao.isMeli) hist = hist.filter(function(r){
+      var t = normTransp(r.transportadora);
+      if (sessao.transp === 'BLD XPT') return t === normTransp('BLD XPT');
+      if (sessao.transp === 'BLD SVC') return (t === normTransp('BLD LOGÍSTICA') || t === 'BLD') && t !== normTransp('BLD XPT');
+      return t === normTransp(sessao.transp);
+    });
+    renderHisPend(hist);
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getHistoricoFaltantes&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function renderHisPend(registros) {
+  if (!registros.length) { document.getElementById('pTabelaHis').innerHTML='<div class="empty">Nenhuma justificativa registrada ainda.</div>'; return; }
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>ID Pacote</th><th>Transportadora</th><th>Rota</th><th>Placa</th><th>Motivo</th><th>Responsável</th></tr></thead><tbody>';
+  registros.forEach(function(r) {
+    var vig = r._vigente
+      ? ' <span style="background:rgba(0,166,80,.15);color:var(--ok);font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px">vigente</span>'
+      : ' <span style="color:var(--text2);font-size:10px">(anterior)</span>';
+    var estilo = r._vigente ? '' : 'opacity:.6';
+    h += '<tr style="'+estilo+'">';
+    h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
+    h += '<td><span class="sid">'+e(r.id_pacote)+'</span>'+vig+'</td>';
+    h += '<td style="font-weight:600">'+e(r.transportadora||'—')+'</td>';
+    h += '<td>'+routeLink(r.rota)+'</td>';
+    h += '<td style="font-size:11px">'+e(r.placa||'—')+'</td>';
+    h += '<td><div class="mcell">'+e(r.motivo_justificativa)+'</div></td>';
+    h += '<td style="color:var(--text2)">'+e(r.nome_dispatcher)+'</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('pTabelaHis').innerHTML = h;
+}
+
+// modal de justificar pendente (reaproveita o modal, modo 'faltante')
+var pendSel = null;
+function abrirModalPend(id) {
+  pendSel = pendCache.find(function(p){return p.id_pacote===id;});
+  if (!pendSel) return;
+  var p = pendSel;
+  document.getElementById('mInfo').innerHTML =
+    mi('ID Pacote', p.id_pacote) + mi('Rota', p.rota||'—') +
+    mi('Transportadora', p.transportadora||'—') + mi('Placa', p.placa||'—') +
+    mi('Valor', p.valor||'—') + mi('Insucesso', p.data_insucesso||'—') +
+    '<div class="mi" style="grid-column:1/-1"><label>Produto</label><span style="font-size:11px;font-weight:400">'+e(p.produto||'—')+'</span></div>';
+  // esconde bloco de motivo padrão (é do ORH)
+  document.getElementById('mMotivoPadraoWrap').style.display = 'none';
+  document.getElementById('mMotivoLabel').textContent = 'Motivo do pendente *';
+  document.getElementById('mMotivo').value = (p.justificado && p.just_motivo) ? p.just_motivo : '';
+  var bs = document.getElementById('bSave');
+  bs.classList.remove('disabled'); bs.textContent = 'Salvar';
+  document.getElementById('modalJust').setAttribute('data-modo', 'faltante');
+  document.querySelector('#modalJust h3').textContent = p.justificado ? 'Reeditar justificativa do pendente' : 'Justificar pendente';
+  document.getElementById('modalJust').classList.add('open');
+  setTimeout(function(){document.getElementById('mMotivo').focus();},100);
+}
+
+function salvarPend() {
+  var motivo = document.getElementById('mMotivo').value.trim();
+  if (!motivo) { toast('Informe o motivo.',1); return; }
+  if (!pendSel) return;
+  var btn = document.getElementById('bSave');
+  btn.classList.add('disabled'); btn.textContent = 'Salvando...';
+  var p = pendSel;
+  var params = {
+    action: 'salvarJustificativaFaltante',
+    id_pacote: p.id_pacote, transportadora: p.transportadora,
+    rota: p.rota, placa: p.placa, produto: p.produto,
+    motivo: motivo, nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')'
+  };
+  var cb = 'cbspend_' + Date.now();
+  var timeout = setTimeout(function () {
+    if (window[cb]) { delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão. Tente novamente.',1); }
+  }, 12000);
+  window[cb] = function (d) {
+    clearTimeout(timeout); delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Salvar';
+    if (d && d.ok) {
+      var i = pendCache.findIndex(function (x) { return x.id_pacote === pendSel.id_pacote; });
+      if (i !== -1) { pendCache[i].justificado = true; pendCache[i].just_motivo = motivo; }
+      fecharModal(); renderPend(); toast('Justificativa salva!');
+    } else { toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1); }
+  };
+  var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
+  var s = document.createElement('script');
+  s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now();
+  s.onerror = function () { clearTimeout(timeout); delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão. Tente novamente.',1); s.remove(); };
+  document.head.appendChild(s);
+}
+
+// abas internas dos Pendentes
+document.querySelectorAll('[data-ptab]').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('[data-ptab]').forEach(function(x){x.classList.remove('ativo');});
+    t.classList.add('ativo');
+    var n = t.getAttribute('data-ptab');
+    document.getElementById('pPaneLista').style.display = n==='lista'?'block':'none';
+    document.getElementById('pPaneJust').style.display  = n==='just'?'block':'none';
+    if (n==='just') carregarHisPend();
+  });
+});
+['pBusca','pJustF'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el){ el.addEventListener('input',renderPendTabela); el.addEventListener('change',renderPendTabela); }
+});
+
+// ════════════════════════════════════════════════════════════
+// PRESENTEÍSMO BRIEFING
+// ════════════════════════════════════════════════════════════
+function salvarBriefing() {
+  var nome = document.getElementById('bNome').value.trim();
+  var transp = document.getElementById('bTransp').value.trim();
+  var tema = document.getElementById('bTema').value.trim();
+  if (!nome) { toast('Informe o nome.',1); return; }
+  if (!tema) { toast('Informe o tema do briefing.',1); return; }
+  var btn = document.getElementById('bSalvarBrief');
+  btn.classList.add('disabled'); btn.textContent = 'Registrando...';
+  var params = { action:'salvarBriefing', nome:nome, transportadora:transp, tema:tema };
+  var cb = 'cbbrief_' + Date.now();
+  var timeout = setTimeout(function () {
+    if (window[cb]) { delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Registrar presença'; toast('Erro de conexão. Tente novamente.',1); }
+  }, 12000);
+  window[cb] = function (d) {
+    clearTimeout(timeout); delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Registrar presença';
+    if (d && d.ok) {
+      document.getElementById('bNome').value = '';
+      document.getElementById('bTema').value = '';
+      toast('Presença registrada!');
+    } else { toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1); }
+  };
+  var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
+  var s = document.createElement('script');
+  s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now();
+  s.onerror = function () { clearTimeout(timeout); delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Registrar presença'; toast('Erro de conexão. Tente novamente.',1); s.remove(); };
+  document.head.appendChild(s);
+}
+
+function carregarBriefingPainel() {
+  document.getElementById('bContagem').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+  var cb = 'cbgbrief' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
+    var regs = d.registros || [];
+    if (!sessao.isMeli) regs = regs.filter(function(r){
+      var t = normTransp(r.transportadora);
+      if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') return t === normTransp('BLD LOGÍSTICA');
+      return t === normTransp(sessao.transp);
+    });
+    renderBriefingPainel(regs);
+  };
+  var s = document.createElement('script');
+  s.src = API + '?action=getBriefing&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function renderBriefingPainel(registros) {
+  if (!registros.length) { document.getElementById('bContagem').innerHTML='<div class="empty">Nenhuma presença registrada ainda.</div>'; return; }
+
+  // contagem por transportadora
+  var cont = {};
+  registros.forEach(function(r){ var t=(r.transportadora||'—').trim()||'—'; cont[t]=(cont[t]||0)+1; });
+  var tKeys = Object.keys(cont).sort(function(a,b){ return cont[b]-cont[a]; });
+
+  var h = '<div class="kpi-bar" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">';
+  tKeys.forEach(function(t){
+    h += '<div class="kpi"><div class="kpi-label">'+e(t)+'</div><div class="kpi-val b">'+cont[t]+'</div></div>';
+  });
+  h += '</div>';
+
+  // histórico de registros
+  h += '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Nome</th><th>Transportadora</th><th>Tema</th></tr></thead><tbody>';
+  registros.forEach(function(r){
+    h += '<tr>';
+    h += '<td style="white-space:nowrap;color:var(--text2)">'+e(r.data_hora)+'</td>';
+    h += '<td style="font-weight:600">'+e(r.nome)+'</td>';
+    h += '<td>'+e(r.transportadora||'—')+'</td>';
+    h += '<td><div class="mcell">'+e(r.tema||'—')+'</div></td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('bContagem').innerHTML = h;
+}
+
+// abas internas do Briefing
+document.querySelectorAll('[data-btab]').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('[data-btab]').forEach(function(x){x.classList.remove('ativo');});
+    t.classList.add('ativo');
+    var n = t.getAttribute('data-btab');
+    document.getElementById('bPaneRegistrar').style.display = n==='registrar'?'block':'none';
+    document.getElementById('bPanePainel').style.display    = n==='painel'?'block':'none';
+    if (n==='painel') carregarBriefingPainel();
+  });
+});
+
+// ── ABAS ─────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('ativo');});
+    t.classList.add('ativo');
+    var n=t.getAttribute('data-tab');
+    document.getElementById('panePac').style.display = n==='pac'?'block':'none';
+    document.getElementById('paneHis').style.display = n==='his'?'block':'none';
+    if(n==='his') carregarHis();
+  });
+});
+
+['fBusca','fStatus','fJust'].forEach(function(id){
+  var el=document.getElementById(id);
+  el.addEventListener('input',render);
+  el.addEventListener('change',render);
+});
+
+function tog(h){ h.parentElement.classList.toggle('open'); }
+function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=msg; t.className='toast'+(err?' err':'')+' show'; setTimeout(function(){t.classList.remove('show');},3500); }
+
+document.getElementById('modalJust').addEventListener('click',function(ev){if(ev.target===this)fecharModal();});
+document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModal();});
+</script>
+
+<script>
+// lobo.js — Lobo animado que monta as peças ao carregar a página
+// Injeta o SVG no elemento #loboContainer
+
+(function() {
+  var LOBO_SVG = `<svg class="lobo" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-132 160.8 346.8 472.2" preserveAspectRatio="xMidYMid meet">
+<style>
+.lb0{fill:#2B485F}.lb1{fill:#4C3B97}.lb2{fill:#493163}.lb3{fill:#603163}.lb4{fill:#49312D}.lb5{fill:#242059}.lb6{fill:#3A4F54}.lb7{fill:#B0D8E3}.lb8{fill:#EFDFCE}.lb9{fill:#E2D4CC}.lb10{fill:#CFCAE5}.lb11{fill:#E9E9EA}.lb12{fill:#D3C8C2}.lb13{fill:#C7B7AD}.lb14{fill:#B7BCCD}.lb15{fill:#A1B0B5}.lb16{fill:#B7A5BF}.lb17{fill:#C3C3C7}.lb18{fill:#D2D3D4}.lb19{fill:#A8BCDB}.lb20{fill:#787FA0}.lb21{fill:#626AB1}.lb22{fill:#7E91C1}.lb23{fill:#358A9E}.lb24{fill:#A7D0DB}.lb25{fill:#C0D3E2}.lb26{fill:#737CBB}.lb27{fill:#E9F3E3}.lb28{fill:#E0F3F9}.lb29{fill:#E5D9EB}.lb30{fill:#D6E8F7}.lb31{fill:#A799CA}.lb32{fill:#91A9D8}.lb33{fill:#9AAAC6}.lb34{fill:#5E679B}.lb35{fill:#5A627B}.lb36{fill:#585857}.lb37{fill:#69534D}.lb38{fill:#0B5C8D}.lb39{fill:#2B5C61}.lb40{fill:#AA9ECD}.lb41{fill:#A5C2D2}.lb42{fill:#C2E7EF}.lb43{fill:#FDFCE7}.lb44{fill:#FEF8CC}.lb45{fill:#C0B5DA}.lb46{fill:#6E877F}.lb47{fill:#454C4D}.lb48{fill:#526487}.lb49{fill:#88B0C4}.lb50{fill:#62A8C4}.lb51{fill:#8DCADB}.lb52{fill:#5D7ABC}.lb53{fill:#8A979B}.lb54{fill:#765A85}.lb55{fill:#53B1DA}.lb56{fill:#737372}.lb57{fill:#B2967D}.lb58{fill:#69ACDE}.lb59{fill:#7AB9DD}
+.lobo polygon, .lobo #Ojo-izquierdo, .lobo #Ojo-derecho { opacity: 0; }
+.lobo.go polygon { animation: lbup .35s ease-out forwards; }
+.lobo.go #Ojo-izquierdo, .lobo.go #Ojo-derecho { animation: lbfade .4s 1.6s forwards; }
+@keyframes lbup { from { opacity:0; transform: translateY(-30px) scale(.7);} to { opacity:1; transform:none; } }
+@keyframes lbfade { to { opacity:1; } }
+</style>
+<g id="Izquierda">
+<polygon class="lb0" points="-21.4,268.1 5.4,241.1 14.8,255.2"/><polygon class="lb1" points="5.4,241.1 -11.9,241.8 -21.4,268.1"/><polygon class="lb2" points="-11.9,241.8 -3.2,231.8 5.4,241.1"/><polygon class="lb3" points="-11.9,241.8 -19.1,231.8 -3.2,231.8"/><polygon class="lb4" points="-19.1,231.8 -20.4,213.4 -3.2,231.8"/><polygon class="lb5" points="-19.1,231.8 -38.3,209.5 -20.4,213.4"/><polygon class="lb6" points="-38.3,209.5 -38.8,193.8 -20.4,213.4"/><polygon class="lb2" points="-38.3,209.5 -57.2,192.4 -38.8,193.8"/><polygon class="lb1" points="-57.2,192.4 -47.1,181.5 -38.8,193.8"/><polygon class="lb6" points="-57.2,192.4 -56.1,177.6 -47.1,181.5"/><polygon class="lb0" points="-57.2,192.4 -74.4,193.9 -56.1,177.6"/><polygon class="lb1" points="-74.4,193.9 -67.2,200.4 -57.2,192.4"/><polygon class="lb5" points="-74.4,193.9 -79.3,213.6 -67.2,200.4"/><polygon class="lb2" points="-67.2,245.4 -53.7,248.7 -38.3,231.8"/><polygon class="lb6" points="-53.7,248.7 -53.8,276.4 -41.1,287.3"/><polygon class="lb7" points="-53.7,248.7 -21.4,268.1 -41.1,287.3"/><polygon class="lb8" points="-53.7,248.7 -38.3,231.8 -21.4,268.1"/><polygon class="lb9" points="-38.3,231.8 -19.1,231.8 -21.4,268.1"/><polygon class="lb10" points="-19.1,231.8 -11.9,241.8 -21.4,268.1"/><polygon class="lb11" points="-67.2,245.4 -85.3,237.7 -69.6,271.7"/><polygon class="lb8" points="-85.3,237.7 -79.3,213.6 -67.2,245.4"/><polygon class="lb12" points="-67.2,245.4 -53.8,276.4 -69.6,271.7"/><polygon class="lb13" points="-67.2,245.4 -53.8,276.4 -53.7,248.7"/><polygon class="lb14" points="-69.6,271.7 -58.3,299.8 -53.8,276.4"/><polygon class="lb15" points="-53.8,276.4 -41.1,287.3 -58.3,299.8"/><polygon class="lb16" points="-58.3,299.8 -90.6,279.6 -64.9,283.4"/><polygon class="lb17" points="-90.6,279.6 -69.6,271.7 -64.9,283.4"/><polygon class="lb18" points="-69.6,271.7 -88,260.9 -85.3,237.7"/><polygon class="lb19" points="-88,260.9 -84.3,277.2 -69.6,271.7"/><polygon class="lb20" points="-57.2,192.4 -38.3,231.8 -38.3,209.5"/><polygon class="lb21" points="-38.3,209.5 -19.1,231.8 -38.3,231.8"/><polygon class="lb22" points="-57.2,192.4 -67.2,200.4 -38.3,231.8"/><polygon class="lb23" points="-67.2,200.4 -79.3,213.6 -38.3,231.8"/><polygon class="lb24" points="-16.7,336.1 -33.6,340.3 0.7,350.1"/><polygon class="lb25" points="-33.6,340.3 -23.9,354.3 -2.7,348.7"/><polygon class="lb26" points="-79.3,213.6 -67.2,245.4 -38.3,231.8"/><polygon class="lb27" points="-23.9,354.3 -35.4,360.5 -13.9,367.7"/><polygon class="lb4" points="8.2,361.7 13.2,378.8 -3.3,370.7"/><polygon class="lb2" points="8.2,361.7 16.1,361.9 13.2,378.8"/><polygon class="lb20" points="-33.6,340.3 -2.7,332.7 -21.6,307.5"/><polygon class="lb20" points="15.1,315.3 -58.3,299.8 -41.1,287.3"/><polygon class="lb12" points="-2.7,332.7 3.8,352.5 -16.7,336.1"/><polygon class="lb28" points="-2.7,332.7 15.9,331.9 8.2,361.7 3.8,352.5"/><polygon class="lb29" points="15.1,315.3 15.9,331.9 -2.7,332.7"/><polygon class="lb11" points="15.1,315.3 27.8,332.7 15.9,331.9"/><polygon class="lb30" points="15.9,331.9 27.2,362.2 8.2,361.7"/><polygon class="lb24" points="15.9,331.9 27.8,332.7 27.2,362.2"/><polygon class="lb22" points="27.8,332.7 45.6,342.6 27.2,362.2"/><polygon class="lb31" points="27.2,362.2 45.6,386.8 45.6,342.6"/><polygon class="lb32" points="27.2,362.2 28.7,401.3 45.6,386.8"/><polygon class="lb33" points="28.7,401.3 45.6,437.1 45.6,386.8"/><polygon class="lb16" points="28.7,401.3 17.9,447.4 45.6,437.1"/><polygon class="lb18" points="13.2,378.8 27.2,362.2 16.1,361.9"/><polygon class="lb21" points="15.1,315.3 45.6,307.1 27.8,332.7"/><polygon class="lb23" points="27.8,332.7 45.6,307.1 45.6,342.6"/><polygon class="lb34" points="15.1,315.3 45.6,256.1 45.6,307.1"/><polygon class="lb35" points="15.1,315.3 14.8,255.2 33.7,279.1"/><polygon class="lb36" points="14.8,255.2 -21.4,268.1 15.1,315.3"/><polygon class="lb36" points="14.8,255.2 32.8,254.2 33.7,279.1"/><polygon class="lb37" points="14.8,255.2 22.3,236.5 32.8,254.2"/><polygon class="lb38" points="32.8,254.2 45.6,256.1 33.7,279.1"/><polygon class="lb1" points="32.8,254.2 39.2,235 45.6,256.1"/><polygon class="lb39" points="22.3,236.5 5.4,241.1 14.8,255.2"/><polygon class="lb21" points="-21.4,268.1 -41.1,287.3 15.1,315.3"/><polygon class="lb32" points="-2.7,332.7 15.1,315.3 -21.6,307.5"/><polygon class="lb26" points="-35.4,360.5 -46.5,389.2 -89.4,398.1"/><polygon class="lb32" points="-35.4,360.5 -24.8,379.4 -41.1,375.4"/><polygon class="lb40" points="-24.8,379.4 -25.5,400.4 -14.8,403.5"/><polygon class="lb15" points="-24.8,379.4 -41.1,375.4 -25.5,400.4"/><polygon class="lb15" points="-46.5,389.2 -49.7,411.3 -89.4,398.1"/><polygon class="lb41" points="-46.5,389.2 -36.8,424.4 -49.7,411.3"/><polygon class="lb41" points="-46.5,389.2 -41.1,375.4 -25.5,400.4"/><polygon class="lb42" points="17.9,447.4 18.2,459.9 35.2,440.9"/><polygon class="lb43" points="17.9,447.4 -7.9,467.6 20.2,475.7"/><polygon class="lb44" points="-7.9,467.6 -0.9,491.9 20.2,475.7"/><polygon class="lb27" points="17.9,447.4 -6.7,440.5 -7.9,467.6"/><polygon class="lb42" points="-6.7,440.5 28.7,401.3 17.9,447.4"/><polygon class="lb10" points="-7.9,467.6 -15.4,458.5 -6.7,440.5"/><polygon class="lb10" points="35.2,440.9 45.6,447.4 28.7,447.9"/><polygon class="lb45" points="35.2,440.9 45.6,437.1 45.6,447.4"/><polygon class="lb38" points="-15.4,458.5 -17.2,466.9 -7.9,467.6"/><polygon class="lb21" points="-17.2,466.9 -0.9,491.9 -7.9,467.6"/><polygon class="lb14" points="20.2,475.7 32.7,492.5 21.8,489.7"/><polygon class="lb11" points="-12.4,382.7 -3.2,370.7 -13.9,367.7"/><polygon class="lb18" points="20.2,475.7 21.8,489.7 -0.9,491.9"/><polygon class="lb46" points="45.6,495.8 21.8,489.7 25.6,498.7"/><polygon class="lb39" points="25.6,498.7 14.3,503 45.6,500.9 45.6,495.8"/><polygon class="lb0" points="14.3,503 31.1,509.5 45.6,508.9 45.6,500.9"/><polygon class="lb16" points="21.8,489.7 14.3,503 25.6,498.7"/><polygon class="lb14" points="21.8,489.7 -0.9,491.9 14.3,503"/><polygon class="lb44" points="-35.4,360.5 -13.9,367.7 -24.8,379.4"/><polygon class="lb27" points="-13.9,367.7 -12.4,382.7 -24.8,379.4"/><polygon class="lb42" points="-12.4,382.7 -14.8,403.5 -24.8,379.4"/><polygon class="lb7" points="-12.4,382.7 -7.6,408 -14.8,403.5"/><polygon class="lb14" points="-12.4,382.7 1.2,393.6 -7.6,408"/>
+<g id="Ojo-izquierdo"><path class="lb5" d="M-23.9,354.3c0,0,19.7-11.2,27.7-1.7l4.4,9.2c0,0-6.4,15.4-22.1,5.9C-13.9,367.7-18.9,363.6-23.9,354.3z"/><path class="lb23" d="M-5.3,355c3,0,5.6,2,6.4,4.7c0.2-0.6,0.3-1.3,0.3-2c0-3.7-3-6.7-6.7-6.7s-6.7,3-6.7,6.7c0,0.7,0.1,1.4,0.3,2C-10.9,357-8.3,355-5.3,355z"/><path class="lb42" d="M-5.3,364.4c3,0,5.6-2,6.4-4.7C0.2,357-2.3,355-5.3,355c-3,0-5.6,2-6.4,4.7C-10.9,362.5-8.3,364.4-5.3,364.4z"/><circle class="lb6" cx="-4.1" cy="356.4" r="1.9"/></g>
+<polygon class="lb30" points="-12.4,382.7 1.2,393.6 -3.2,370.7"/><polygon class="lb25" points="-3.2,370.7 13.2,378.8 1.2,393.6"/><polygon class="lb8" points="13.2,378.8 27.2,362.2 28.7,401.3"/><polygon class="lb9" points="13.2,378.8 1.2,393.6 28.7,401.3"/><polygon class="lb12" points="1.2,393.6 -7.6,408 28.7,401.3"/><polygon class="lb13" points="-7.6,408 -6.7,440.5 28.7,401.3"/><polygon class="lb18" points="-36.8,424.4 -7.6,408 -6.7,440.5"/><polygon class="lb9" points="-25.5,400.4 -36.8,424.4 -46.5,389.2"/><polygon class="lb11" points="-25.5,400.4 -18.6,414.2 -36.8,424.4"/><polygon class="lb11" points="-49.7,411.3 -73.7,437.1 -36.8,424.4"/><polygon class="lb44" points="-49.7,411.3 -73,413.9 -73.7,437.1"/><polygon class="lb29" points="-73,413.9 -69.5,404.7 -49.7,411.3"/><polygon class="lb29" points="-14.8,403.5 -18.6,414.2 -25.5,400.4"/><polygon class="lb10" points="-14.8,403.5 -7.6,408 -18.6,414.2"/><polygon class="lb45" points="-15.4,458.5 -36.8,424.4 -6.7,440.5"/><polygon class="lb18" points="-36.8,424.4 -45.5,452.7 -73.7,437.1"/><polygon class="lb9" points="-36.8,424.4 -15.4,458.5 -45.5,452.7"/><polygon class="lb9" points="-17.2,466.9 -47.7,476.3 -45.5,452.7"/><polygon class="lb47" points="32.7,492.5 45.6,480.5 45.6,495.8"/><polygon class="lb5" points="39.8,485.9 30.7,477.5 31.2,469.4 39.1,469.4"/><polygon class="lb48" points="20.2,475.7 30.7,477.5 18.9,459.2"/><polygon class="lb6" points="31.2,469.4 28.7,447.9 18.9,459.2"/><polygon class="lb5" points="28.7,447.9 45.6,462.1 45.6,447.4"/><polygon class="lb2" points="45.6,462.1 39.1,469.4 39.8,485.9 45.6,480.5"/><polygon class="lb3" points="39.1,469.4 28.7,447.9 45.6,462.1"/><polygon class="lb2" points="31.2,469.4 28.7,447.9 39.1,469.4"/><polygon class="lb0" points="31.2,469.4 30.7,477.5 18.9,459.2"/><polygon class="lb2" points="20.2,475.7 32.7,492.5 39.8,485.9 30.7,477.5"/><polygon class="lb21" points="-45.5,452.7 -73.7,437.1 -78.1,471.5"/><polygon class="lb26" points="-73.7,437.1 -89,448 -78.1,471.5"/><polygon class="lb22" points="-89,448 -95.6,421.6 -73.7,437.1"/><polygon class="lb31" points="-95.6,421.6 -73,413.9 -73.7,437.1"/><polygon class="lb49" points="-95.6,421.6 -89.4,398.1 -73,413.9"/><polygon class="lb50" points="-89.4,398.1 -73,413.9 -69.5,404.7"/><polygon class="lb51" points="-95.6,421.6 -109.3,488 -89,448"/><polygon class="lb50" points="-89,448 -78.1,471.5 -109.3,488"/><polygon class="lb41" points="-95.6,421.6 -118.1,424.9 -89.4,398.1"/><polygon class="lb21" points="-35.4,360.5 -89.9,379.1 -89.4,398.1"/><polygon class="lb52" points="-89.9,379.1 -88.7,357.6 -35.4,360.5"/><polygon class="lb53" points="-35.4,360.5 -33.6,340.3 -23.9,354.3"/><polygon class="lb53" points="-89.9,379.1 -115.7,392 -89.4,398.1"/><polygon class="lb54" points="-89.9,379.1 -112.9,378.6 -88.7,357.6"/><polygon class="lb31" points="-88.7,357.6 -85,343.1 -35.4,360.5"/><polygon class="lb22" points="-58.3,299.8 -33.6,340.3 -21.6,307.5"/><polygon class="lb20" points="-58.3,299.8 -70,314.8 -49.2,314.8"/><polygon class="lb26" points="-70,314.8 -74.6,330 -49.2,314.8"/><polygon class="lb55" points="-74.6,330 -35.4,360.5 -85,343.1"/><polygon class="lb22" points="-74.6,330 -33.6,340.3 -35.4,360.5"/><polygon class="lb55" points="-74.6,330 -49.2,314.8 -33.6,340.3"/><polygon class="lb34" points="-74.6,330 -98.5,317.5 -70,314.8"/><polygon class="lb23" points="-74.6,330 -103.1,331.6 -85,343.1"/><polygon class="lb20" points="-85,343.1 -107.4,363 -88.7,357.6"/><polygon class="lb56" points="-58.3,299.8 -70,314.8 -92.8,298.8"/><polygon class="lb57" points="-92.8,298.8 -81.1,285.5 -58.3,299.8"/><polygon class="lb14" points="-78.1,471.5 -50.9,506.4 -47.7,476.3"/><polygon class="lb45" points="-45.5,452.7 -47.7,476.3 -78.1,471.5"/><polygon class="lb30" points="-50.9,506.4 -17.2,466.9 -47.7,476.3"/><polygon class="lb8" points="-17.2,466.9 -33.7,500.1 -50.9,506.4"/><polygon class="lb18" points="-17.2,466.9 -0.9,491.9 -33.7,500.1"/><polygon class="lb18" points="-50.9,506.4 -36.9,518.7 -33.7,500.1"/><polygon class="lb49" points="-50.9,506.4 -98.9,501.6 -66.1,486.9"/><polygon class="lb58" points="-78.1,471.5 -98.9,501.6 -66.1,486.9"/><polygon class="lb22" points="-50.9,506.4 -83,526.7 -78.1,503.7"/><polygon class="lb32" points="-50.9,506.4 -36.9,518.7 -83,526.7"/><polygon class="lb13" points="-36.9,518.7 -0.9,491.9 -33.7,500.1"/><polygon class="lb15" points="-36.9,518.7 -76.9,548.5 -67.8,524.1"/><polygon class="lb53" points="-36.9,518.7 -47.7,548 -77.4,548.7"/><polygon class="lb19" points="-36.9,518.7 -15.5,537.1 -6.1,511.6"/><polygon class="lb14" points="-0.9,491.9 -6.1,511.6 -36.9,518.7"/><polygon class="lb11" points="14.3,503 29.3,516.6 31.1,509.5"/><polygon class="lb28" points="31.1,509.5 45.6,508.9 29.3,516.6"/><polygon class="lb27" points="29.3,516.6 45.6,518 45.6,508.9"/><polygon class="lb42" points="29.3,516.6 45.6,528.4 45.6,518"/><polygon class="lb45" points="7,526.4 -15.5,537.1 -4.2,549.9"/><polygon class="lb10" points="7,526.4 12.8,559.2 -4.2,549.9"/><polygon class="lb25" points="12.8,559.2 45.6,575.4 10.2,544.7"/><polygon class="lb42" points="12.8,559.2 28,605 45.6,575.4"/><polygon class="lb18" points="12.8,559.2 -7.9,589.2 -4.2,549.9"/><polygon class="lb11" points="12.8,559.2 1.1,576.2 28,605"/><polygon class="lb8" points="45.6,575.4 35.4,592.6 45.6,603"/><polygon class="lb44" points="35.4,592.6 45.6,616.9 45.6,603"/><polygon class="lb10" points="10.2,544.7 28.7,536.6 45.6,575.4"/><polygon class="lb18" points="28.7,536.6 45.6,528.4 45.6,575.4"/><polygon class="lb41" points="29.3,516.6 28.7,536.6 45.6,528.4"/><polygon class="lb45" points="29.3,516.6 10.2,544.7 28.7,536.6"/><polygon class="lb16" points="14.3,503 7,526.4 29.3,516.6"/><polygon class="lb41" points="29.3,516.6 10.2,544.7 7,526.4"/><polygon class="lb59" points="-0.9,491.9 14.3,503 -6.1,511.6"/><polygon class="lb40" points="-15.5,537.1 -34,572.5 -48.5,548"/><polygon class="lb14" points="-15.5,537.1 -7.9,589.2 -4.2,549.9"/><polygon class="lb15" points="-15.5,537.1 -27.5,560 -7.9,589.2"/><polygon class="lb33" points="-36.9,518.7 -15.5,537.1 -48.5,548"/><polygon class="lb13" points="-6.1,511.6 7,526.4 -15.5,537.1"/><polygon class="lb14" points="-6.1,511.6 14.3,503 7,526.4"/><polygon class="lb14" points="-15.4,458.5 -17.2,466.9 -45.5,452.7"/>
+</g>
+<g id="Derecha">
+<polygon class="lb0" points="112.3,267.8 85.5,240.7 76.1,254.8"/><polygon class="lb1" points="85.5,240.7 102.8,241.4 112.3,267.8"/><polygon class="lb2" points="102.8,241.4 94.1,231.4 85.5,240.7"/><polygon class="lb3" points="102.8,241.4 110,231.4 94.1,231.4"/><polygon class="lb4" points="110,231.4 111.3,213 94.1,231.4"/><polygon class="lb5" points="110,231.4 129.2,209.1 111.3,213"/><polygon class="lb6" points="129.2,209.1 129.8,193.4 111.3,213"/><polygon class="lb2" points="129.2,209.1 148.1,192 129.8,193.4"/><polygon class="lb1" points="148.1,192 138,181.1 129.8,193.4"/><polygon class="lb6" points="148.1,192 147,177.2 138,181.1"/><polygon class="lb0" points="148.1,192 165.3,193.5 147,177.2"/><polygon class="lb1" points="165.3,193.5 158.2,200 148.1,192"/><polygon class="lb5" points="165.3,193.5 170.2,213.2 158.2,200"/><polygon class="lb2" points="158.2,245.1 144.6,248.3 129.2,231.4"/><polygon class="lb6" points="144.6,248.3 144.8,276.1 132,286.9"/><polygon class="lb7" points="144.6,248.3 112.3,267.8 132,286.9"/><polygon class="lb8" points="144.6,248.3 129.2,231.4 112.3,267.8"/><polygon class="lb9" points="129.2,231.4 110,231.4 112.3,267.8"/><polygon class="lb10" points="110,231.4 102.8,241.4 112.3,267.8"/><polygon class="lb11" points="158.2,245.1 176.3,237.3 160.5,271.4"/><polygon class="lb8" points="176.3,237.3 170.2,213.2 158.2,245.1"/><polygon class="lb12" points="158.2,245.1 144.8,276.1 160.5,271.4"/><polygon class="lb13" points="158.2,245.1 144.8,276.1 144.6,248.3"/><polygon class="lb14" points="160.5,271.4 149.2,299.4 144.8,276.1"/><polygon class="lb16" points="149.2,299.4 181.5,279.2 155.8,283.1"/><polygon class="lb15" points="144.8,276.1 132,286.9 149.2,299.4"/><polygon class="lb17" points="181.5,279.2 160.5,271.4 155.8,283.1"/><polygon class="lb18" points="160.5,271.4 178.9,260.5 176.3,237.3"/><polygon class="lb19" points="178.9,260.5 175.2,276.9 160.5,271.4"/><polygon class="lb20" points="148.1,192 129.2,231.4 129.2,209.1"/><polygon class="lb21" points="129.2,209.1 110,231.4 129.2,231.4"/><polygon class="lb22" points="148.1,192 158.2,200 129.2,231.4"/><polygon class="lb23" points="158.2,200 170.2,213.2 129.2,231.4"/><polygon class="lb24" points="107.6,335.8 124.5,339.9 90.2,349.7"/><polygon class="lb25" points="124.5,339.9 114.8,353.9 93.6,348.4"/><polygon class="lb26" points="170.2,213.2 158.2,245.1 129.2,231.4"/><polygon class="lb27" points="114.8,353.9 126.3,360.2 104.9,367.3"/><polygon class="lb4" points="82.8,361.4 77.7,378.4 94.2,370.3"/><polygon class="lb2" points="82.8,361.4 74.8,361.5 77.7,378.4"/><polygon class="lb20" points="124.5,339.9 93.6,332.3 112.5,307.2"/><polygon class="lb20" points="75.8,314.9 149.2,299.4 132,286.9"/><polygon class="lb12" points="93.6,332.3 87.1,352.2 107.6,335.8"/><polygon class="lb28" points="93.6,332.3 75.1,331.5 82.8,361.4 87.1,352.2"/><polygon class="lb29" points="75.8,314.9 75.1,331.5 93.6,332.3"/><polygon class="lb11" points="75.8,314.9 63.1,332.3 75.1,331.5"/><polygon class="lb30" points="75.1,331.5 63.7,361.8 82.8,361.4"/><polygon class="lb24" points="75.1,331.5 63.1,332.3 63.7,361.8"/><polygon class="lb22" points="63.1,332.3 45.3,342.2 63.7,361.8"/><polygon class="lb31" points="63.7,361.8 45.3,386.4 45.3,342.2"/><polygon class="lb32" points="63.7,361.8 62.2,401 45.3,386.4"/><polygon class="lb33" points="62.2,401 45.3,436.7 45.3,386.4"/><polygon class="lb16" points="62.2,401 73,447 45.3,436.7"/><polygon class="lb18" points="77.7,378.4 63.7,361.8 74.8,361.5"/><polygon class="lb21" points="75.8,314.9 45.3,306.7 63.1,332.3"/><polygon class="lb23" points="63.1,332.3 45.3,306.7 45.3,342.2"/><polygon class="lb34" points="75.8,314.9 45.3,255.7 45.3,306.7"/><polygon class="lb35" points="75.8,314.9 76.1,254.8 57.2,278.8"/><polygon class="lb36" points="76.1,254.8 112.3,267.8 75.8,314.9"/><polygon class="lb36" points="76.1,254.8 58.1,253.9 57.2,278.8"/><polygon class="lb37" points="76.1,254.8 68.7,236.1 58.1,253.9"/><polygon class="lb38" points="58.1,253.9 45.3,255.7 57.2,278.8"/><polygon class="lb1" points="58.1,253.9 51.7,234.6 45.3,255.7"/><polygon class="lb39" points="68.7,236.1 85.5,240.7 76.1,254.8"/><polygon class="lb21" points="112.3,267.8 132,286.9 75.8,314.9"/><polygon class="lb32" points="93.6,332.3 75.8,314.9 112.5,307.2"/><polygon class="lb26" points="126.3,360.2 137.4,388.9 180.3,397.8"/><polygon class="lb32" points="126.3,360.2 115.8,379.1 132,375"/><polygon class="lb40" points="115.8,379.1 116.4,400 105.7,403.2"/><polygon class="lb15" points="115.8,379.1 132,375 116.4,400"/><polygon class="lb15" points="137.4,388.9 140.6,410.9 180.3,397.8"/><polygon class="lb41" points="137.4,388.9 127.8,424 140.6,410.9"/><polygon class="lb41" points="137.4,388.9 132,375 116.4,400"/><polygon class="lb42" points="73,447 72.7,459.6 55.7,440.5"/><polygon class="lb43" points="73,447 98.8,467.3 70.7,475.3"/><polygon class="lb44" points="98.8,467.3 91.8,491.5 70.7,475.3"/><polygon class="lb27" points="73,447 97.7,440.1 98.8,467.3"/><polygon class="lb42" points="97.7,440.1 62.2,401 73,447"/><polygon class="lb10" points="98.8,467.3 106.3,458.1 97.7,440.1"/><polygon class="lb10" points="55.7,440.5 45.3,447 62.2,447.6"/><polygon class="lb45" points="55.7,440.5 45.3,436.7 45.3,447"/><polygon class="lb38" points="106.3,458.1 108.1,466.5 98.8,467.3"/><polygon class="lb21" points="108.1,466.5 91.8,491.5 98.8,467.3"/><polygon class="lb14" points="70.7,475.3 58.2,492.1 69.1,489.3"/><polygon class="lb11" points="103.3,382.4 94.1,370.4 104.9,367.3"/><polygon class="lb18" points="70.7,475.3 69.1,489.3 91.8,491.5"/><polygon class="lb46" points="45.3,495.5 69.1,489.3 65.3,498.4"/><polygon class="lb39" points="65.3,498.4 76.6,502.6 45.3,500.5 45.3,495.5"/><polygon class="lb0" points="76.6,502.6 59.9,509.2 45.3,508.6 45.3,500.5"/><polygon class="lb16" points="69.1,489.3 76.6,502.6 65.3,498.4"/><polygon class="lb14" points="69.1,489.3 91.8,491.5 76.6,502.6"/><polygon class="lb44" points="126.3,360.2 104.9,367.3 115.8,379.1"/><polygon class="lb27" points="104.9,367.3 103.3,382.4 115.8,379.1"/><polygon class="lb42" points="103.3,382.4 105.7,403.2 115.8,379.1"/><polygon class="lb7" points="103.3,382.4 98.5,407.6 105.7,403.2"/><polygon class="lb14" points="103.3,382.4 89.7,393.2 98.5,407.6"/>
+<g id="Ojo-derecho"><path class="lb5" d="M114.8,353.9c0,0-19.7-11.2-27.7-1.7l-4.4,9.2c0,0,6.4,15.4,22.1,5.9C104.9,367.3,109.8,363.2,114.8,353.9z"/><path class="lb23" d="M96.2,354.6c-3,0-5.6,2-6.4,4.7c-0.2-0.6-0.3-1.3-0.3-2c0-3.7,3-6.7,6.7-6.7s6.7,3,6.7,6.7c0,0.7-0.1,1.4-0.3,2C101.8,356.6,99.3,354.6,96.2,354.6z"/><path class="lb42" d="M96.2,364.1c-3,0-5.6-2-6.4-4.7c0.9-2.7,3.4-4.7,6.4-4.7s5.6,2,6.4,4.7C101.8,362.1,99.3,364.1,96.2,364.1z"/><circle class="lb6" cx="95" cy="356.1" r="1.9"/></g>
+<polygon class="lb30" points="103.3,382.4 89.7,393.2 94.1,370.4"/><polygon class="lb25" points="94.1,370.4 77.7,378.4 89.7,393.2"/><polygon class="lb8" points="77.7,378.4 63.7,361.8 62.2,401"/><polygon class="lb9" points="77.7,378.4 89.7,393.2 62.2,401"/><polygon class="lb12" points="89.7,393.2 98.5,407.6 62.2,401"/><polygon class="lb13" points="98.5,407.6 97.7,440.1 62.2,401"/><polygon class="lb18" points="127.8,424 98.5,407.6 97.7,440.1"/><polygon class="lb9" points="116.4,400 127.8,424 137.4,388.9"/><polygon class="lb11" points="116.4,400 109.5,413.8 127.8,424"/><polygon class="lb11" points="140.6,410.9 164.6,436.7 127.8,424"/><polygon class="lb44" points="140.6,410.9 163.9,413.5 164.6,436.7"/><polygon class="lb29" points="163.9,413.5 160.4,404.4 140.6,410.9"/><polygon class="lb29" points="105.7,403.2 109.5,413.8 116.4,400"/><polygon class="lb10" points="105.7,403.2 98.5,407.6 109.5,413.8"/><polygon class="lb45" points="106.3,458.1 127.8,424 97.7,440.1"/><polygon class="lb18" points="127.8,424 136.4,452.3 164.6,436.7"/><polygon class="lb9" points="127.8,424 106.3,458.1 136.4,452.3"/><polygon class="lb9" points="108.1,466.5 138.6,475.9 136.4,452.3"/><polygon class="lb47" points="58.2,492.1 45.3,480.1 45.3,495.5"/><polygon class="lb5" points="51.1,485.5 60.2,477.1 59.7,469.1 51.8,469.1"/><polygon class="lb48" points="70.7,475.3 60.2,477.1 72.1,458.9"/><polygon class="lb6" points="59.7,469.1 62.2,447.6 72.1,458.9"/><polygon class="lb5" points="62.2,447.6 45.3,461.7 45.3,447"/><polygon class="lb2" points="45.3,461.7 51.8,469.1 51.1,485.5 45.3,480.1"/><polygon class="lb3" points="51.8,469.1 62.2,447.6 45.3,461.7"/><polygon class="lb2" points="59.7,469.1 62.2,447.6 51.8,469.1"/><polygon class="lb0" points="59.7,469.1 60.2,477.1 72.1,458.9"/><polygon class="lb2" points="70.7,475.3 58.2,492.1 51.1,485.5 60.2,477.1"/><polygon class="lb21" points="136.4,452.3 164.6,436.7 169,471.1"/><polygon class="lb26" points="164.6,436.7 179.9,447.6 169,471.1"/><polygon class="lb22" points="179.9,447.6 186.5,421.3 164.6,436.7"/><polygon class="lb31" points="186.5,421.3 163.9,413.5 164.6,436.7"/><polygon class="lb49" points="186.5,421.3 180.3,397.8 163.9,413.5"/><polygon class="lb50" points="180.3,397.8 163.9,413.5 160.4,404.4"/><polygon class="lb51" points="186.5,421.3 200.2,487.7 179.9,447.6"/><polygon class="lb50" points="179.9,447.6 169,471.1 200.2,487.7"/><polygon class="lb41" points="186.5,421.3 209,424.5 180.3,397.8"/><polygon class="lb21" points="126.3,360.2 180.8,378.7 180.3,397.8"/><polygon class="lb52" points="180.8,378.7 179.6,357.2 126.3,360.2"/><polygon class="lb53" points="126.3,360.2 124.5,339.9 114.8,353.9"/><polygon class="lb53" points="180.8,378.7 206.6,391.6 180.3,397.8"/><polygon class="lb54" points="180.8,378.7 203.8,378.3 179.6,357.2"/><polygon class="lb31" points="179.6,357.2 175.9,342.7 126.3,360.2"/><polygon class="lb22" points="149.2,299.4 124.5,339.9 112.5,307.2"/><polygon class="lb20" points="149.2,299.4 161,314.4 140.1,314.4"/><polygon class="lb26" points="161,314.4 165.5,329.6 140.1,314.4"/><polygon class="lb55" points="165.5,329.6 126.3,360.2 175.9,342.7"/><polygon class="lb22" points="165.5,329.6 124.5,339.9 126.3,360.2"/><polygon class="lb55" points="165.5,329.6 140.1,314.4 124.5,339.9"/><polygon class="lb34" points="165.5,329.6 189.4,317.1 161,314.4"/><polygon class="lb23" points="165.5,329.6 194,331.2 175.9,342.7"/><polygon class="lb20" points="175.9,342.7 198.4,362.6 179.6,357.2"/><polygon class="lb56" points="149.2,299.4 161,314.4 183.7,298.4"/><polygon class="lb57" points="183.7,298.4 172,285.2 149.2,299.4"/><polygon class="lb14" points="169,471.1 141.8,506.1 138.6,475.9"/><polygon class="lb45" points="136.4,452.3 138.6,475.9 169,471.1"/><polygon class="lb30" points="141.8,506.1 108.1,466.5 138.6,475.9"/><polygon class="lb8" points="108.1,466.5 124.7,499.7 141.8,506.1"/><polygon class="lb18" points="108.1,466.5 91.8,491.5 124.7,499.7"/><polygon class="lb18" points="141.8,506.1 127.8,518.3 124.7,499.7"/><polygon class="lb49" points="141.8,506.1 189.8,501.2 157,486.5"/><polygon class="lb58" points="169,471.1 189.8,501.2 157,486.5"/><polygon class="lb22" points="141.8,506.1 174,526.3 169,503.3"/><polygon class="lb32" points="141.8,506.1 127.8,518.3 174,526.3"/><polygon class="lb13" points="127.8,518.3 91.8,491.5 124.7,499.7"/><polygon class="lb15" points="127.8,518.3 167.9,548.1 158.7,523.7"/><polygon class="lb53" points="127.8,518.3 138.6,547.6 168.3,548.3"/><polygon class="lb19" points="127.8,518.3 106.4,536.8 97,511.2"/><polygon class="lb14" points="91.8,491.5 97,511.2 127.8,518.3"/><polygon class="lb11" points="76.6,502.6 61.6,516.2 59.9,509.2"/><polygon class="lb28" points="59.9,509.2 45.3,508.6 61.6,516.2"/><polygon class="lb27" points="61.6,516.2 45.3,517.6 45.3,508.6"/><polygon class="lb42" points="61.6,516.2 45.3,528 45.3,517.6"/><polygon class="lb45" points="83.9,526 106.4,536.8 95.1,549.5"/><polygon class="lb10" points="83.9,526 78.1,558.8 95.1,549.5"/><polygon class="lb25" points="78.1,558.8 45.3,575 80.7,544.3"/><polygon class="lb42" points="78.1,558.8 62.9,604.7 45.3,575"/><polygon class="lb18" points="78.1,558.8 98.8,588.9 95.1,549.5"/><polygon class="lb11" points="78.1,558.8 89.8,575.8 62.9,604.7"/><polygon class="lb8" points="45.3,575 55.5,592.2 45.3,602.6"/><polygon class="lb44" points="55.5,592.2 45.3,616.5 45.3,602.6"/><polygon class="lb10" points="80.7,544.3 62.2,536.2 45.3,575"/><polygon class="lb18" points="62.2,536.2 45.3,528 45.3,575"/><polygon class="lb41" points="61.6,516.2 62.2,536.2 45.3,528"/><polygon class="lb45" points="61.6,516.2 80.7,544.3 62.2,536.2"/><polygon class="lb16" points="76.6,502.6 83.9,526 61.6,516.2"/><polygon class="lb41" points="61.6,516.2 80.7,544.3 83.9,526"/><polygon class="lb59" points="91.8,491.5 76.6,502.6 97,511.2"/><polygon class="lb40" points="106.4,536.8 125,572.2 139.4,547.6"/><polygon class="lb14" points="106.4,536.8 98.8,588.9 95.1,549.5"/><polygon class="lb15" points="106.4,536.8 118.4,559.7 98.8,588.9"/><polygon class="lb33" points="127.8,518.3 106.4,536.8 139.4,547.6"/><polygon class="lb13" points="97,511.2 83.9,526 106.4,536.8"/><polygon class="lb14" points="97,511.2 76.6,502.6 83.9,526"/><polygon class="lb14" points="106.3,458.1 108.1,466.5 136.4,452.3"/>
+</g>
+</svg>`;
+
+  function initLobo() {
+    var c = document.getElementById('loboContainer');
+    if (!c) return;
+    c.innerHTML = LOBO_SVG;
+    var svg = c.querySelector('.lobo');
+    var polys = svg.querySelectorAll('polygon');
+    // aplica delay progressivo para efeito de montagem
+    polys.forEach(function(p, i) {
+      p.style.animationDelay = (i * 0.008) + 's';
+    });
+    // dispara a animação
+    requestAnimationFrame(function() {
+      svg.classList.add('go');
+      svg.querySelector('#Izquierda').style.visibility = 'visible';
+      svg.querySelector('#Derecha').style.visibility = 'visible';
+    });
+    animarTexto();
+  }
+
+  function animarTexto() {
+    // animação de letras removida — título agora é fixo (SPR5 + CONTROLE LIDERANÇAS)
+    return;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLobo);
+  } else {
+    initLobo();
+  }
+})();
+
+</script>
+</body>
+</html>
