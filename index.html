@@ -705,7 +705,6 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <div class="su-nome" id="suNome"></div>
   </div>
   <nav class="sidebar-nav">
-    <!-- Pacotes Faltantes desativado (código mantido para reativação futura). Para reativar: remover style display:none e a lógica em iniciarApp/sair. -->
     <button class="nav-item" data-view="pacotes" data-oculto="1" onclick="abrirView('pacotes')" style="display:none">
       <div class="dots_border"></div>
       <span class="nav-icon">📦</span> <span>Pacotes Faltantes</span>
@@ -721,6 +720,11 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <button class="nav-item" data-view="orh" onclick="abrirView('orh')">
       <div class="dots_border"></div>
       <span class="nav-icon">📊</span> <span>Análise ORH</span>
+    </button>
+    <!-- NOVO BOTÃO: HISTÓRICO OPERACIONAL -->
+    <button class="nav-item" data-view="historico-orh" onclick="abrirView('historico-orh')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">📈</span> <span>Histórico Operacional</span>
     </button>
     <button class="nav-item" data-view="briefing" onclick="abrirView('briefing')">
       <div class="dots_border"></div>
@@ -915,6 +919,35 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <div id="oPaneJust" style="display:none">
       <div id="oTabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
+  </div>
+
+  <!-- VIEW: HISTÓRICO OPERACIONAL (D-2) -->
+  <div class="view" id="viewHistOrh">
+    <div class="page-header">
+      <div class="page-title">📈 Histórico Operacional (Evolução)</div>
+      <div class="page-sub" id="histOrhSub">Carregando...</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-bar" style="grid-template-columns: repeat(4, 1fr);">
+      <div class="kpi"><div class="kpi-label">Média Compliance</div><div class="kpi-val b" id="hoCompliance">—</div></div>
+      <div class="kpi"><div class="kpi-label">Média DPPH</div><div class="kpi-val b" id="hoDpph">—</div></div>
+      <div class="kpi"><div class="kpi-label">Stem Out Médio (min)</div><div class="kpi-val b" id="hoStemOut">—</div></div>
+      <div class="kpi" style="border-color:var(--danger)"><div class="kpi-label" style="color:var(--danger)">Paradas >= 1h</div><div class="kpi-val d" id="hoParadasLongas">—</div></div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="orh-charts" style="margin-bottom: 16px;">
+      <div class="chart-box"><div class="chart-title">Evolução de Compliance %</div><canvas id="chHoCompliance"></canvas></div>
+      <div class="chart-box"><div class="chart-title">Média DPPH por Experiência do Driver</div><canvas id="chHoDpphExp"></canvas></div>
+    </div>
+
+    <!-- TABELA E FILTROS -->
+    <div class="filtros">
+      <input type="text" id="hoBusca" placeholder="Buscar rota, motorista, placa...">
+      <button class="btn-atualizar" onclick="carregarHistORH()">↻ Atualizar</button>
+    </div>
+    <div id="hoListaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
   </div>
 
   <!-- VIEW: PENDENTES (aba faltantes) -->
@@ -1155,8 +1188,8 @@ function sair() {
   sessionStorage.removeItem('spr5sessao');
   sessao = null; cache = [];
   // reseta flags de carregamento das ferramentas
-  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false;
-  orhCache = []; pendCache = [];
+  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false; histOrhCarregado = false;
+  orhCache = []; pendCache = []; histOrhCache = [];
   // restaura os itens do menu (exceto os marcados como ocultos, ex: Pacotes desativado)
   document.querySelectorAll('.nav-item').forEach(function(b){
     b.style.display = b.getAttribute('data-oculto') ? 'none' : 'flex';
@@ -1183,6 +1216,9 @@ var orhCharts = {};
 var pendCarregado = false;
 var pendCache = [];
 var briefingCarregado = false;
+var histOrhCarregado = false;
+var histOrhCache = [];
+var histOrhCharts = {};
 
 function abrirMenu() {
   document.getElementById('sidebar').classList.add('aberto');
@@ -1202,6 +1238,7 @@ function abrirView(nome, semFechar) {
   document.getElementById('viewPacotes').classList.toggle('ativa', nome === 'pacotes');
   document.getElementById('viewYms').classList.toggle('ativa', nome === 'yms');
   document.getElementById('viewOrh').classList.toggle('ativa', nome === 'orh');
+  document.getElementById('viewHistOrh').classList.toggle('ativa', nome === 'historico-orh');
   document.getElementById('viewPendentes').classList.toggle('ativa', nome === 'pendentes');
   document.getElementById('viewBriefing').classList.toggle('ativa', nome === 'briefing');
 
@@ -1222,6 +1259,12 @@ function abrirView(nome, semFechar) {
   if (nome === 'orh' && !orhCarregado && sessao) {
     carregarORH();
     orhCarregado = true;
+  }
+
+  // carrega o Histórico ORH na primeira vez que abre
+  if (nome === 'historico-orh' && !histOrhCarregado && sessao) {
+    carregarHistORH();
+    histOrhCarregado = true;
   }
 
   // carrega Pendentes na primeira vez
@@ -2150,6 +2193,139 @@ document.querySelectorAll('[data-otab]').forEach(function(t){
 
 
 // ════════════════════════════════════════════════════════════
+// HISTÓRICO OPERACIONAL (D-2)
+// ════════════════════════════════════════════════════════════
+function carregarHistORH() {
+  document.getElementById('hoListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando histórico D-2...</div>';
+  var cb = 'cbho' + Date.now();
+  window[cb] = function(d) {
+    delete window[cb];
+    if (d.erro) { toast('Erro Histórico: ' + d.erro, 1); return; }
+    var todas = d.rotas || [];
+    // Usa a mesma regra de restrição de transportadora do ORH atual
+    histOrhCache = sessao.isMeli ? todas : todas.filter(function(r){ return perteceAoUsuarioRota(r); });
+    renderHistORH();
+  };
+  var s = document.createElement('script');
+  // CHAMADA API getHistORH
+  s.src = API + '?action=getHistORH&callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function hoFiltrar() {
+  var b = (document.getElementById('hoBusca').value || '').toLowerCase();
+  return histOrhCache.filter(function(r) {
+    if (b) {
+      var t = [r.ID_ROTA, r.ID_DRIVER, r.PLACA_VEICULO, r.TRANSPORTADORA].join(' ').toLowerCase();
+      if (!t.includes(b)) return false;
+    }
+    return true;
+  });
+}
+
+function renderHistORH() {
+  var f = hoFiltrar();
+  var tot = f.length;
+  
+  if (!tot) {
+    document.getElementById('hoListaGrupos').innerHTML = '<div class="empty">Nenhum dado histórico encontrado.</div>';
+    document.getElementById('hoCompliance').textContent = '—';
+    document.getElementById('hoDpph').textContent = '—';
+    document.getElementById('hoStemOut').textContent = '—';
+    document.getElementById('hoParadasLongas').textContent = '0';
+    return;
+  }
+
+  // Cálculos de KPI baseados nas colunas fornecidas
+  var somaCompliance = 0, somaDpph = 0, somaStemOut = 0, paradasLongas = 0;
+  
+  f.forEach(function(r) {
+    somaCompliance += parseFloat(r.COMPLIANCE) || 0;
+    somaDpph += parseFloat(r.DPPH) || 0;
+    somaStemOut += parseFloat(r.STEMOUT_REAL_MIN) || 0;
+    if (parseInt(r.PARADA_MAIOR_IGUAL_1_hora) > 0) paradasLongas++;
+  });
+
+  document.getElementById('hoCompliance').textContent = Math.round(somaCompliance / tot) + '%';
+  document.getElementById('hoDpph').textContent = (somaDpph / tot).toFixed(2);
+  document.getElementById('hoStemOut').textContent = Math.round(somaStemOut / tot) + ' min';
+  document.getElementById('hoParadasLongas').textContent = paradasLongas;
+  document.getElementById('histOrhSub').textContent = tot + ' registros analisados';
+
+  // Montar Tabela (Resumo)
+  var h = '<div class="hist-wrap"><table class="htable"><thead><tr>';
+  h += '<th>Data</th><th>Rota</th><th>Motorista</th><th>Placa</th><th>Veículo</th><th>Compliance</th><th>DPPH</th><th>Stem Out</th><th>Parada > 1h</th>';
+  h += '</tr></thead><tbody>';
+  
+  f.forEach(function(r) {
+    h += '<tr>';
+    h += '<td style="font-size:11px; color:var(--text2)">' + e(r.DATA_DIA) + '</td>';
+    h += '<td><span class="sid">' + e(r.ID_ROTA) + '</span></td>';
+    h += '<td style="font-size:11px">' + e(r.ID_DRIVER || '—') + '</td>';
+    h += '<td style="font-size:11px">' + e(r.PLACA_VEICULO || '—') + '</td>';
+    h += '<td style="font-size:11px">' + e(r.VEICULO_REAL || '—') + '</td>';
+    h += '<td>' + e(r.COMPLIANCE || '0') + '%</td>';
+    h += '<td>' + e(r.DPPH || '0') + '</td>';
+    h += '<td>' + e(r.STEMOUT_REAL_MIN || '0') + 'm</td>';
+    h += '<td class="dc ' + (parseInt(r.PARADA_MAIOR_IGUAL_1_hora) > 0 ? 'crit' : 'ok') + '">' + e(r.PARADA_MAIOR_IGUAL_1_hora || '0') + '</td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  
+  document.getElementById('hoListaGrupos').innerHTML = h;
+
+  desenharGraficosHistORH(f);
+}
+
+function desenharGraficosHistORH(dados) {
+  if (typeof Chart === 'undefined') return;
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var cor = dark ? '#8888aa' : '#6c757d';
+  var grid = dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  
+  Object.keys(histOrhCharts).forEach(function(k){ if(histOrhCharts[k]) histOrhCharts[k].destroy(); });
+
+  // Agrupamento para Gráfico 1: Evolução Compliance
+  var porDia = {};
+  dados.forEach(function(r) {
+    var d = r.DATA_DIA;
+    if(!porDia[d]) porDia[d] = { soma: 0, qtd: 0 };
+    porDia[d].soma += parseFloat(r.COMPLIANCE) || 0;
+    porDia[d].qtd++;
+  });
+  var diasLabels = Object.keys(porDia).sort();
+  var complianceData = diasLabels.map(function(d) { return Math.round(porDia[d].soma / porDia[d].qtd); });
+
+  histOrhCharts.compliance = new Chart(document.getElementById('chHoCompliance'), {
+    type: 'line',
+    data: { labels: diasLabels, datasets: [{ label: 'Compliance %', data: complianceData, borderColor: '#3483fa', backgroundColor: 'rgba(52,131,250,.12)', fill: true, tension: 0.3 }] },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: grid } }, y: { grid: { color: grid }, max: 100, beginAtZero: true } } }
+  });
+
+  // Agrupamento para Gráfico 2: DPPH por Experiência
+  var porExp = {};
+  dados.forEach(function(r) {
+    var exp = r.EXPERIENCIA_DRIVER || 'Não informada';
+    if(!porExp[exp]) porExp[exp] = { soma: 0, qtd: 0 };
+    porExp[exp].soma += parseFloat(r.DPPH) || 0;
+    porExp[exp].qtd++;
+  });
+  var expLabels = Object.keys(porExp);
+  var dpphData = expLabels.map(function(e) { return (porExp[e].soma / porExp[e].qtd).toFixed(2); });
+
+  histOrhCharts.dpphExp = new Chart(document.getElementById('chHoDpphExp'), {
+    type: 'bar',
+    data: { labels: expLabels, datasets: [{ label: 'DPPH Médio', data: dpphData, backgroundColor: '#00a650' }] },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: grid } }, y: { grid: { color: grid }, beginAtZero: true } } }
+  });
+}
+
+// Evento de busca no input da nova tela
+var elHoBusca = document.getElementById('hoBusca');
+if (elHoBusca) elHoBusca.addEventListener('input', renderHistORH);
+
+
+// ════════════════════════════════════════════════════════════
 // PENDENTES (aba "faltantes")
 // ════════════════════════════════════════════════════════════
 function carregarPend() {
@@ -2496,8 +2672,10 @@ document.querySelectorAll('.tab').forEach(function(t){
 
 ['fBusca','fStatus','fJust'].forEach(function(id){
   var el=document.getElementById(id);
-  el.addEventListener('input',render);
-  el.addEventListener('change',render);
+  if (el) {
+    el.addEventListener('input',render);
+    el.addEventListener('change',render);
+  }
 });
 
 function tog(h){ h.parentElement.classList.toggle('open'); }
