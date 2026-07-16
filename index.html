@@ -1,19 +1,4 @@
-Entendi perfeitamente! Foram ótimas observações. O problema do "Não registrado" mesmo com presença ocorria porque as datas podem vir da planilha com horas embutidas ou formatos diferentes, atrapalhando a comparação. Além disso, as ideias dos filtros e de abrir essa visão para todas as transportadoras (sendo que cada uma só vê a dela) são fundamentais para escalar a ferramenta.
-
-Aqui está o resumo de **tudo o que foi ajustado nesta nova versão**:
-
-1. **Filtro de Data e Transportadora:** Adicionado no topo da Visão Geral.
-2. **Correção de Data no Briefing:** Criamos uma extração exata de `dd/mm/aaaa` para não dar falso positivo de "Não registrado".
-
-
-3. **Visão Restrita por Login:** Agora **TODOS** têm o menu "Visão Geral". Se for MELI, vê tudo e pode filtrar. Se for outra Transportadora, o filtro fica travado apenas na dela.
-4. **Alvo do Briefing:** A coluna "Status Briefing" agora só avalia (e cobra) as 5 transportadoras que você pediu: *Kangu Logistics, RodaCoop, Altovale, Bravox e BLD Logística*. Para as demais, o campo fica vazio ("—").
-5. **Ordem de Exibição:** Essas 5 transportadoras prioritárias agora aparecem **sempre no topo da tabela**.
-6. **Botão de Verificado:** Adicionei um botão prático na última coluna que permite marcar a linha como "Verificada" (ele deixa o botão verde e a linha levemente transparente pra você saber que já olhou aquela transportadora).
-
-Para não ter erro na hora de colar (como aconteceu com o texto vazando no layout), copie **exatamente a partir da primeira linha do código abaixo** (`<!DOCTYPE html>`) e substitua tudo no seu arquivo `index.html`.
-
-```html
+html
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
