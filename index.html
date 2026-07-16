@@ -1,3 +1,8 @@
+Aqui está o código completo e atualizado, já integrando **tanto as novas justificativas do ORH quanto o novo painel de Visão Geral (Torre de Controle)**.
+
+Basta você copiar tudo o que está no bloco abaixo e substituir o conteúdo do seu arquivo `index.html` lá no seu repositório do GitHub.
+
+```html
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
@@ -669,7 +674,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
           <svg id="light-ray-3" class="light-ray" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
           <svg id="cloud-1" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
           <svg id="cloud-2" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
-          <svg id="cloud-3" class="cloud-dark" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+          <svg id="cloud-3" class="cloud-dark" viewBox="0 100 100"><circle cx="50" cy="50" r="50"/></svg>
           <svg id="cloud-4" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
           <svg id="cloud-5" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
           <svg id="cloud-6" class="cloud-light" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
@@ -705,6 +710,11 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <div class="su-nome" id="suNome"></div>
   </div>
   <nav class="sidebar-nav">
+    <button class="nav-item" data-view="geral" onclick="abrirView('geral')" id="btnNavGeral" style="display:none">
+      <div class="dots_border"></div>
+      <span class="nav-icon">👁️</span> <span>Visão Geral</span>
+    </button>
+    <!-- Pacotes Faltantes desativado (código mantido para reativação futura). Para reativar: remover style display:none e a lógica em iniciarApp/sair. -->
     <button class="nav-item" data-view="pacotes" data-oculto="1" onclick="abrirView('pacotes')" style="display:none">
       <div class="dots_border"></div>
       <span class="nav-icon">📦</span> <span>Pacotes Faltantes</span>
@@ -720,11 +730,6 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <button class="nav-item" data-view="orh" onclick="abrirView('orh')">
       <div class="dots_border"></div>
       <span class="nav-icon">📊</span> <span>Análise ORH</span>
-    </button>
-    <!-- NOVO BOTÃO: HISTÓRICO OPERACIONAL -->
-    <button class="nav-item" data-view="historico-orh" onclick="abrirView('historico-orh')">
-      <div class="dots_border"></div>
-      <span class="nav-icon">📈</span> <span>Histórico Operacional</span>
     </button>
     <button class="nav-item" data-view="briefing" onclick="abrirView('briefing')">
       <div class="dots_border"></div>
@@ -783,6 +788,31 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 
 <!-- APP -->
 <div id="app">
+
+  <!-- VIEW: VISÃO GERAL (TORRE DE CONTROLE) -->
+  <div class="view" id="viewGeral">
+    <div class="page-header">
+      <div class="page-title">👁️ Visão Geral da Liderança</div>
+      <div class="page-sub">Acompanhamento consolidado de pendências por transportadora (Dia atual)</div>
+    </div>
+
+    <div class="kpi-bar" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="kpi" style="border-color:var(--warn)">
+        <div class="kpi-label" style="color:var(--warn)">Total Pendências Faltantes</div>
+        <div class="kpi-val w" id="vgTotFaltantes"><span class="spinner"></span></div>
+      </div>
+      <div class="kpi" style="border-color:var(--danger)">
+        <div class="kpi-label" style="color:var(--danger)">Total Pendências ORH</div>
+        <div class="kpi-val d" id="vgTotORH"><span class="spinner"></span></div>
+      </div>
+      <div class="kpi" style="border-color:var(--blue)">
+        <div class="kpi-label" style="color:var(--blue)">Faltas no Briefing</div>
+        <div class="kpi-val b" id="vgTotBriefing"><span class="spinner"></span></div>
+      </div>
+    </div>
+
+    <div id="vgLista"><div class="empty"><span class="spinner"></span> Carregando dados de todos os painéis...</div></div>
+  </div>
 
   <!-- VIEW: PACOTES FALTANTES -->
   <div class="view ativa" id="viewPacotes">
@@ -921,54 +951,6 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     </div>
   </div>
 
-  <!-- VIEW: HISTÓRICO OPERACIONAL (D-2) -->
-  <div class="view" id="viewHistOrh">
-    <div class="page-header">
-      <div class="page-title">📈 Histórico Operacional (Evolução D-2)</div>
-      <div class="page-sub" id="histOrhSub">Carregando...</div>
-    </div>
-
-    <!-- FILTROS -->
-    <div class="filtros">
-      <select id="hoPeriodoTipo">
-        <option value="tudo">Todos os dias</option>
-        <option value="dia">Filtrar por dia</option>
-        <option value="semana">Filtrar por semana</option>
-      </select>
-      <select id="hoPeriodoValor" style="display:none"><option value="">—</option></select>
-      <input type="text" id="hoBusca" placeholder="Buscar rota, motorista...">
-      <button class="btn-atualizar" onclick="carregarHistORH()">↻ Atualizar</button>
-    </div>
-
-    <!-- KPIs -->
-    <div class="kpi-bar" style="grid-template-columns: repeat(4, 1fr);">
-      <div class="kpi"><div class="kpi-label">Média Compliance</div><div class="kpi-val b" id="hoCompliance">—</div></div>
-      <div class="kpi"><div class="kpi-label">Média DPPH</div><div class="kpi-val b" id="hoDpph">—</div></div>
-      <div class="kpi"><div class="kpi-label">Rotas > Contrato (Ofensoras)</div><div class="kpi-val d" id="hoAcimaContrato">—</div></div>
-      <div class="kpi" style="border-color:var(--danger)"><div class="kpi-label" style="color:var(--danger)">🚨 Rotas > 12h</div><div class="kpi-val d" id="hoAcima12h">—</div></div>
-    </div>
-
-    <!-- GRÁFICOS -->
-    <div class="orh-charts" style="margin-bottom: 16px;">
-      <div class="chart-box"><div class="chart-title">Evolução de Compliance %</div><canvas id="chHoCompliance"></canvas></div>
-      <div class="chart-box"><div class="chart-title">Média DPPH por Experiência do Driver</div><canvas id="chHoDpphExp"></canvas></div>
-    </div>
-
-    <!-- TABELAS RESUMO EM VEZ DA TABELA GIGANTE -->
-    <div class="orh-charts">
-      <div class="grupo open" style="margin-bottom:0">
-        <div class="gh" style="cursor:default"><div class="gh-left">⚠️ Top Drivers Ofensores (Rotas > Contrato)</div></div>
-        <div class="gb" style="display:block"><div id="hoTopDrivers"><div class="empty">Carregando...</div></div></div>
-      </div>
-      
-      <div class="grupo open" style="margin-bottom:0; border-color:var(--danger)">
-        <div class="gh" style="background:rgba(224,82,82,.10);cursor:default"><div class="gh-left"><span style="color:var(--danger)">🚨 Histórico de Rotas Acima de 12 horas</span></div></div>
-        <div class="gb" style="display:block"><div id="hoRotas12h"><div class="empty">Carregando...</div></div></div>
-      </div>
-    </div>
-
-  </div>
-
   <!-- VIEW: PENDENTES (aba faltantes) -->
   <div class="view" id="viewPendentes">
     <div class="page-header">
@@ -1055,15 +1037,98 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;margin-bottom:12px">
         <option value="">Selecione o motivo...</option>
         <option value="Número alto de paradas">Número alto de paradas</option>
-        <option value="Cidades dispersas">Cidades dispersas</option>
         <option value="Retorno de insucessos">Retorno de insucessos</option>
+        <option value="Atraso driver">Atraso driver</option>
+        <option value="Cidades dispersas">Cidades dispersas</option>
+        <option value="Problemas mecânicos">Problemas mecânicos</option>
+        <option value="Ajudou outro driver">Ajudou outro driver</option>
         <option value="Coleta fantasma">Coleta fantasma (informe o ID)</option>
         <option value="Outras">Outras</option>
       </select>
-      <div id="mColetaIdWrap" style="display:none;margin-bottom:12px">
-        <label class="flabel">ID da coleta fantasma *</label>
-        <input type="text" id="mColetaId" placeholder="Digite o ID da coleta"
-          style="width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none">
+
+      <!-- Sub-formulários Dinâmicos -->
+      <div id="subFormsWrap" style="margin-bottom:12px;">
+        
+        <!-- NÚMERO ALTO DE PARADAS -->
+        <div id="sub_AltoParadas" style="display:none; gap:10px; flex-direction:column;">
+          <div><label class="flabel">Haviam manuais? Se sim, quantos? *</label><input type="number" id="i_ap_manuais" placeholder="Somente números (0 se não houver)" class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Quantas paradas haviam nesta rota? *</label><input type="number" id="i_ap_paradas" placeholder="Somente números" class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Qual foi o DPPH (Produtividade)? *</label><input type="number" id="i_ap_dpph" placeholder="Somente números" class="filtros" style="width:100%"></div>
+        </div>
+
+        <!-- RETORNO DE INSUCESSOS -->
+        <div id="sub_Insucessos" style="display:none; gap:10px; flex-direction:column;">
+          <div><label class="flabel">Quantidade de insucessos *</label><input type="number" id="i_ri_qtd" placeholder="Somente números" class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Qual foi o tipo de insucesso? *</label>
+            <select id="i_ri_tipo" class="filtros" style="width:100%">
+              <option value="">Selecione...</option>
+              <option value="Cliente ausente">Cliente ausente</option>
+              <option value="Recusado">Recusado</option>
+              <option value="Endereço não encontrado">Endereço não encontrado</option>
+              <option value="Misto/Vários">Misto / Vários</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div><label class="flabel">Horário que o driver retornou *</label><input type="time" id="i_ri_hora" class="filtros" style="width:100%"></div>
+        </div>
+
+        <!-- ATRASO DRIVER -->
+        <div id="sub_AtrasoDriver" style="display:none; gap:10px; flex-direction:column;">
+          <div><label class="flabel">Driver estava sendo acompanhado? *</label>
+            <select id="i_ad_acomp" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select>
+          </div>
+          <div><label class="flabel">Foi enviada ambulância para suporte? *</label>
+            <select id="i_ad_ambu" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select>
+          </div>
+        </div>
+
+        <!-- CIDADES DISPERSAS -->
+        <div id="sub_CidadesDispersas" style="display:none; gap:10px; flex-direction:column;">
+          <div><label class="flabel">Cidades que afetaram o deslocamento *</label><input type="text" id="i_cd_cidades" placeholder="Ex: Guarapuava, Pinhão..." class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Driver é novato? *</label>
+            <select id="i_cd_novato" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select>
+          </div>
+          <div><label class="flabel">Driver está familiarizado com a região? *</label>
+            <select id="i_cd_famil" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select>
+          </div>
+        </div>
+
+        <!-- PROBLEMAS MECÂNICOS -->
+        <div id="sub_ProbMecanico" style="display:none; gap:10px; flex-direction:column;">
+          <div><label class="flabel">Qual foi o problema apresentado? *</label><input type="text" id="i_pm_prob" placeholder="Ex: Pneu furado, bateria..." class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Horário que foi identificado *</label><input type="time" id="i_pm_hora_id" class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Horário da conclusão do conserto *</label><input type="time" id="i_pm_hora_fim" class="filtros" style="width:100%"></div>
+        </div>
+
+        <!-- AJUDOU OUTRO DRIVER -->
+        <div id="sub_AjudouDriver" style="display:none; gap:10px; flex-direction:column;">
+          <div><label class="flabel">Rota em que foi prestado apoio *</label><input type="text" id="i_aod_rota" placeholder="ID da rota apoiada" class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Apoio a driver com problema mecânico? *</label>
+            <select id="i_aod_mec" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select>
+          </div>
+          <div><label class="flabel">Qual o problema do veículo apoiado? (Opcional)</label><input type="text" id="i_aod_prob" placeholder="Ex: Bateria" class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Prestou apoio a entregas de outro driver? *</label>
+            <select id="i_aod_entregas" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select>
+          </div>
+          <div><label class="flabel">Quanto tempo durou este suporte? *</label><input type="text" id="i_aod_tempo" placeholder="Ex: 1h30, 45min" class="filtros" style="width:100%"></div>
+        </div>
+
+        <!-- COLETA FANTASMA -->
+        <div id="mColetaIdWrap" style="display:none; gap:10px; flex-direction:column;">
+          <div><label class="flabel">ID da coleta fantasma *</label>
+          <input type="text" id="mColetaId" placeholder="Digite o ID da coleta" class="filtros" style="width:100%"></div>
+        </div>
+
+        <!-- PERGUNTA COMUM: Reporte 18h -->
+        <div id="wrap_Reporte18h" style="display:none; margin-top:10px;">
+          <label class="flabel" style="color:var(--blue)">Foi enviado reporte no grupo do MELI às 18:00 informando o atraso? *</label>
+          <select id="i_comum_reporte" class="filtros" style="width:100%">
+            <option value="">Selecione...</option>
+            <option value="SIM">SIM</option>
+            <option value="NÃO">NÃO</option>
+          </select>
+        </div>
+
       </div>
     </div>
     <div>
@@ -1094,8 +1159,6 @@ var ACESSOS = {
   'KN'             : 'KN1234'
 };
 
-// Transportadoras com acesso restrito: só enxergam as ferramentas listadas.
-// (não listadas aqui = acesso completo, como as demais)
 var FERRAMENTAS_RESTRITAS = {
   'KN': ['pendentes']
 };
@@ -1112,14 +1175,12 @@ function toggleDark() {
   recolorirTitulo();
 }
 
-// Recolore as letras do título conforme o tema atual
 function recolorirTitulo() {
   var el = document.getElementById('logoTexto');
   if (!el) return;
   var letras = el.querySelectorAll('.ltr');
   if (!letras.length) return;
   var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  // modo escuro: amarelo Mercado Livre; modo claro: escuro (header já é amarelo)
   var cor = dark ? '#ffe600' : '#1c1c1e';
   letras.forEach(function(s) { s.style.color = cor; });
 }
@@ -1143,7 +1204,6 @@ window.addEventListener('load', function() {
   iniciarLogoFlip();
 });
 
-// ── LOGO ANIMADO (loop entre #TodoMundoJunto e SPR5) ──────────
 function iniciarLogoFlip() {
   var el = document.getElementById('logoFlip');
   if (!el) return;
@@ -1181,35 +1241,38 @@ function iniciarApp() {
   hu.classList.add('show');
   document.getElementById('hTransp').textContent = sessao.transp;
   document.getElementById('hNome').textContent   = '— ' + sessao.nome;
-  // menu lateral
   document.getElementById('btnMenu').style.display = 'flex';
   document.getElementById('suTransp').textContent = sessao.transp;
   document.getElementById('suNome').textContent   = sessao.nome;
 
-  // Aplica restrição de ferramentas (ex: KN só vê Pendentes)
   var permitidas = FERRAMENTAS_RESTRITAS[sessao.transp] || null;
   document.querySelectorAll('.nav-item').forEach(function(b){
     var v = b.getAttribute('data-view');
-    if (b.getAttribute('data-oculto')) { b.style.display = 'none'; return; } // itens desativados ficam ocultos
+    if (b.getAttribute('data-oculto')) { b.style.display = 'none'; return; }
     b.style.display = (!permitidas || permitidas.indexOf(v) !== -1) ? 'flex' : 'none';
   });
 
+  // Esconde a Visão Geral de quem não for MELI
+  var btnGeral = document.getElementById('btnNavGeral');
+  if (btnGeral) btnGeral.style.display = sessao.isMeli ? 'flex' : 'none';
+
   if (permitidas) {
-    // abre direto a primeira ferramenta permitida e carrega os dados dela
     abrirView(permitidas[0], true);
   } else {
-    // Pendentes é a tela de entrada padrão (Pacotes Faltantes foi desativado)
-    abrirView('pendentes', true);
+    // Se for líder meli, abre a visão geral direto como default
+    if (sessao.isMeli) {
+      abrirView('geral', true);
+    } else {
+      abrirView('pendentes', true);
+    }
   }
 }
 
 function sair() {
   sessionStorage.removeItem('spr5sessao');
   sessao = null; cache = [];
-  // reseta flags de carregamento das ferramentas
-  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false; histOrhCarregado = false;
-  orhCache = []; pendCache = []; histOrhCache = []; histOrhCacheFull = [];
-  // restaura os itens do menu (exceto os marcados como ocultos, ex: Pacotes desativado)
+  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false;
+  orhCache = []; pendCache = [];
   document.querySelectorAll('.nav-item').forEach(function(b){
     b.style.display = b.getAttribute('data-oculto') ? 'none' : 'flex';
   });
@@ -1225,7 +1288,6 @@ function sair() {
 }
 
 // ── MENU LATERAL / VIEWS ──────────────────────────────────────
-// URL base do YMS (Monitoramento de Pátio)
 var YMS_URL = 'https://frmarques-spr5.github.io/yms-spr5/';
 var ymsCarregado = false;
 var orhCarregado = false;
@@ -1235,10 +1297,6 @@ var orhCharts = {};
 var pendCarregado = false;
 var pendCache = [];
 var briefingCarregado = false;
-var histOrhCarregado = false;
-var histOrhCacheFull = [];
-var histOrhCache = [];
-var histOrhCharts = {};
 
 function abrirMenu() {
   document.getElementById('sidebar').classList.add('aberto');
@@ -1250,50 +1308,41 @@ function fecharMenu() {
 }
 
 function abrirView(nome, semFechar) {
-  // marca item ativo no menu
   document.querySelectorAll('.nav-item').forEach(function(b){
     b.classList.toggle('ativo', b.getAttribute('data-view') === nome);
   });
-  // mostra a view
+  
   document.getElementById('viewPacotes').classList.toggle('ativa', nome === 'pacotes');
   document.getElementById('viewYms').classList.toggle('ativa', nome === 'yms');
   document.getElementById('viewOrh').classList.toggle('ativa', nome === 'orh');
-  document.getElementById('viewHistOrh').classList.toggle('ativa', nome === 'historico-orh');
   document.getElementById('viewPendentes').classList.toggle('ativa', nome === 'pendentes');
   document.getElementById('viewBriefing').classList.toggle('ativa', nome === 'briefing');
+  document.getElementById('viewGeral').classList.toggle('ativa', nome === 'geral');
 
-  // carrega o iframe do YMS só na primeira vez, já filtrado pela transportadora
+  if (nome === 'geral' && sessao && sessao.isMeli) {
+    carregarVisaoGeral();
+  }
+
   if (nome === 'yms' && !ymsCarregado && sessao) {
     var url = YMS_URL;
     if (!sessao.isMeli) {
-      // passa a transportadora do login; BLD SVC/XPT viram BLD LOGÍSTICA
-      var transpYms = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT')
-        ? 'BLD LOGÍSTICA' : sessao.transp;
+      var transpYms = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
       url += '?transp=' + encodeURIComponent(transpYms);
     }
     document.getElementById('frameYms').src = url;
     ymsCarregado = true;
   }
 
-  // carrega o ORH na primeira vez que abre
   if (nome === 'orh' && !orhCarregado && sessao) {
     carregarORH();
     orhCarregado = true;
   }
 
-  // carrega o Histórico ORH na primeira vez que abre
-  if (nome === 'historico-orh' && !histOrhCarregado && sessao) {
-    carregarHistORH();
-    histOrhCarregado = true;
-  }
-
-  // carrega Pendentes na primeira vez
   if (nome === 'pendentes' && !pendCarregado && sessao) {
     carregarPend();
     pendCarregado = true;
   }
 
-  // Briefing: trava a transportadora do login e carrega painel na 1ª vez
   if (nome === 'briefing' && sessao) {
     var tB = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
     var elBT = document.getElementById('bTransp');
@@ -1309,7 +1358,6 @@ function toggleSenha() {
   i.type = i.type === 'password' ? 'text' : 'password';
 }
 
-// ── DADOS ─────────────────────────────────────────────────────
 function carregar() {
   document.getElementById('listaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando pacotes...</div>';
   var cb = 'cb' + Date.now();
@@ -1340,7 +1388,6 @@ function carregarHis() {
   document.head.appendChild(s);
 }
 
-// ── HELPERS ───────────────────────────────────────────────────
 function brl(usd) {
   var v = parseFloat(String(usd).replace(',','.')) || 0;
   return (v * USD_BRL).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
@@ -1358,16 +1405,12 @@ function shipmentLink(id) {
   return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener" style="font-family:monospace;font-weight:700">' + e(id) + '</a>';
 }
 
-// Normaliza nome de transportadora p/ comparação robusta:
-// tira acento, espaços extras e deixa maiúsculo. "BLD Logística " -> "BLD LOGISTICA"
 function normTransp(t) {
   return String(t || '')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .trim().replace(/\s+/g, ' ').toUpperCase();
 }
 
-// Define o nome do grupo de exibição de um pacote.
-// A BLD LOGÍSTICA é dividida: XPT -> "BLD XPT", demais tramos -> "BLD SVC".
 function grupoDoPacote(p) {
   var t = (p.transportadora || '').trim();
   if (t === 'BLD LOGÍSTICA') {
@@ -1376,7 +1419,6 @@ function grupoDoPacote(p) {
   return t || '— Sem transportadora —';
 }
 
-// Verifica se um pacote pertence ao usuário logado (não-MELI).
 function perteceAoUsuario(p) {
   if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
     return grupoDoPacote(p) === sessao.transp;
@@ -1384,7 +1426,6 @@ function perteceAoUsuario(p) {
   return normTransp(p.transportadora) === normTransp(sessao.transp);
 }
 
-// Mesma verificação para registros do histórico (usa transportadora + tramo gravados).
 function perteceAoUsuarioHist(r) {
   var t = (r.transportadora || '').trim();
   if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
@@ -1395,7 +1436,6 @@ function perteceAoUsuarioHist(r) {
   return t === sessao.transp;
 }
 
-// ── RENDER PACOTES ────────────────────────────────────────────
 function filtrar() {
   var b  = document.getElementById('fBusca').value.toLowerCase();
   var st = document.getElementById('fStatus').value;
@@ -1435,10 +1475,8 @@ function render() {
 
   var grupos = {};
   if (sessao.isMeli) {
-    // MELI vê todas agrupadas; BLD aparece dividida em BLD XPT / BLD SVC
     f.forEach(function(p){ var k=grupoDoPacote(p); if(!grupos[k]) grupos[k]=[]; grupos[k].push(p); });
   } else {
-    // BLD SVC / BLD XPT já vêm filtrados; usa o nome do login como título
     grupos[sessao.transp] = f;
   }
 
@@ -1490,7 +1528,6 @@ function render() {
   document.getElementById('listaGrupos').innerHTML = h;
 }
 
-// ── HISTÓRICO ─────────────────────────────────────────────────
 function renderHis(registros) {
   if (!registros.length) { document.getElementById('tabelaHis').innerHTML='<div class="empty">Nenhuma justificativa registrada ainda.</div>'; return; }
   var h = '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Shipment ID</th><th>Transportadora</th><th>Rota</th><th>Tramo</th><th>Dias</th><th>Motivo</th><th>Dispatcher</th></tr></thead><tbody>';
@@ -1510,7 +1547,6 @@ function renderHis(registros) {
   document.getElementById('tabelaHis').innerHTML = h;
 }
 
-// ── MODAL ─────────────────────────────────────────────────────
 function abrirModal(id) {
   pacSel = cache.find(function(p){return p.shipment_id===id;});
   if (!pacSel) return;
@@ -1527,7 +1563,6 @@ function abrirModal(id) {
   document.getElementById('bSave').classList.remove('disabled');
   document.getElementById('bSave').textContent = 'Salvar';
   document.getElementById('modalJust').setAttribute('data-modo', 'pacotes');
-  // esconde o bloco de motivo padrão (é exclusivo do ORH) e restaura rótulo
   document.getElementById('mMotivoPadraoWrap').style.display = 'none';
   document.getElementById('mMotivoLabel').textContent = 'Motivo da justificativa *';
   document.getElementById('modalJust').classList.add('open');
@@ -1537,13 +1572,10 @@ function abrirModal(id) {
 function mi(l,v){ return '<div class="mi"><label>'+l+'</label><span>'+e(String(v))+'</span></div>'; }
 function fecharModal() { document.getElementById('modalJust').classList.remove('open'); pacSel=null; }
 
-// ── SALVAR ────────────────────────────────────────────────────
 function salvar() {
-  // se o modal está em modo ORH, chama o salvar do ORH
   if (document.getElementById('modalJust').getAttribute('data-modo') === 'orh') {
     return salvarORH();
   }
-  // se está em modo pendente (aba faltantes)
   if (document.getElementById('modalJust').getAttribute('data-modo') === 'faltante') {
     return salvarPend();
   }
@@ -1608,25 +1640,6 @@ function salvar() {
 // ════════════════════════════════════════════════════════════
 // ANÁLISE ORH (rotas — ORH_REAL vs ORH_CONTRATO)
 // ════════════════════════════════════════════════════════════
-
-// LÓGICA COMPARTILHADA DE TEMPO
-function _horaParaMinutos_(v) {
-  if (v === null || v === undefined) return null;
-  if (v instanceof Date) { return v.getHours() * 60 + v.getMinutes() + v.getSeconds() / 60; }
-  var s = String(v).trim();
-  if (!s) return null;
-  var hm = s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if (hm) {
-    var h = parseInt(hm[1], 10) || 0;
-    var min = parseInt(hm[2], 10) || 0;
-    var seg = parseInt(hm[3], 10) || 0;
-    return h * 60 + min + seg / 60;
-  }
-  var dec = parseFloat(s.replace(',', '.'));
-  if (!isNaN(dec)) return dec * 60;
-  return null;
-}
-
 function carregarORH() {
   document.getElementById('oListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando rotas ORH...</div>';
   var cb = 'cborh' + Date.now();
@@ -1643,20 +1656,18 @@ function carregarORH() {
   document.head.appendChild(s);
 }
 
-// Converte "dd/mm/aaaa" (ou "dd/mm/aaaa hh:mm") num valor ordenável aaaammdd
 function dataChave(txt) {
   var m = String(txt||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   if (!m) return '';
   var d = m[1].padStart(2,'0'), mo = m[2].padStart(2,'0'), a = m[3];
   if (a.length === 2) a = '20' + a;
-  return a + mo + d; // ex: 20260711
+  return a + mo + d;
 }
 function dataLabel(txt) {
   var m = String(txt||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   return m ? (m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')) : (txt||'—');
 }
 
-// Preenche o dropdown de dias/semanas a partir dos dados carregados
 function popularFiltroPeriodo() {
   var tipo = document.getElementById('oPeriodoTipo').value;
   var sel = document.getElementById('oPeriodoValor');
@@ -1668,13 +1679,12 @@ function popularFiltroPeriodo() {
     if (tipo === 'dia') { var k = dataChave(r.data_dia); if (k) vals[k] = dataLabel(r.data_dia); }
     else { var s = String(r.numero_semana||'').trim(); if (s) vals[s] = 'Semana ' + s; }
   });
-  var keys = Object.keys(vals).sort().reverse(); // mais recente primeiro
+  var keys = Object.keys(vals).sort().reverse();
   var h = '';
   keys.forEach(function(k){ h += '<option value="'+e(k)+'">'+e(vals[k])+'</option>'; });
   sel.innerHTML = h || '<option value="">—</option>';
 }
 
-// Aplica o período selecionado sobre o cache completo -> orhCache (usado por tudo)
 function aplicarPeriodo() {
   var tipo = document.getElementById('oPeriodoTipo').value;
   var val  = document.getElementById('oPeriodoValor').value;
@@ -1688,11 +1698,8 @@ function aplicarPeriodo() {
   renderORH();
 }
 
-// Filtro por transportadora do login (mesma regra do resto do hub).
-// Rotas ORH usam a coluna TRANSPORTADORA direto; BLD vira BLD LOGÍSTICA.
 function perteceAoUsuarioRota(r) {
   var t = normTransp(r.transportadora);
-  // BLD LOGÍSTICA é dividida por SERVICO: "ROTAS XPT" = XPT, o resto = SVC
   if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
     if (t !== normTransp('BLD LOGÍSTICA')) return false;
     var ehXpt = normTransp(r.servico).indexOf('XPT') !== -1;
@@ -1701,8 +1708,6 @@ function perteceAoUsuarioRota(r) {
   return t === normTransp(sessao.transp);
 }
 
-// Nome do grupo de exibição de uma rota ORH.
-// A BLD LOGÍSTICA é dividida em BLD XPT / BLD SVC conforme o SERVICO.
 function grupoDaRota(r) {
   var t = normTransp(r.transportadora);
   if (t === normTransp('BLD LOGÍSTICA')) {
@@ -1720,13 +1725,11 @@ function minParaHhmm(min) {
   return (neg ? '-' : '') + h + 'h' + (mm < 10 ? '0' : '') + mm;
 }
 
-// Limpa textos de hora feios (ex: "Sat Dec 30 1899 09:50:00 GMT...") -> "9h50".
-// Se já vier limpo (ex: "8h47" ou "08:47"), mantém.
 function limparHora(txt) {
   if (!txt) return '—';
   var s = String(txt).trim();
-  if (/^\d{1,2}h\d{2}$/.test(s)) return s;          // já está "9h50"
-  var hm = s.match(/(\d{1,2}):(\d{2})/);            // pega hh:mm de qualquer texto
+  if (/^\d{1,2}h\d{2}$/.test(s)) return s;
+  var hm = s.match(/(\d{1,2}):(\d{2})/);
   if (hm) {
     var h = parseInt(hm[1], 10) || 0;
     var mm = hm[2];
@@ -1735,7 +1738,7 @@ function limparHora(txt) {
   return s;
 }
 
-var ORH_12H_MIN = 12 * 60; // 720 min
+var ORH_12H_MIN = 12 * 60;
 
 function orhFiltrar() {
   var b  = (document.getElementById('oBusca').value || '').toLowerCase();
@@ -1781,7 +1784,6 @@ function renderORH() {
   renderORHTabela();
 }
 
-// Card de rotas acima de 12h
 function renderCard12h(lista) {
   document.getElementById('o12hBadge').textContent = lista.length + (lista.length===1?' rota':' rotas');
   if (!lista.length) { document.getElementById('o12hLista').innerHTML = '<div class="empty" style="padding:20px">Nenhuma rota acima de 12h neste período. 👏</div>'; return; }
@@ -1812,7 +1814,6 @@ function desenharGraficosORH() {
 
   Object.keys(orhCharts).forEach(function(k){ if(orhCharts[k]) orhCharts[k].destroy(); });
 
-  // ── COMPARATIVO DIA A DIA (usa o cache completo, todos os dias) ──
   var porDia = {};
   orhCacheFull.forEach(function(r){
     if (r.orh_real_min === null) return;
@@ -1823,20 +1824,18 @@ function desenharGraficosORH() {
     porDia[k].soma += r.orh_real_min;
     if (r.ofensora) porDia[k].ofens++;
   });
-  var diasKeys = Object.keys(porDia).sort(); // cronológico
+  var diasKeys = Object.keys(porDia).sort();
   var diasLabels = diasKeys.map(function(k){ return porDia[k].label; });
   var serieAdesao = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(((d.total-d.ofens)/d.total)*100) : 0; });
   var serieOfens  = diasKeys.map(function(k){ return porDia[k].ofens; });
-  var serieMedio  = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(d.soma/d.total) : 0; }); // min
+  var serieMedio  = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(d.soma/d.total) : 0; });
 
-  // Gráfico evolução da adesão %
   orhCharts.evoAdesao = new Chart(document.getElementById('chEvoAdesao'), {
     type: 'line',
     data: { labels: diasLabels, datasets: [{ label:'Adesão %', data: serieAdesao, borderColor:'#00a650', backgroundColor:'rgba(0,166,80,.12)', fill:true, tension:.3, pointRadius:4, pointBackgroundColor:'#00a650' }] },
     options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true, max:100, ticks:{ callback:function(v){return v+'%';} } } } }
   });
 
-  // Gráfico evolução ofensoras (barra) + ORH médio (linha), eixos duplos
   orhCharts.evoOfensoras = new Chart(document.getElementById('chEvoOfensoras'), {
     data: {
       labels: diasLabels,
@@ -1855,14 +1854,12 @@ function desenharGraficosORH() {
   var ofensoras = comReal.filter(function(r){ return r.ofensora; });
   var dentro = comReal.length - ofensoras.length;
 
-  // 1) Adesão geral (dentro x ofensora)
   orhCharts.adesao = new Chart(document.getElementById('chAdesao'), {
     type: 'doughnut',
     data: { labels: ['Dentro do ORH','Ofensoras'], datasets: [{ data: [dentro, ofensoras.length], backgroundColor: ['#00a650','#e05252'] }] },
     options: { responsive:true, plugins:{ legend:{ position:'bottom' } } }
   });
 
-  // 2) Ofensoras por transportadora
   var ofPorT = {};
   ofensoras.forEach(function(r){ var t=grupoDaRota(r); ofPorT[t]=(ofPorT[t]||0)+1; });
   var ofKeys = Object.keys(ofPorT).sort(function(a,b){ return ofPorT[b]-ofPorT[a]; });
@@ -1872,7 +1869,6 @@ function desenharGraficosORH() {
     options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } }
   });
 
-  // 3) Rotas por transportadora (total)
   var totPorT = {};
   orhCache.forEach(function(r){ var t=grupoDaRota(r); totPorT[t]=(totPorT[t]||0)+1; });
   var tKeys = Object.keys(totPorT).sort(function(a,b){ return totPorT[b]-totPorT[a]; });
@@ -1882,7 +1878,6 @@ function desenharGraficosORH() {
     options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } }
   });
 
-  // 4) Top ofensoras por excedente (min acima do contrato)
   var topEx = ofensoras.slice().sort(function(a,b){ return (b.excedente_min||0) - (a.excedente_min||0); }).slice(0, 12);
   orhCharts.excedente = new Chart(document.getElementById('chExcedente'), {
     type: 'bar',
@@ -1893,7 +1888,6 @@ function desenharGraficosORH() {
     options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true } } }
   });
 
-  // 5) Ofensoras por motivo do atraso (só as já justificadas)
   var motivos = {};
   ofensoras.forEach(function(r){
     if (r.justificado && r.just_motivo_padrao) {
@@ -1915,7 +1909,6 @@ function renderORHTabela() {
   var f = orhFiltrar();
   if (!f.length) { document.getElementById('oListaGrupos').innerHTML='<div class="empty">Nenhuma rota encontrada.</div>'; return; }
 
-  // ofensoras primeiro, depois maior excedente
   f.sort(function(a,b){
     if (a.ofensora !== b.ofensora) return a.ofensora ? -1 : 1;
     return (b.excedente_min||0) - (a.excedente_min||0);
@@ -1971,8 +1964,6 @@ function renderORHTabela() {
   document.getElementById('oListaGrupos').innerHTML = h;
 }
 
-// ── DRIVERS OFENSORES ──────────────────────────────────────────
-// Agrupa por motorista (id_driver), conta ofensoras e soma o excedente.
 function renderDrivers() {
   var drv = {};
   orhCache.forEach(function(r){
@@ -2007,11 +1998,10 @@ function renderDrivers() {
   document.getElementById('oDriversLista').innerHTML = h;
 }
 
-// ── TRANSPORTADORAS: pendentes vs justificadas ─────────────────
 function renderTranspStatus() {
   var t = {};
   orhCache.forEach(function(r){
-    if (!r.ofensora) return; // só ofensoras precisam de justificativa
+    if (!r.ofensora) return;
     var k = grupoDaRota(r);
     if (!t[k]) t[k] = { nome:k, ofens:0, just:0, pend:0 };
     t[k].ofens++;
@@ -2022,7 +2012,6 @@ function renderTranspStatus() {
   if (!lista.length) { document.getElementById('oTranspLista').innerHTML = '<div class="empty">Nenhuma ofensora neste período. 👏</div>'; return; }
 
   var h = '';
-  // cards resumo
   var totPend = lista.reduce(function(a,x){return a+x.pend;},0);
   var totJust = lista.reduce(function(a,x){return a+x.just;},0);
   h += '<div class="kpi-bar" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">';
@@ -2093,21 +2082,41 @@ function renderHisORH(registros) {
   document.getElementById('oTabelaHis').innerHTML = h;
 }
 
-// modal ORH (reaproveita o mesmo modal visual)
 var orhSel = null;
 
-// mostra/esconde o campo de ID quando o motivo é "Coleta fantasma"
 function onMotivoPadraoChange() {
   var v = document.getElementById('mMotivoPadrao').value;
-  document.getElementById('mColetaIdWrap').style.display = (v === 'Coleta fantasma') ? 'block' : 'none';
-  // ajusta o rótulo do texto livre: obrigatório em "Outras", opcional no resto
+  
+  document.getElementById('sub_AltoParadas').style.display = 'none';
+  document.getElementById('sub_Insucessos').style.display = 'none';
+  document.getElementById('sub_AtrasoDriver').style.display = 'none';
+  document.getElementById('sub_CidadesDispersas').style.display = 'none';
+  document.getElementById('sub_ProbMecanico').style.display = 'none';
+  document.getElementById('sub_AjudouDriver').style.display = 'none';
+  document.getElementById('mColetaIdWrap').style.display = 'none';
+  document.getElementById('wrap_Reporte18h').style.display = 'none';
+
+  var requerReporte = false;
+
+  if (v === 'Número alto de paradas') { document.getElementById('sub_AltoParadas').style.display = 'flex'; requerReporte = true; }
+  else if (v === 'Retorno de insucessos') { document.getElementById('sub_Insucessos').style.display = 'flex'; requerReporte = true; }
+  else if (v === 'Atraso driver') { document.getElementById('sub_AtrasoDriver').style.display = 'flex'; requerReporte = true; }
+  else if (v === 'Cidades dispersas') { document.getElementById('sub_CidadesDispersas').style.display = 'flex'; requerReporte = true; }
+  else if (v === 'Problemas mecânicos') { document.getElementById('sub_ProbMecanico').style.display = 'flex'; requerReporte = true; }
+  else if (v === 'Ajudou outro driver') { document.getElementById('sub_AjudouDriver').style.display = 'flex'; requerReporte = true; }
+  else if (v === 'Coleta fantasma') { document.getElementById('mColetaIdWrap').style.display = 'flex'; }
+
+  if (requerReporte) {
+    document.getElementById('wrap_Reporte18h').style.display = 'block';
+  }
+
   var lbl = document.getElementById('mMotivoLabel');
   var ta  = document.getElementById('mMotivo');
   if (v === 'Outras') {
-    lbl.textContent = 'Descreva o motivo *';
+    lbl.textContent = 'Descreva o motivo detalhadamente *';
     ta.placeholder = 'Descreva o motivo do atraso...';
   } else {
-    lbl.textContent = 'Observações (opcional)';
+    lbl.textContent = 'Observações adicionais (opcional)';
     ta.placeholder = 'Detalhes adicionais (opcional)...';
   }
 }
@@ -2122,15 +2131,14 @@ function abrirModalORH(idRota) {
     mi('Placa', r.placa||'—') + mi('Paradas', r.paradas||'—') +
     mi('ORH real', r.orh_real_txt||minParaHhmm(r.orh_real_min)) + mi('Contrato', r.orh_contrato_txt||minParaHhmm(r.orh_contrato_min)) +
     '<div class="mi" style="grid-column:1/-1"><label>Excedente sobre o contrato</label><span style="font-weight:700;color:var(--danger)">+'+minParaHhmm(r.excedente_min)+'</span></div>';
-  // exibe o bloco de motivo padrão (só no ORH)
+
   document.getElementById('mMotivoPadraoWrap').style.display = 'block';
 
   var jaTem = r.justificado && (r.just_motivo || r.just_motivo_padrao);
-  // pré-preenche campos estruturados ao reeditar
   document.getElementById('mMotivoPadrao').value = jaTem ? (r.just_motivo_padrao || '') : '';
   document.getElementById('mColetaId').value = jaTem ? (r.just_coleta_id || '') : '';
   document.getElementById('mMotivo').value = jaTem ? (r.just_obs || '') : '';
-  onMotivoPadraoChange(); // ajusta visibilidade do ID e rótulos
+  onMotivoPadraoChange();
 
   var bs = document.getElementById('bSave');
   bs.classList.remove('disabled'); bs.textContent = 'Salvar';
@@ -2144,17 +2152,67 @@ function salvarORH() {
   var motivoPadrao = document.getElementById('mMotivoPadrao').value;
   var coletaId = document.getElementById('mColetaId').value.trim();
   var obs = document.getElementById('mMotivo').value.trim();
+  var reporte18h = document.getElementById('i_comum_reporte').value;
+  var detalhesFormatados = "";
 
-  // validações
   if (!motivoPadrao) { toast('Selecione o motivo do atraso.', 1); return; }
-  if (motivoPadrao === 'Coleta fantasma' && !coletaId) { toast('Informe o ID da coleta fantasma.', 1); return; }
-  if (motivoPadrao === 'Outras' && !obs) { toast('Descreva o motivo.', 1); return; }
+
+  if (motivoPadrao === 'Número alto de paradas') {
+    var v1 = document.getElementById('i_ap_manuais').value;
+    var v2 = document.getElementById('i_ap_paradas').value;
+    var v3 = document.getElementById('i_ap_dpph').value;
+    if (!v1 || !v2 || !v3 || !reporte18h) { toast('Preencha todos os campos do motivo.', 1); return; }
+    detalhesFormatados = "Manuais: " + v1 + " | Paradas: " + v2 + " | DPPH: " + v3 + " | Reporte 18h: " + reporte18h;
+  } 
+  else if (motivoPadrao === 'Retorno de insucessos') {
+    var v1 = document.getElementById('i_ri_qtd').value;
+    var v2 = document.getElementById('i_ri_tipo').value;
+    var v3 = document.getElementById('i_ri_hora').value;
+    if (!v1 || !v2 || !v3 || !reporte18h) { toast('Preencha todos os campos do motivo.', 1); return; }
+    detalhesFormatados = "Qtd: " + v1 + " | Tipo: " + v2 + " | Horário: " + v3 + " | Reporte 18h: " + reporte18h;
+  }
+  else if (motivoPadrao === 'Atraso driver') {
+    var v1 = document.getElementById('i_ad_acomp').value;
+    var v2 = document.getElementById('i_ad_ambu').value;
+    if (!v1 || !v2 || !reporte18h) { toast('Preencha todos os campos do motivo.', 1); return; }
+    detalhesFormatados = "Acompanhado: " + v1 + " | Ambulância: " + v2 + " | Reporte 18h: " + reporte18h;
+  }
+  else if (motivoPadrao === 'Cidades dispersas') {
+    var v1 = document.getElementById('i_cd_cidades').value.trim();
+    var v2 = document.getElementById('i_cd_novato').value;
+    var v3 = document.getElementById('i_cd_famil').value;
+    if (!v1 || !v2 || !v3 || !reporte18h) { toast('Preencha todos os campos do motivo.', 1); return; }
+    detalhesFormatados = "Cidades: " + v1 + " | Novato: " + v2 + " | Familiarizado: " + v3 + " | Reporte 18h: " + reporte18h;
+  }
+  else if (motivoPadrao === 'Problemas mecânicos') {
+    var v1 = document.getElementById('i_pm_prob').value.trim();
+    var v2 = document.getElementById('i_pm_hora_id').value;
+    var v3 = document.getElementById('i_pm_hora_fim').value;
+    if (!v1 || !v2 || !v3 || !reporte18h) { toast('Preencha todos os campos do motivo.', 1); return; }
+    detalhesFormatados = "Problema: " + v1 + " | Início: " + v2 + " | Fim: " + v3 + " | Reporte 18h: " + reporte18h;
+  }
+  else if (motivoPadrao === 'Ajudou outro driver') {
+    var v1 = document.getElementById('i_aod_rota').value.trim();
+    var v2 = document.getElementById('i_aod_mec').value;
+    var v3 = document.getElementById('i_aod_prob').value.trim(); 
+    var v4 = document.getElementById('i_aod_entregas').value;
+    var v5 = document.getElementById('i_aod_tempo').value.trim();
+    if (!v1 || !v2 || !v4 || !v5 || !reporte18h) { toast('Preencha todos os campos obrigatórios.', 1); return; }
+    detalhesFormatados = "Rota apoiada: " + v1 + " | Apoio Mecânico: " + v2 + (v3 ? " ("+v3+")" : "") + " | Apoio Entregas: " + v4 + " | Duração: " + v5 + " | Reporte 18h: " + reporte18h;
+  }
+  else if (motivoPadrao === 'Coleta fantasma') {
+    if (!coletaId) { toast('Informe o ID da coleta fantasma.', 1); return; }
+    detalhesFormatados = "ID: " + coletaId;
+  }
+  else if (motivoPadrao === 'Outras') {
+    if (!obs) { toast('Descreva o motivo detalhadamente.', 1); return; }
+  }
+
   if (!orhSel) return;
 
-  // monta o texto final do motivo para exibição/histórico
   var motivoFinal = motivoPadrao;
-  if (motivoPadrao === 'Coleta fantasma') motivoFinal += ' (ID: ' + coletaId + ')';
-  if (obs) motivoFinal += (motivoPadrao === 'Outras' ? ': ' : ' — ') + obs;
+  if (detalhesFormatados) motivoFinal += " [" + detalhesFormatados + "]";
+  if (obs) motivoFinal += (motivoPadrao === 'Outras' ? ': ' : ' — Obs: ') + obs;
 
   var btn = document.getElementById('bSave');
   btn.classList.add('disabled'); btn.textContent = 'Salvando...';
@@ -2199,7 +2257,6 @@ function salvarORH() {
   document.head.appendChild(s);
 }
 
-// abas internas do ORH
 document.querySelectorAll('[data-otab]').forEach(function(t){
   t.addEventListener('click',function(){
     document.querySelectorAll('[data-otab]').forEach(function(x){x.classList.remove('ativo');});
@@ -2222,267 +2279,12 @@ document.querySelectorAll('[data-otab]').forEach(function(t){
   if(el){ el.addEventListener('input',renderORHTabela); el.addEventListener('change',renderORHTabela); }
 });
 
-// Filtro de período (dia / semana) do painel ORH
 (function(){
   var tipo = document.getElementById('oPeriodoTipo');
   var valor = document.getElementById('oPeriodoValor');
   if (tipo) tipo.addEventListener('change', function(){ popularFiltroPeriodo(); aplicarPeriodo(); });
   if (valor) valor.addEventListener('change', aplicarPeriodo);
 })();
-
-
-// ════════════════════════════════════════════════════════════
-// HISTÓRICO OPERACIONAL (D-2)
-// ════════════════════════════════════════════════════════════
-function popularFiltroPeriodoHO() {
-  var tipo = document.getElementById('hoPeriodoTipo').value;
-  var sel = document.getElementById('hoPeriodoValor');
-  if (tipo === 'tudo') { sel.style.display = 'none'; return; }
-  sel.style.display = '';
-
-  var vals = {};
-  histOrhCacheFull.forEach(function(r){
-    if (tipo === 'dia') {
-      var k = dataChave(r.DATA_DIA);
-      if (k) vals[k] = dataLabel(r.DATA_DIA);
-    } else {
-      var s = String(r.NUMERO_SEMANA||'').trim();
-      if (s) vals[s] = 'Semana ' + s;
-    }
-  });
-  var keys = Object.keys(vals).sort().reverse();
-  var h = '';
-  keys.forEach(function(k){ h += '<option value="'+e(k)+'">'+e(vals[k])+'</option>'; });
-  sel.innerHTML = h || '<option value="">—</option>';
-}
-
-function aplicarPeriodoHO() {
-  var tipo = document.getElementById('hoPeriodoTipo').value;
-  var val  = document.getElementById('hoPeriodoValor').value;
-  if (tipo === 'tudo' || !val) {
-    histOrhCache = histOrhCacheFull.slice();
-  } else if (tipo === 'dia') {
-    histOrhCache = histOrhCacheFull.filter(function(r){ return dataChave(r.DATA_DIA) === val; });
-  } else {
-    histOrhCache = histOrhCacheFull.filter(function(r){ return String(r.NUMERO_SEMANA||'').trim() === val; });
-  }
-  renderHistORH();
-}
-
-function carregarHistORH() {
-  document.getElementById('hoTopDrivers').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando histórico D-2...</div>';
-  document.getElementById('hoRotas12h').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando histórico D-2...</div>';
-  
-  var cb = 'cbho' + Date.now();
-  window[cb] = function(d) {
-    delete window[cb];
-    if (d.erro) { toast('Erro Histórico: ' + d.erro, 1); return; }
-    var todas = d.rotas || [];
-    
-    // Filtra corretamente as transportadoras simulando os campos transportadora e servico 
-    // que a função perteceAoUsuarioRota original espera
-    histOrhCacheFull = sessao.isMeli ? todas : todas.filter(function(r){ 
-      return perteceAoUsuarioRota({
-        transportadora: String(r.TRANSPORTADORA || ''),
-        servico: '' 
-      }); 
-    });
-    
-    popularFiltroPeriodoHO();
-    aplicarPeriodoHO();
-  };
-  var s = document.createElement('script');
-  s.src = API + '?action=getHistORH&callback=' + cb + '&t=' + Date.now();
-  document.head.appendChild(s);
-}
-
-function hoFiltrar() {
-  var b = (document.getElementById('hoBusca').value || '').toLowerCase();
-  return histOrhCache.filter(function(r) {
-    if (b) {
-      var t = [r.ID_ROTA, r.ID_DRIVER, r.PLACA_VEICULO, r.TRANSPORTADORA].join(' ').toLowerCase();
-      if (!t.includes(b)) return false;
-    }
-    return true;
-  });
-}
-
-function renderHistORH() {
-  var f = hoFiltrar();
-  var tot = f.length;
-  
-  if (!tot) {
-    document.getElementById('hoTopDrivers').innerHTML = '<div class="empty">Nenhum dado encontrado para os filtros selecionados.</div>';
-    document.getElementById('hoRotas12h').innerHTML = '<div class="empty">Nenhuma rota de 12 horas encontrada.</div>';
-    document.getElementById('hoCompliance').textContent = '—';
-    document.getElementById('hoDpph').textContent = '—';
-    document.getElementById('hoAcimaContrato').textContent = '—';
-    document.getElementById('hoAcima12h').textContent = '0';
-    document.getElementById('histOrhSub').textContent = '0 registros analisados';
-    return;
-  }
-
-  var somaCompliance = 0, somaDpph = 0, qtdAcimaContrato = 0;
-  var rotas12h = [];
-  var drvMap = {};
-  
-  f.forEach(function(r) {
-    // Corrige números que vêm com vírgula ou porcentagem
-    var comp = parseFloat(String(r.COMPLIANCE).replace(',', '.').replace('%', '')) || 0;
-    var dpph = parseFloat(String(r.DPPH).replace(',', '.')) || 0;
-    
-    if (comp > 0 && comp <= 1) comp = comp * 100;
-    var isOfensora = (comp < 100);
-
-    var orhMin = _horaParaMinutos_(r.ORH_REAL); 
-    var is12h = (orhMin !== null && orhMin > 720); // 720 min = 12h
-
-    somaCompliance += comp;
-    somaDpph += dpph;
-    
-    if (isOfensora) qtdAcimaContrato++;
-    
-    if (is12h) {
-      rotas12h.push({
-        data: r.DATA_DIA,
-        rota: r.ID_ROTA,
-        transp: r.TRANSPORTADORA,
-        driver: r.ID_DRIVER,
-        placa: r.PLACA_VEICULO,
-        orhMin: orhMin,
-        orhTxt: _minParaTexto_(orhMin)
-      });
-    }
-
-    var driver = String(r.ID_DRIVER || '—').trim();
-    if (driver !== '—') {
-      if (!drvMap[driver]) drvMap[driver] = { driver: driver, transp: r.TRANSPORTADORA, total: 0, ofensoras: 0, somaDpph: 0 };
-      drvMap[driver].total++;
-      drvMap[driver].somaDpph += dpph;
-      if (isOfensora) drvMap[driver].ofensoras++;
-    }
-  });
-
-  // Atualiza KPIs
-  document.getElementById('hoCompliance').textContent = Math.round(somaCompliance / tot) + '%';
-  document.getElementById('hoDpph').textContent = (somaDpph / tot).toFixed(2);
-  document.getElementById('hoAcimaContrato').textContent = qtdAcimaContrato;
-  document.getElementById('hoAcima12h').textContent = rotas12h.length;
-  
-  var perTxt = document.getElementById('hoPeriodoTipo').value === 'tudo' ? 'todos os dias' :
-    (document.getElementById('hoPeriodoValor').selectedOptions[0] ? document.getElementById('hoPeriodoValor').selectedOptions[0].text : '');
-  
-  document.getElementById('histOrhSub').textContent = tot + ' registros analisados' + (sessao && !sessao.isMeli ? ' — ' + sessao.transp : '') + ' · ' + perTxt;
-
-  // ── Montar Tabela Top Drivers Ofensores (Top 10) ──
-  var arrDrv = Object.keys(drvMap).map(function(k){ return drvMap[k]; })
-    .filter(function(d){ return d.ofensoras > 0; })
-    .sort(function(a,b){ return b.ofensoras - a.ofensoras; })
-    .slice(0, 10);
-
-  if(arrDrv.length === 0) {
-    document.getElementById('hoTopDrivers').innerHTML = '<div class="empty">Parabéns! Nenhum motorista com rotas acima do contrato.</div>';
-  } else {
-    var hDrv = '<div class="hist-wrap" style="max-height: 350px; overflow-y: auto"><table class="htable"><thead><tr><th>#</th><th>Motorista (ID)</th><th>Transportadora</th><th>Total de Rotas</th><th>Ofensoras</th><th>% Ofensa</th><th>DPPH Médio</th></tr></thead><tbody>';
-    arrDrv.forEach(function(d, i){
-      var pctOfensa = d.total ? Math.round((d.ofensoras / d.total) * 100) : 0;
-      var dpphMedio = d.total ? (d.somaDpph / d.total).toFixed(2) : '0.00';
-      hDrv += '<tr>';
-      hDrv += '<td style="color:var(--text2)">' + (i + 1) + '</td>';
-      hDrv += '<td class="sid">' + e(d.driver) + '</td>';
-      hDrv += '<td style="font-size:11px">' + e(d.transp) + '</td>';
-      hDrv += '<td style="text-align:center">' + d.total + '</td>';
-      hDrv += '<td style="text-align:center"><span class="dc crit">' + d.ofensoras + '</span></td>';
-      hDrv += '<td style="text-align:center">' + pctOfensa + '%</td>';
-      hDrv += '<td>' + dpphMedio + '</td>';
-      hDrv += '</tr>';
-    });
-    hDrv += '</tbody></table></div>';
-    document.getElementById('hoTopDrivers').innerHTML = hDrv;
-  }
-
-  // ── Montar Tabela Rotas 12h ──
-  if(rotas12h.length === 0) {
-    document.getElementById('hoRotas12h').innerHTML = '<div class="empty" style="padding:20px">Nenhuma rota acima de 12 horas neste período. 👏</div>';
-  } else {
-    rotas12h.sort(function(a,b){ return b.orhMin - a.orhMin; });
-    var h12 = '<div class="hist-wrap" style="max-height: 350px; overflow-y: auto"><table class="htable"><thead><tr><th>Rota</th><th>Data</th><th>Transportadora</th><th>Motorista</th><th>Placa</th><th>ORH Real</th></tr></thead><tbody>';
-    rotas12h.forEach(function(r) {
-      h12 += '<tr>';
-      h12 += '<td>' + routeLink(r.rota) + '</td>';
-      h12 += '<td style="font-size:11px;color:var(--text2);white-space:nowrap">' + e(dataLabel(r.data)) + '</td>';
-      h12 += '<td style="font-size:11px">' + e(r.transp || '—') + '</td>';
-      h12 += '<td style="font-size:11px">' + e(r.driver || '—') + '</td>';
-      h12 += '<td style="font-size:11px">' + e(r.placa || '—') + '</td>';
-      h12 += '<td class="dc crit">' + e(r.orhTxt) + '</td>';
-      h12 += '</tr>';
-    });
-    h12 += '</tbody></table></div>';
-    document.getElementById('hoRotas12h').innerHTML = h12;
-  }
-
-  desenharGraficosHistORH(f);
-}
-
-function desenharGraficosHistORH(dados) {
-  if (typeof Chart === 'undefined') return;
-  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  var cor = dark ? '#8888aa' : '#6c757d';
-  var grid = dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
-  
-  Object.keys(histOrhCharts).forEach(function(k){ if(histOrhCharts[k]) histOrhCharts[k].destroy(); });
-
-  // Agrupamento para Gráfico 1: Evolução Compliance
-  var porDia = {};
-  dados.forEach(function(r) {
-    var k = dataChave(r.DATA_DIA);
-    if (!k) return;
-    
-    var d = dataLabel(r.DATA_DIA);
-    if(!porDia[k]) porDia[k] = { label: d, soma: 0, qtd: 0 };
-    
-    var comp = parseFloat(String(r.COMPLIANCE).replace(',', '.').replace('%', '')) || 0;
-    if (comp > 0 && comp <= 1) comp = comp * 100;
-    
-    porDia[k].soma += comp;
-    porDia[k].qtd++;
-  });
-  var diasKeys = Object.keys(porDia).sort();
-  var diasLabels = diasKeys.map(function(k){ return porDia[k].label; });
-  var complianceData = diasKeys.map(function(k) { return Math.round(porDia[k].soma / porDia[k].qtd); });
-
-  histOrhCharts.compliance = new Chart(document.getElementById('chHoCompliance'), {
-    type: 'line',
-    data: { labels: diasLabels, datasets: [{ label: 'Compliance %', data: complianceData, borderColor: '#3483fa', backgroundColor: 'rgba(52,131,250,.12)', fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#3483fa' }] },
-    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: grid } }, y: { grid: { color: grid }, max: 100, beginAtZero: true } } }
-  });
-
-  // Agrupamento para Gráfico 2: DPPH por Experiência
-  var porExp = {};
-  dados.forEach(function(r) {
-    var exp = r.EXPERIENCIA_DRIVER || 'Não informada';
-    if(!porExp[exp]) porExp[exp] = { soma: 0, qtd: 0 };
-    porExp[exp].soma += parseFloat(String(r.DPPH).replace(',', '.')) || 0;
-    porExp[exp].qtd++;
-  });
-  var expLabels = Object.keys(porExp);
-  var dpphData = expLabels.map(function(e) { return (porExp[e].soma / porExp[e].qtd).toFixed(2); });
-
-  histOrhCharts.dpphExp = new Chart(document.getElementById('chHoDpphExp'), {
-    type: 'bar',
-    data: { labels: expLabels, datasets: [{ label: 'DPPH Médio', data: dpphData, backgroundColor: '#00a650' }] },
-    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: grid } }, y: { grid: { color: grid }, beginAtZero: true } } }
-  });
-}
-
-// Filtros do Histórico
-var elHoBusca = document.getElementById('hoBusca');
-if (elHoBusca) elHoBusca.addEventListener('input', renderHistORH);
-
-var elHoTipo = document.getElementById('hoPeriodoTipo');
-var elHoValor = document.getElementById('hoPeriodoValor');
-if (elHoTipo) elHoTipo.addEventListener('change', function(){ popularFiltroPeriodoHO(); aplicarPeriodoHO(); });
-if (elHoValor) elHoValor.addEventListener('change', aplicarPeriodoHO);
 
 
 // ════════════════════════════════════════════════════════════
@@ -2503,29 +2305,23 @@ function carregarPend() {
   document.head.appendChild(s);
 }
 
-// filtro por transportadora do login; BLD SVC/XPT -> BLD LOGÍSTICA
 function perteceAoUsuarioPend(p) {
   var t = normTransp(p.transportadora);
-  // Na aba "faltantes", a BLD vem separada no próprio texto da coluna:
-  // "BLD XPT" para XPT e "BLD LOGÍSTICA" (ou "BLD") para SVC.
   if (sessao.transp === 'BLD XPT') {
     return t === normTransp('BLD XPT');
   }
   if (sessao.transp === 'BLD SVC') {
-    // SVC = tudo que é BLD mas NÃO é "BLD XPT"
     return (t === normTransp('BLD LOGÍSTICA') || t === 'BLD') && t !== normTransp('BLD XPT');
   }
   return t === normTransp(sessao.transp);
 }
 
-// link "logistics" que abre o pacote no adminml
 function pkgLink(id) {
   if (!id) return '';
   var url = 'https://envios.adminml.com/logistics/package-management/package/' + id;
   return '<a class="route-link" href="' + url + '" target="_blank" rel="noopener" style="font-size:11px">logistics</a>';
 }
 
-// copia o ID do pacote pra área de transferência
 function copiarId(id) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(id).then(function(){ toast('ID ' + id + ' copiado!'); },
@@ -2568,7 +2364,6 @@ function renderPendTabela() {
   var f = pendFiltrar();
   if (!f.length) { document.getElementById('pListaGrupos').innerHTML='<div class="empty">Nenhum pendente encontrado.</div>'; return; }
 
-  // pendentes de justificativa primeiro
   f.sort(function(a,b){ if(a.justificado!==b.justificado) return a.justificado?1:-1; return 0; });
 
   var grupos = {};
@@ -2593,7 +2388,6 @@ function renderPendTabela() {
     h += '</tr></thead><tbody>';
     ps.forEach(function(p) {
       h += '<tr>';
-      // ID copiável + link logistics ao lado
       h += '<td style="white-space:nowrap"><span class="sid" style="cursor:pointer" title="Clique para copiar" onclick="copiarId(\''+e(p.id_pacote)+'\')">'+e(p.id_pacote)+' ⧉</span> '+pkgLink(p.id_pacote)+'</td>';
       h += '<td>'+routeLink(p.rota)+'</td>';
       h += '<td style="font-size:11px">'+e(p.placa||'—')+'</td>';
@@ -2655,7 +2449,6 @@ function renderHisPend(registros) {
   document.getElementById('pTabelaHis').innerHTML = h;
 }
 
-// modal de justificar pendente (reaproveita o modal, modo 'faltante')
 var pendSel = null;
 function abrirModalPend(id) {
   pendSel = pendCache.find(function(p){return p.id_pacote===id;});
@@ -2666,7 +2459,6 @@ function abrirModalPend(id) {
     mi('Transportadora', p.transportadora||'—') + mi('Placa', p.placa||'—') +
     mi('Valor', p.valor||'—') + mi('Insucesso', p.data_insucesso||'—') +
     '<div class="mi" style="grid-column:1/-1"><label>Produto</label><span style="font-size:11px;font-weight:400">'+e(p.produto||'—')+'</span></div>';
-  // esconde bloco de motivo padrão (é do ORH)
   document.getElementById('mMotivoPadraoWrap').style.display = 'none';
   document.getElementById('mMotivoLabel').textContent = 'Motivo do pendente *';
   document.getElementById('mMotivo').value = (p.justificado && p.just_motivo) ? p.just_motivo : '';
@@ -2711,7 +2503,6 @@ function salvarPend() {
   document.head.appendChild(s);
 }
 
-// abas internas dos Pendentes
 document.querySelectorAll('[data-ptab]').forEach(function(t){
   t.addEventListener('click',function(){
     document.querySelectorAll('[data-ptab]').forEach(function(x){x.classList.remove('ativo');});
@@ -2781,7 +2572,6 @@ function carregarBriefingPainel() {
 function renderBriefingPainel(registros) {
   if (!registros.length) { document.getElementById('bContagem').innerHTML='<div class="empty">Nenhuma presença registrada ainda.</div>'; return; }
 
-  // contagem por transportadora
   var cont = {};
   registros.forEach(function(r){ var t=(r.transportadora||'—').trim()||'—'; cont[t]=(cont[t]||0)+1; });
   var tKeys = Object.keys(cont).sort(function(a,b){ return cont[b]-cont[a]; });
@@ -2792,7 +2582,6 @@ function renderBriefingPainel(registros) {
   });
   h += '</div>';
 
-  // histórico de registros
   h += '<div class="hist-wrap"><table class="htable"><thead><tr><th>Data/hora</th><th>Nome</th><th>Transportadora</th><th>Tema</th></tr></thead><tbody>';
   registros.forEach(function(r){
     h += '<tr>';
@@ -2806,7 +2595,6 @@ function renderBriefingPainel(registros) {
   document.getElementById('bContagem').innerHTML = h;
 }
 
-// abas internas do Briefing
 document.querySelectorAll('[data-btab]').forEach(function(t){
   t.addEventListener('click',function(){
     document.querySelectorAll('[data-btab]').forEach(function(x){x.classList.remove('ativo');});
@@ -2832,10 +2620,7 @@ document.querySelectorAll('.tab').forEach(function(t){
 
 ['fBusca','fStatus','fJust'].forEach(function(id){
   var el=document.getElementById(id);
-  if (el) {
-    el.addEventListener('input',render);
-    el.addEventListener('change',render);
-  }
+  if(el){ el.addEventListener('input',render); el.addEventListener('change',render); }
 });
 
 function tog(h){ h.parentElement.classList.toggle('open'); }
@@ -2844,6 +2629,118 @@ function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=m
 
 document.getElementById('modalJust').addEventListener('click',function(ev){if(ev.target===this)fecharModal();});
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModal();});
+
+// ════════════════════════════════════════════════════════════
+// VISÃO GERAL (TORRE DE CONTROLE LIDERANÇA)
+// ════════════════════════════════════════════════════════════
+
+function fetchMacroAPI(action) {
+  return new Promise(function(resolve, reject) {
+    var cb = 'cbmacro_' + action + '_' + Date.now() + Math.floor(Math.random()*1000);
+    window[cb] = function(d) { delete window[cb]; resolve(d); };
+    var s = document.createElement('script');
+    s.src = API + '?action=' + action + '&callback=' + cb + '&t=' + Date.now();
+    s.onerror = function() { delete window[cb]; reject('Erro ao carregar ' + action); };
+    document.head.appendChild(s);
+  });
+}
+
+function carregarVisaoGeral() {
+  document.getElementById('vgLista').innerHTML = '<div class="empty"><span class="spinner"></span> Analisando pendências...</div>';
+  
+  Promise.all([
+    fetchMacroAPI('getFaltantes'),
+    fetchMacroAPI('getORH'),
+    fetchMacroAPI('getBriefing')
+  ]).then(function(resultados) {
+    var dadosPend = resultados[0].pacotes || [];
+    var dadosORH = resultados[1].rotas || [];
+    var dadosBrief = resultados[2].registros || [];
+    
+    renderVisaoGeral(dadosPend, dadosORH, dadosBrief);
+  }).catch(function(err) {
+    document.getElementById('vgLista').innerHTML = '<div class="empty" style="color:var(--danger)">Erro ao carregar visão geral.</div>';
+    toast(err, 1);
+  });
+}
+
+function renderVisaoGeral(pend, orh, brief) {
+  var macro = {};
+  
+  function initTransp(t) {
+    var nome = normTransp(t);
+    if (!nome || nome === '— SEM TRANSP —') return null;
+    if (nome.includes('BLD')) nome = 'BLD LOGÍSTICA'; 
+    if (!macro[nome]) {
+      macro[nome] = { nome: nome, pendFaltantes: 0, pendORH: 0, fezBriefing: false };
+    }
+    return nome;
+  }
+
+  pend.forEach(function(p) {
+    if (!p.justificado) {
+      var t = initTransp(p.transportadora);
+      if (t) macro[t].pendFaltantes++;
+    }
+  });
+
+  orh.forEach(function(r) {
+    if (r.ofensora && !r.justificado) {
+      var t = initTransp(r.transportadora);
+      if (t) macro[t].pendORH++;
+    }
+  });
+
+  var hojeStr = new Date().toLocaleDateString('pt-BR');
+  brief.forEach(function(b) {
+    if (String(b.data_hora).includes(hojeStr)) {
+      var t = initTransp(b.transportadora);
+      if (t) macro[t].fezBriefing = true;
+    }
+  });
+
+  var conhecidas = ['MELI', 'BLD LOGÍSTICA', 'ALTOVALE', 'BRAVOX', 'RODACOOP', 'KANGU LOGISTICS', 'KN'];
+  conhecidas.forEach(function(t) { initTransp(t); });
+
+  var lista = Object.keys(macro).map(function(k) { return macro[k]; });
+  
+  var totF = 0, totO = 0, faltamB = 0;
+  lista.forEach(function(m) { 
+    totF += m.pendFaltantes; 
+    totO += m.pendORH; 
+    if(m.nome !== 'MELI' && !m.fezBriefing) faltamB++; 
+  });
+  
+  document.getElementById('vgTotFaltantes').textContent = totF;
+  document.getElementById('vgTotORH').textContent = totO;
+  document.getElementById('vgTotBriefing').textContent = faltamB;
+
+  var h = '<div class="hist-wrap"><table class="htable" style="font-size:13px;"><thead><tr><th>Transportadora</th><th>Pendentes (Faltantes)</th><th>Pendentes (ORH)</th><th>Status Briefing (Hoje)</th><th>Status Geral</th></tr></thead><tbody>';
+  
+  lista.sort(function(a,b) { return (b.pendFaltantes + b.pendORH) - (a.pendFaltantes + a.pendORH); });
+
+  lista.forEach(function(x) {
+    if (x.nome === 'MELI') return; 
+
+    var stFaltantes = x.pendFaltantes > 0 ? '<span class="dc crit">'+x.pendFaltantes+' pendente(s)</span>' : '<span class="jok">✓ Tudo justificado</span>';
+    var stORH = x.pendORH > 0 ? '<span class="dc crit">'+x.pendORH+' pendente(s)</span>' : '<span class="jok">✓ Tudo justificado</span>';
+    var stBrief = x.fezBriefing ? '<span class="jok">✓ Registrado</span>' : '<span class="sb status-missing">Não registrado</span>';
+    
+    var limpo = (x.pendFaltantes === 0 && x.pendORH === 0 && x.fezBriefing);
+    var stGeral = limpo ? '<span class="jok" style="font-weight:800">✅ OK</span>' : '<span class="dc crit" style="font-weight:800">🚨 Cobrar ação</span>';
+
+    h += '<tr>';
+    h += '<td style="font-weight:800; text-transform:uppercase;">' + e(x.nome) + '</td>';
+    h += '<td>' + stFaltantes + '</td>';
+    h += '<td>' + stORH + '</td>';
+    h += '<td>' + stBrief + '</td>';
+    h += '<td>' + stGeral + '</td>';
+    h += '</tr>';
+  });
+  
+  h += '</tbody></table></div>';
+  document.getElementById('vgLista').innerHTML = h;
+}
 </script>
 
 <script>
@@ -2868,4 +2765,40 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModa
 <g id="Derecha">
 <polygon class="lb0" points="112.3,267.8 85.5,240.7 76.1,254.8"/><polygon class="lb1" points="85.5,240.7 102.8,241.4 112.3,267.8"/><polygon class="lb2" points="102.8,241.4 94.1,231.4 85.5,240.7"/><polygon class="lb3" points="102.8,241.4 110,231.4 94.1,231.4"/><polygon class="lb4" points="110,231.4 111.3,213 94.1,231.4"/><polygon class="lb5" points="110,231.4 129.2,209.1 111.3,213"/><polygon class="lb6" points="129.2,209.1 129.8,193.4 111.3,213"/><polygon class="lb2" points="129.2,209.1 148.1,192 129.8,193.4"/><polygon class="lb1" points="148.1,192 138,181.1 129.8,193.4"/><polygon class="lb6" points="148.1,192 147,177.2 138,181.1"/><polygon class="lb0" points="148.1,192 165.3,193.5 147,177.2"/><polygon class="lb1" points="165.3,193.5 158.2,200 148.1,192"/><polygon class="lb5" points="165.3,193.5 170.2,213.2 158.2,200"/><polygon class="lb2" points="158.2,245.1 144.6,248.3 129.2,231.4"/><polygon class="lb6" points="144.6,248.3 144.8,276.1 132,286.9"/><polygon class="lb7" points="144.6,248.3 112.3,267.8 132,286.9"/><polygon class="lb8" points="144.6,248.3 129.2,231.4 112.3,267.8"/><polygon class="lb9" points="129.2,231.4 110,231.4 112.3,267.8"/><polygon class="lb10" points="110,231.4 102.8,241.4 112.3,267.8"/><polygon class="lb11" points="158.2,245.1 176.3,237.3 160.5,271.4"/><polygon class="lb8" points="176.3,237.3 170.2,213.2 158.2,245.1"/><polygon class="lb12" points="158.2,245.1 144.8,276.1 160.5,271.4"/><polygon class="lb13" points="158.2,245.1 144.8,276.1 144.6,248.3"/><polygon class="lb14" points="160.5,271.4 149.2,299.4 144.8,276.1"/><polygon class="lb16" points="149.2,299.4 181.5,279.2 155.8,283.1"/><polygon class="lb15" points="144.8,276.1 132,286.9 149.2,299.4"/><polygon class="lb17" points="181.5,279.2 160.5,271.4 155.8,283.1"/><polygon class="lb18" points="160.5,271.4 178.9,260.5 176.3,237.3"/><polygon class="lb19" points="178.9,260.5 175.2,276.9 160.5,271.4"/><polygon class="lb20" points="148.1,192 129.2,231.4 129.2,209.1"/><polygon class="lb21" points="129.2,209.1 110,231.4 129.2,231.4"/><polygon class="lb22" points="148.1,192 158.2,200 129.2,231.4"/><polygon class="lb23" points="158.2,200 170.2,213.2 129.2,231.4"/><polygon class="lb24" points="107.6,335.8 124.5,339.9 90.2,349.7"/><polygon class="lb25" points="124.5,339.9 114.8,353.9 93.6,348.4"/><polygon class="lb26" points="170.2,213.2 158.2,245.1 129.2,231.4"/><polygon class="lb27" points="114.8,353.9 126.3,360.2 104.9,367.3"/><polygon class="lb4" points="82.8,361.4 77.7,378.4 94.2,370.3"/><polygon class="lb2" points="82.8,361.4 74.8,361.5 77.7,378.4"/><polygon class="lb20" points="124.5,339.9 93.6,332.3 112.5,307.2"/><polygon class="lb20" points="75.8,314.9 149.2,299.4 132,286.9"/><polygon class="lb12" points="93.6,332.3 87.1,352.2 107.6,335.8"/><polygon class="lb28" points="93.6,332.3 75.1,331.5 82.8,361.4 87.1,352.2"/><polygon class="lb29" points="75.8,314.9 75.1,331.5 93.6,332.3"/><polygon class="lb11" points="75.8,314.9 63.1,332.3 75.1,331.5"/><polygon class="lb30" points="75.1,331.5 63.7,361.8 82.8,361.4"/><polygon class="lb24" points="75.1,331.5 63.1,332.3 63.7,361.8"/><polygon class="lb22" points="63.1,332.3 45.3,342.2 63.7,361.8"/><polygon class="lb31" points="63.7,361.8 45.3,386.4 45.3,342.2"/><polygon class="lb32" points="63.7,361.8 62.2,401 45.3,386.4"/><polygon class="lb33" points="62.2,401 45.3,436.7 45.3,386.4"/><polygon class="lb16" points="62.2,401 73,447 45.3,436.7"/><polygon class="lb18" points="77.7,378.4 63.7,361.8 74.8,361.5"/><polygon class="lb21" points="75.8,314.9 45.3,306.7 63.1,332.3"/><polygon class="lb23" points="63.1,332.3 45.3,306.7 45.3,342.2"/><polygon class="lb34" points="75.8,314.9 45.3,255.7 45.3,306.7"/><polygon class="lb35" points="75.8,314.9 76.1,254.8 57.2,278.8"/><polygon class="lb36" points="76.1,254.8 112.3,267.8 75.8,314.9"/><polygon class="lb36" points="76.1,254.8 58.1,253.9 57.2,278.8"/><polygon class="lb37" points="76.1,254.8 68.7,236.1 58.1,253.9"/><polygon class="lb38" points="58.1,253.9 45.3,255.7 57.2,278.8"/><polygon class="lb1" points="58.1,253.9 51.7,234.6 45.3,255.7"/><polygon class="lb39" points="68.7,236.1 85.5,240.7 76.1,254.8"/><polygon class="lb21" points="112.3,267.8 132,286.9 75.8,314.9"/><polygon class="lb32" points="93.6,332.3 75.8,314.9 112.5,307.2"/><polygon class="lb26" points="126.3,360.2 137.4,388.9 180.3,397.8"/><polygon class="lb32" points="126.3,360.2 115.8,379.1 132,375"/><polygon class="lb40" points="115.8,379.1 116.4,400 105.7,403.2"/><polygon class="lb15" points="115.8,379.1 132,375 116.4,400"/><polygon class="lb15" points="137.4,388.9 140.6,410.9 180.3,397.8"/><polygon class="lb41" points="137.4,388.9 127.8,424 140.6,410.9"/><polygon class="lb41" points="137.4,388.9 132,375 116.4,400"/><polygon class="lb42" points="73,447 72.7,459.6 55.7,440.5"/><polygon class="lb43" points="73,447 98.8,467.3 70.7,475.3"/><polygon class="lb44" points="98.8,467.3 91.8,491.5 70.7,475.3"/><polygon class="lb27" points="73,447 97.7,440.1 98.8,467.3"/><polygon class="lb42" points="97.7,440.1 62.2,401 73,447"/><polygon class="lb10" points="98.8,467.3 106.3,458.1 97.7,440.1"/><polygon class="lb10" points="55.7,440.5 45.3,447 62.2,447.6"/><polygon class="lb45" points="55.7,440.5 45.3,436.7 45.3,447"/><polygon class="lb38" points="106.3,458.1 108.1,466.5 98.8,467.3"/><polygon class="lb21" points="108.1,466.5 91.8,491.5 98.8,467.3"/><polygon class="lb14" points="70.7,475.3 58.2,492.1 69.1,489.3"/><polygon class="lb11" points="103.3,382.4 94.1,370.4 104.9,367.3"/><polygon class="lb18" points="70.7,475.3 69.1,489.3 91.8,491.5"/><polygon class="lb46" points="45.3,495.5 69.1,489.3 65.3,498.4"/><polygon class="lb39" points="65.3,498.4 76.6,502.6 45.3,500.5 45.3,495.5"/><polygon class="lb0" points="76.6,502.6 59.9,509.2 45.3,508.6 45.3,500.5"/><polygon class="lb16" points="69.1,489.3 76.6,502.6 65.3,498.4"/><polygon class="lb14" points="69.1,489.3 91.8,491.5 76.6,502.6"/><polygon class="lb44" points="126.3,360.2 104.9,367.3 115.8,379.1"/><polygon class="lb27" points="104.9,367.3 103.3,382.4 115.8,379.1"/><polygon class="lb42" points="103.3,382.4 105.7,403.2 115.8,379.1"/><polygon class="lb7" points="103.3,382.4 98.5,407.6 105.7,403.2"/><polygon class="lb14" points="103.3,382.4 89.7,393.2 98.5,407.6"/>
 <g id="Ojo-derecho"><path class="lb5" d="M114.8,353.9c0,0-19.7-11.2-27.7-1.7l-4.4,9.2c0,0,6.4,15.4,22.1,5.9C104.9,367.3,109.8,363.2,114.8,353.9z"/><path class="lb23" d="M96.2,354.6c-3,0-5.6,2-6.4,4.7c-0.2-0.6-0.3-1.3-0.3-2c0-3.7,3-6.7,6.7-6.7s6.7,3,6.7,6.7c0,0.7-0.1,1.4-0.3,2C101.8,356.6,99.3,354.6,96.2,354.6z"/><path class="lb42" d="M96.2,364.1c-3,0-5.6-2-6.4-4.7c0.9-2.7,3.4-4.7,6.4-4.7s5.6,2,6.4,4.7C101.8,362.1,99.3,364.1,96.2,364.1z"/><circle class="lb6" cx="95" cy="356.1" r="1.9"/></g>
-<polygon class="lb30" points="103.3,382.4 89.7,393.2 94.1,370.4"/><polygon class="lb25" points="94.1,370.4 77.7,378.4 89.7,393.2"/><polygon class="lb8" points="77.7,378.4 63.7,361.8 62.2,401"/><polygon class="lb9" points="77.7,378.4 89.7,393.2 62.2,401"/><polygon class="lb12" points="89.7,393.2 98.5,407.6 62.2,401"/><polygon class="lb13" points="98.5,407.6 97.7,440.1 62.2,401"/><polygon class="lb18" points="127.8,424 98.5,407.6 97.7,440.1"/><polygon class="lb9" points="116.4,400 127.8,424 137.4,388.9"/><polygon class="lb11" points="116.4,400 109.5,413.8 127.8,424"/><polygon class="lb11" points="140.6,410.9 164.6,436.7 127.8,424"/><polygon class="lb44" points="140.6,410.9 163.9,413.5 164.6,436.7"/><polygon class="lb29" points="163.9,413.5 160.4,404.4 140.6,410.9"/><polygon class="lb29" points="105.7,403.2 109.5,413.8 116.4,400"/><polygon class="lb10" points="105.7,403.2 98.5,407.6 109.5,413.8"/><polygon class="lb45" points="106.3,458.1 127.8,424 97.7,440.1"/><polygon class="lb18" points="127.8,424 136.4,452.3 164.6,436.7"/><polygon class="lb9" points="127.8,424 106.3,458.1 136.4,452.3"/><polygon class="lb9" points="108.1,466.5 138.6,475.9 136.4,452.3"/><polygon class="lb47" points="58.2,492.1 45.3,480.1 45.3,495.5"/><polygon class="lb5" points="51.1,485.5 60.2,477.1 59.7,469.1 51.8,469.1"/><polygon class="lb48" points="70.7,475.3 60.2,477.1 72.1,458.9"/><polygon class="lb6" points="59.7,469.1 62.2,447.6 72.1,458.9"/><polygon class="lb5" points="62.2,447.6 45.3,461.7 45.3,447"/><polygon class="lb2" points="45.3,461.7 51.8,469.1 51.1,485.5 45.3,480.1"/><polygon class="lb3" points="51.8,469.1 62.2,447.6 45.3,461.7"/><polygon class="lb2" points="59.7,469.1 62.2,447.6 51.8,469.1"/><polygon class="lb0" points="59.7,469.1 60.2,477.1 72.1,458.9"/><polygon class="lb2" points="70.7,475.3 58.2,492.1 51.1,485.5 60.2,477.1"/><polygon class="lb21" points="136.4,452.3 164.6,436.7 169,471.1"/><polygon class="lb26" points="164.6,436.7 179.9,447.6 169,471.1"/><polygon class="lb22" points="179.9,447.6 186.5,421.3 164.6,436.7"/><polygon class="lb31" points="186.5,421.3 163.9,413.5 164.6,436.7"/><polygon class="lb49" points="186.5,421.3 180.3,397.8 163.9,413.5"/><polygon class="lb50" points="180.3,397.8 163.9,413.5 160.4,404.4"/><polygon class="lb51" points="186.5,421.3 200.2,487.7 179.9,447.6"/><polygon class="lb50" points="179.9,447.6 169,471.1 200.2,487.7"/><polygon class="lb41" points="186.5,421.3 209,424.5 180.3,397.8"/><polygon class="lb21" points="126.3,360.2 180.8,378.7 180.3,397.8"/><polygon class="lb52" points="180.8,378.7 179.6,357.2 126.3,360.2"/><polygon class="lb53" points="126.3,360.2 124.5,339.9 114.8,353.9"/><polygon class="lb53" points="180.8,378.7 206.6,391.6 180.3,397.8"/><polygon class="lb54" points="180.8,378.7 203.8,378.3 179.6,357.2"/><polygon class="lb31" points="179.6,357.2 175.9,342.7 126.3,360.2"/><polygon class="lb22" points="149.2,299.4 124.5,339.9 112.5,307.2"/><polygon class="lb20" points="149.2,299.4 161,314.4 140.1,314.4"/><polygon class="lb26" points="161,314.4 165.5,329.6 140.1,314.4"/><polygon class="lb55" points="165.5,329.6 126.3,360.2 175.9,342.7"/><polygon class="lb22" points="165.5,329.6 124.5,339.9 126.3,360.2"/><polygon class="lb55" points="165.5,329.6 140.1,314.4 124.5,339.9"/><polygon class="lb34" points="165.5,329.6 189.4,317.1 161,314.4"/><polygon class="lb23" points="165.5,329.6 194,331.2 175.9,342.7"/><polygon class="lb20" points="175.9,342.7 198.4,362.6 179.6,357.2"/><polygon class="lb56" points="149.2,299.4 161,314.4 183.7,298.4"/><polygon class="lb57" points="183.7,298.4 172,285.2 149.2,299.4"/><polygon class="lb14" points="169,471.1 141.8,506.1 138.6,475.9"/><polygon class="lb45" points="136.4,452.3 138.6,475.9 169,471.1"/><polygon class="lb30" points="141.8,506.1 108.1,466.5 138.6,475.9"/><polygon class="lb8" points="108.1,466.5 124.7,499.7 141.8,506.1"/><polygon class="lb18" points="108.1,466.5 91.8,491.5 124.7,499.7Fui criado apenas para processar e gerar texto, então não consigo te ajudar com isso.
+<polygon class="lb30" points="103.3,382.4 89.7,393.2 94.1,370.4"/><polygon class="lb25" points="94.1,370.4 77.7,378.4 89.7,393.2"/><polygon class="lb8" points="77.7,378.4 63.7,361.8 62.2,401"/><polygon class="lb9" points="77.7,378.4 89.7,393.2 62.2,401"/><polygon class="lb12" points="89.7,393.2 98.5,407.6 62.2,401"/><polygon class="lb13" points="98.5,407.6 97.7,440.1 62.2,401"/><polygon class="lb18" points="127.8,424 98.5,407.6 97.7,440.1"/><polygon class="lb9" points="116.4,400 127.8,424 137.4,388.9"/><polygon class="lb11" points="116.4,400 109.5,413.8 127.8,424"/><polygon class="lb11" points="140.6,410.9 164.6,436.7 127.8,424"/><polygon class="lb44" points="140.6,410.9 163.9,413.5 164.6,436.7"/><polygon class="lb29" points="163.9,413.5 160.4,404.4 140.6,410.9"/><polygon class="lb29" points="105.7,403.2 109.5,413.8 116.4,400"/><polygon class="lb10" points="105.7,403.2 98.5,407.6 109.5,413.8"/><polygon class="lb45" points="106.3,458.1 127.8,424 97.7,440.1"/><polygon class="lb18" points="127.8,424 136.4,452.3 164.6,436.7"/><polygon class="lb9" points="127.8,424 106.3,458.1 136.4,452.3"/><polygon class="lb9" points="108.1,466.5 138.6,475.9 136.4,452.3"/><polygon class="lb47" points="58.2,492.1 45.3,480.1 45.3,495.5"/><polygon class="lb5" points="51.1,485.5 60.2,477.1 59.7,469.1 51.8,469.1"/><polygon class="lb48" points="70.7,475.3 60.2,477.1 72.1,458.9"/><polygon class="lb6" points="59.7,469.1 62.2,447.6 72.1,458.9"/><polygon class="lb5" points="62.2,447.6 45.3,461.7 45.3,447"/><polygon class="lb2" points="45.3,461.7 51.8,469.1 51.1,485.5 45.3,480.1"/><polygon class="lb3" points="51.8,469.1 62.2,447.6 45.3,461.7"/><polygon class="lb2" points="59.7,469.1 62.2,447.6 51.8,469.1"/><polygon class="lb0" points="59.7,469.1 60.2,477.1 72.1,458.9"/><polygon class="lb2" points="70.7,475.3 58.2,492.1 51.1,485.5 60.2,477.1"/><polygon class="lb21" points="136.4,452.3 164.6,436.7 169,471.1"/><polygon class="lb26" points="164.6,436.7 179.9,447.6 169,471.1"/><polygon class="lb22" points="179.9,447.6 186.5,421.3 164.6,436.7"/><polygon class="lb31" points="186.5,421.3 163.9,413.5 164.6,436.7"/><polygon class="lb49" points="186.5,421.3 180.3,397.8 163.9,413.5"/><polygon class="lb50" points="180.3,397.8 163.9,413.5 160.4,404.4"/><polygon class="lb51" points="186.5,421.3 200.2,487.7 179.9,447.6"/><polygon class="lb50" points="179.9,447.6 169,471.1 200.2,487.7"/><polygon class="lb41" points="186.5,421.3 209,424.5 180.3,397.8"/><polygon class="lb21" points="126.3,360.2 180.8,378.7 180.3,397.8"/><polygon class="lb52" points="180.8,378.7 179.6,357.2 126.3,360.2"/><polygon class="lb53" points="126.3,360.2 124.5,339.9 114.8,353.9"/><polygon class="lb53" points="180.8,378.7 206.6,391.6 180.3,397.8"/><polygon class="lb54" points="180.8,378.7 203.8,378.3 179.6,357.2"/><polygon class="lb31" points="179.6,357.2 175.9,342.7 126.3,360.2"/><polygon class="lb22" points="149.2,299.4 124.5,339.9 112.5,307.2"/><polygon class="lb20" points="149.2,299.4 161,314.4 140.1,314.4"/><polygon class="lb26" points="161,314.4 165.5,329.6 140.1,314.4"/><polygon class="lb55" points="165.5,329.6 126.3,360.2 175.9,342.7"/><polygon class="lb22" points="165.5,329.6 124.5,339.9 126.3,360.2"/><polygon class="lb55" points="165.5,329.6 140.1,314.4 124.5,339.9"/><polygon class="lb34" points="165.5,329.6 189.4,317.1 161,314.4"/><polygon class="lb23" points="165.5,329.6 194,331.2 175.9,342.7"/><polygon class="lb20" points="175.9,342.7 198.4,362.6 179.6,357.2"/><polygon class="lb56" points="149.2,299.4 161,314.4 183.7,298.4"/><polygon class="lb57" points="183.7,298.4 172,285.2 149.2,299.4"/><polygon class="lb14" points="169,471.1 141.8,506.1 138.6,475.9"/><polygon class="lb45" points="136.4,452.3 138.6,475.9 169,471.1"/><polygon class="lb30" points="141.8,506.1 108.1,466.5 138.6,475.9"/><polygon class="lb8" points="108.1,466.5 124.7,499.7 141.8,506.1"/><polygon class="lb18" points="108.1,466.5 91.8,491.5 124.7,499.7"/><polygon class="lb18" points="141.8,506.1 127.8,518.3 124.7,499.7"/><polygon class="lb49" points="141.8,506.1 189.8,501.2 157,486.5"/><polygon class="lb58" points="169,471.1 189.8,501.2 157,486.5"/><polygon class="lb22" points="141.8,506.1 174,526.3 169,503.3"/><polygon class="lb32" points="141.8,506.1 127.8,518.3 174,526.3"/><polygon class="lb13" points="127.8,518.3 91.8,491.5 124.7,499.7"/><polygon class="lb15" points="127.8,518.3 167.9,548.1 158.7,523.7"/><polygon class="lb53" points="127.8,518.3 138.6,547.6 168.3,548.3"/><polygon class="lb19" points="127.8,518.3 106.4,536.8 97,511.2"/><polygon class="lb14" points="91.8,491.5 97,511.2 127.8,518.3"/><polygon class="lb11" points="76.6,502.6 61.6,516.2 59.9,509.2"/><polygon class="lb28" points="59.9,509.2 45.3,508.6 61.6,516.2"/><polygon class="lb27" points="61.6,516.2 45.3,517.6 45.3,508.6"/><polygon class="lb42" points="61.6,516.2 45.3,528 45.3,517.6"/><polygon class="lb45" points="83.9,526 106.4,536.8 95.1,549.5"/><polygon class="lb10" points="83.9,526 78.1,558.8 95.1,549.5"/><polygon class="lb25" points="78.1,558.8 45.3,575 80.7,544.3"/><polygon class="lb42" points="78.1,558.8 62.9,604.7 45.3,575"/><polygon class="lb18" points="78.1,558.8 98.8,588.9 95.1,549.5"/><polygon class="lb11" points="78.1,558.8 89.8,575.8 62.9,604.7"/><polygon class="lb8" points="45.3,575 55.5,592.2 45.3,602.6"/><polygon class="lb44" points="55.5,592.2 45.3,616.5 45.3,602.6"/><polygon class="lb10" points="80.7,544.3 62.2,536.2 45.3,575"/><polygon class="lb18" points="62.2,536.2 45.3,528 45.3,575"/><polygon class="lb41" points="61.6,516.2 62.2,536.2 45.3,528"/><polygon class="lb45" points="61.6,516.2 80.7,544.3 62.2,536.2"/><polygon class="lb16" points="76.6,502.6 83.9,526 61.6,516.2"/><polygon class="lb41" points="61.6,516.2 80.7,544.3 83.9,526"/><polygon class="lb59" points="91.8,491.5 76.6,502.6 97,511.2"/><polygon class="lb40" points="106.4,536.8 125,572.2 139.4,547.6"/><polygon class="lb14" points="106.4,536.8 98.8,588.9 95.1,549.5"/><polygon class="lb15" points="106.4,536.8 118.4,559.7 98.8,588.9"/><polygon class="lb33" points="127.8,518.3 106.4,536.8 139.4,547.6"/><polygon class="lb13" points="97,511.2 83.9,526 106.4,536.8"/><polygon class="lb14" points="97,511.2 76.6,502.6 83.9,526"/><polygon class="lb14" points="106.3,458.1 108.1,466.5 136.4,452.3"/>
+</g>
+</svg>`;
+
+  function initLobo() {
+    var c = document.getElementById('loboContainer');
+    if (!c) return;
+    c.innerHTML = LOBO_SVG;
+    var svg = c.querySelector('.lobo');
+    var polys = svg.querySelectorAll('polygon');
+    polys.forEach(function(p, i) {
+      p.style.animationDelay = (i * 0.008) + 's';
+    });
+    requestAnimationFrame(function() {
+      svg.classList.add('go');
+      svg.querySelector('#Izquierda').style.visibility = 'visible';
+      svg.querySelector('#Derecha').style.visibility = 'visible';
+    });
+    animarTexto();
+  }
+
+  function animarTexto() {
+    return;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLobo);
+  } else {
+    initLobo();
+  }
+})();
+
+</script>
+</body>
+</html>
+
+```
