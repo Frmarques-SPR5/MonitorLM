@@ -1,3 +1,4 @@
+painelmonitoramento:
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
@@ -73,25 +74,7 @@ header {
 .logo-txt .logo-spr5 { color: #ffe600; font-weight: 700; }
 .logo-txt .logo-cl   { color: #1c1c1e; font-weight: 600; }
 [data-theme="dark"] .logo-txt .logo-cl { color: #ffe600; }
-.lobo { width: 34px; height: 44px; flex-shrink: 0; overflow: visible; }
-.lobo #Izquierda, .lobo #Derecha { visibility: hidden; }
-.lobo #Ojo-izquierdo { animation: lobo-opacidad 1s 3.9s forwards; }
-.lobo #Ojo-derecho   { animation: lobo-opacidad 1s 3.9s forwards; }
-.lobo [id^="poligono"] { animation: lobo-montar .5s forwards; opacity: 0; }
-.lobo #Izquierda [id^="poligono"] { animation-name: lobo-slide-izq; }
-.lobo #Derecha [id^="poligono"]   { animation-name: lobo-slide-der; }
-@keyframes lobo-opacidad { from { visibility: hidden; } to { visibility: visible; } }
-@keyframes lobo-slide-izq {
-  from { transform: translate(-80px,-60px); opacity: 0; }
-  to   { transform: translate(0,0); opacity: 1; visibility: visible; }
-}
-@keyframes lobo-slide-der {
-  from { transform: translate(80px,-60px); opacity: 0; }
-  to   { transform: translate(0,0); opacity: 1; visibility: visible; }
-}
-@keyframes lobo-montar { to { opacity: 1; } }
-.lobo g[id] { animation: lobo-reveal .1s forwards; }
-@keyframes lobo-reveal { to { visibility: visible; } }
+/* lobo removido para simplificar o codigo e melhorar o mobile */
 .header-right { display: flex; align-items: center; gap: 10px; }
 /* toggle dark mode */
 .switch { position: relative; display: inline-block; width: 60px; height: 34px; flex-shrink: 0; transform: scale(.8); transform-origin: center; margin: 0 -6px; }
@@ -307,6 +290,34 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 .toast.err { background: var(--danger); }
 .toast.show { opacity: 1; transform: translateY(0); }
 .arrow-svg { display: inline-block; }
+/* ── MOBILE ── */
+@media (max-width: 600px) {
+  header { padding: 0 10px; }
+  .logo-wrap { min-width: 0; flex: 1 1 auto; }
+  .logo-txt { font-size: 14px; overflow: hidden; text-overflow: ellipsis; }
+  .header-right { gap: 6px; }
+  #app { padding: 12px 12px 40px; }
+  .kpi-bar { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  .kpi-val { font-size: 19px; }
+  .page-title { font-size: 15px; }
+  .filtros { gap: 6px; }
+  .filtros input, .filtros select { width: 100%; }
+  .btn-atualizar { margin-left: 0; width: 100%; }
+  .tab { padding: 8px 12px; font-size: 12px; }
+  .mcard { padding: 16px 14px; border-radius: 10px; }
+  .minfo { grid-template-columns: 1fr; }
+  .mactions { flex-direction: column-reverse; }
+  .mactions button { width: 100%; }
+  .chart-box canvas { max-height: 260px; }
+  .orh-charts { gap: 10px; }
+  .toast { bottom: 12px; }
+}
+@media (max-width: 380px) {
+  .kpi-bar { grid-template-columns: 1fr 1fr !important; }
+  .logo-txt { font-size: 13px; }
+  .header-transp { font-size: 11px; padding: 2px 6px; }
+  .btn-sair { padding: 5px 10px; }
+}
 </style>
 </head>
 <body>
@@ -315,7 +326,6 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <button class="hamburguer" id="btnMenu" onclick="abrirMenu()" style="display:none">
       <span></span><span></span><span></span>
     </button>
-    <div id="loboContainer"></div>
     <div class="logo-txt" id="logoTexto"><span class="logo-spr5">SPR5</span> <span class="logo-cl">CONTROLE LIDERANÇAS</span></div>
   </div>
   <div class="header-right">
@@ -461,7 +471,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         <div class="kpi-val d" id="vgTotORH"><span class="spinner"></span></div>
       </div>
       <div class="kpi" style="border-color:var(--blue)">
-        <div class="kpi-label" style="color:var(--blue)">Faltas no Briefing</div>
+        <div class="kpi-label" style="color:var(--blue)">Presenteísmo Briefing (semana)</div>
         <div class="kpi-val b" id="vgTotBriefing"><span class="spinner"></span></div>
       </div>
     </div>
@@ -546,13 +556,12 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         <div class="gb" style="display:block"><div id="o12hLista"><div class="empty">—</div></div></div>
       </div>
       <div class="orh-charts">
-        <div class="chart-box"><div class="chart-title">Comparativo dia a dia — Adesão %</div><canvas id="chEvoAdesao"></canvas></div>
-        <div class="chart-box"><div class="chart-title">Comparativo dia a dia — Ofensoras & ORH médio</div><canvas id="chEvoOfensoras"></canvas></div>
-        <div class="chart-box"><div class="chart-title">Adesão geral (dentro × ofensora)</div><canvas id="chAdesao"></canvas></div>
+        <div class="chart-box"><div class="chart-title" id="chEvoAdesaoTitle">Comparativo dia a dia — Adesão %</div><canvas id="chEvoAdesao"></canvas></div>
+        <div class="chart-box"><div class="chart-title" id="chEvoOfensorasTitle">Comparativo dia a dia — Ofensoras & ORH médio</div><canvas id="chEvoOfensoras"></canvas></div>
         <div class="chart-box"><div class="chart-title">Ofensoras por transportadora</div><canvas id="chOfTransp"></canvas></div>
         <div class="chart-box"><div class="chart-title">Rotas por transportadora</div><canvas id="chRotasTransp"></canvas></div>
         <div class="chart-box"><div class="chart-title">Excedente de ORH (min) — top ofensoras</div><canvas id="chExcedente"></canvas></div>
-        <div class="chart-box"><div class="chart-title">Ofensoras por motivo do atraso</div><canvas id="chMotivo"></canvas></div>
+        <div class="chart-box"><div class="chart-title" id="chMotivoTitle">Ofensoras por motivo do atraso</div><canvas id="chMotivo"></canvas></div>
       </div>
     </div>
     <div id="oPaneTabela" style="display:none">
@@ -575,6 +584,11 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div id="oTranspLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
     <div id="oPaneJust" style="display:none">
+      <div class="filtros">
+        <select id="ojDataF" onchange="renderHisORHFiltrado()"><option value="">Todas as datas</option></select>
+        <select id="ojTranspF" onchange="renderHisORHFiltrado()" style="display:none"><option value="">Todas as transportadoras</option></select>
+        <button class="btn-atualizar" onclick="carregarHisORH()">↻ Atualizar</button>
+      </div>
       <div id="oTabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
   </div>
@@ -588,12 +602,21 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="tab" data-ptab="just">Justificativas</div>
     </div>
     <div id="pPaneLista">
+      <div class="kpi-bar" id="pKpis" style="grid-template-columns:repeat(3,1fr);max-width:640px">
+        <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-val b" id="pKTotal">—</div></div>
+        <div class="kpi" style="border-color:var(--ok)"><div class="kpi-label" style="color:var(--ok)">Justificados</div><div class="kpi-val g" id="pKJust">—</div></div>
+        <div class="kpi" style="border-color:var(--danger)"><div class="kpi-label" style="color:var(--danger)">Pendentes</div><div class="kpi-val d" id="pKPend">—</div></div>
+      </div>
+      <div class="chart-box" id="pChartBox" style="margin-bottom:14px;max-width:420px"><div class="chart-title">Justificados × Pendentes</div><canvas id="pChart"></canvas></div>
       <div class="filtros">
         <input type="text" id="pBusca" placeholder="Buscar ID, rota, placa, produto...">
         <select id="pJustF">
           <option value="">Todos</option>
           <option value="nao">Pendentes de justificativa</option>
           <option value="sim">Justificados</option>
+        </select>
+        <select id="pTranspF" onchange="renderPend()" style="display:none">
+          <option value="">Todas as transportadoras</option>
         </select>
         <button class="btn-atualizar" onclick="carregarPend()">↻ Atualizar</button>
       </div>
@@ -691,6 +714,15 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
           <div><label class="flabel">Qual o problema do veículo apoiado? (Opcional)</label><input type="text" id="i_aod_prob" placeholder="Ex: Bateria" class="filtros" style="width:100%"></div>
           <div><label class="flabel">Prestou apoio a entregas de outro driver? *</label><select id="i_aod_entregas" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select></div>
           <div><label class="flabel">Quanto tempo durou este suporte? *</label><input type="text" id="i_aod_tempo" placeholder="Ex: 1h30, 45min" class="filtros" style="width:100%"></div>
+        </div>
+        <div id="sub_Outras" style="display:none; gap:10px; flex-direction:column;">
+          <div><label class="flabel">Driver reincidente? *</label><select id="i_ou_reincidente" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select></div>
+          <div><label class="flabel">Placa do veículo *</label><input type="text" id="i_ou_placa" placeholder="Ex: ABC1D23" class="filtros" style="width:100%"></div>
+          <div><label class="flabel">Driver recorrente? *</label><select id="i_ou_recorrente" class="filtros" style="width:100%" onchange="onOutrasRecorrenteChange()"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select></div>
+          <div id="i_ou_planoWrap" style="display:none; gap:10px; flex-direction:column;">
+            <div><label class="flabel">Existe plano de ação para mitigar futuros desvios? *</label><select id="i_ou_plano" class="filtros" style="width:100%"><option value="">Selecione...</option><option value="SIM">SIM</option><option value="NÃO">NÃO</option></select></div>
+            <div><label class="flabel">Qual o prazo? (se não existe, prazo para criação) *</label><input type="text" id="i_ou_prazo" placeholder="Ex: 15/08/2026 ou 30 dias" class="filtros" style="width:100%"></div>
+          </div>
         </div>
         <div id="mColetaIdWrap" style="display:none; gap:10px; flex-direction:column;">
           <div><label class="flabel">ID da coleta fantasma *</label><input type="text" id="mColetaId" placeholder="Digite o ID da coleta" class="filtros" style="width:100%"></div>
@@ -931,6 +963,19 @@ function extractDateBR(val) {
     return str.split(' ')[0];
   } catch(e) { return ''; }
 }
+function parseBRDate(str) {
+  var m = String(str||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!m) return null;
+  var d = parseInt(m[1],10), mo = parseInt(m[2],10) - 1, a = parseInt(m[3],10); if (a < 100) a += 2000;
+  var dt = new Date(a, mo, d); return isNaN(dt.getTime()) ? null : dt;
+}
+function weekRange(dateStr) {
+  var dt = parseBRDate(dateStr); if (!dt) return null;
+  var day = dt.getDay(), diff = (day === 0 ? -6 : 1 - day);
+  var mon = new Date(dt); mon.setDate(dt.getDate() + diff); mon.setHours(0,0,0,0);
+  var sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+  return { start: mon, end: sun };
+}
 function carregarVisaoGeral() {
   document.getElementById('vgLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando Faltantes... (1/3)</div>';
 
@@ -993,7 +1038,7 @@ function renderVisaoGeral(dataSel, transpSel) {
     if (nome.indexOf('BLD') !== -1) nome = 'BLD LOGÍSTICA';
     if (transpSel && nome !== transpSel) return null;
 
-    if (!macro[nome]) { macro[nome] = { nome: nome, pendFaltantes: 0, pendORH: 0, fezBriefing: false }; }
+    if (!macro[nome]) { macro[nome] = { nome: nome, pendFaltantes: 0, pendORH: 0, fezBriefing: false, briefSemana: 0 }; }
     return nome;
   }
   vgCachePend.forEach(function(p) {
@@ -1004,27 +1049,29 @@ function renderVisaoGeral(dataSel, transpSel) {
       var t = initTransp(r.transportadora); if (t) macro[t].pendORH++;
     }
   });
+  var wkVG = weekRange(dataSel);
   vgCacheBrief.forEach(function(b) {
-    if (extractDateBR(b.data_hora) === dataSel) {
-      var t = initTransp(b.transportadora); if (t) macro[t].fezBriefing = true;
-    }
+    var t = initTransp(b.transportadora); if (!t) return;
+    var bd = parseBRDate(extractDateBR(b.data_hora));
+    if (extractDateBR(b.data_hora) === dataSel) macro[t].fezBriefing = true;
+    if (wkVG && bd && bd >= wkVG.start && bd <= wkVG.end) macro[t].briefSemana++;
   });
   var listaPadrao = ['KANGU LOGISTICS', 'RODACOOP', 'ALTOVALE', 'BRAVOX', 'BLD LOGÍSTICA', 'KN', 'ENVIOS EXTRA'];
   if (!transpSel) { listaPadrao.forEach(function(t) { initTransp(t); }); }
   var lista = Object.keys(macro).map(function(k) { return macro[k]; });
   var briefingObrigatorio = ['KANGU LOGISTICS', 'RODACOOP', 'ALTOVALE', 'BRAVOX', 'BLD LOGÍSTICA'];
 
-  var totF = 0, totO = 0, faltamB = 0;
+  var totF = 0, totO = 0, totBriefSemana = 0;
   lista.forEach(function(m) {
     totF += m.pendFaltantes;
     totO += m.pendORH;
-    if (briefingObrigatorio.indexOf(m.nome) !== -1 && !m.fezBriefing) faltamB++;
+    if (m.nome !== 'MELI') totBriefSemana += (m.briefSemana || 0);
   });
 
   document.getElementById('vgTotFaltantes').textContent = totF;
   document.getElementById('vgTotORH').textContent = totO;
-  document.getElementById('vgTotBriefing').textContent = faltamB;
-  var h = '<div class="hist-wrap"><table class="htable" style="font-size:13px; text-align:center;"><thead><tr><th style="text-align:left;">Transportadora</th><th style="text-align:center;">Pendentes (Faltantes)</th><th style="text-align:center;">Pendentes (ORH)</th><th style="text-align:center;">Status Briefing</th><th style="text-align:center;">Ação Liderança</th></tr></thead><tbody>';
+  document.getElementById('vgTotBriefing').textContent = totBriefSemana;
+  var h = '<div class="hist-wrap"><table class="htable" style="font-size:13px; text-align:center;"><thead><tr><th style="text-align:left;">Transportadora</th><th style="text-align:center;">Pendentes (Faltantes)</th><th style="text-align:center;">Pendentes (ORH)</th><th style="text-align:center;">Presenteísmo (semana)</th><th style="text-align:center;">Ação Liderança</th></tr></thead><tbody>';
 
   lista.sort(function(a,b) {
     var aReq = briefingObrigatorio.indexOf(a.nome) !== -1 ? 1 : 0;
@@ -1038,12 +1085,14 @@ function renderVisaoGeral(dataSel, transpSel) {
     var stORH = x.pendORH > 0 ? '<span class="dc crit">'+x.pendORH+' pendente(s)</span>' : '<span class="jok">✓ Tudo justificado</span>';
 
     var reqBriefing = briefingObrigatorio.indexOf(x.nome) !== -1;
-    var stBrief = '<span style="color:var(--text2)">—</span>';
-    var isBriefLimpo = true;
+    var qtdSem = x.briefSemana || 0;
+    var stBrief;
     if (reqBriefing) {
-        stBrief = x.fezBriefing ? '<span class="jok">✓ Registrado</span>' : '<span class="sb status-missing">Não registrado</span>';
-        isBriefLimpo = x.fezBriefing;
+        stBrief = qtdSem > 0 ? '<span class="jok">'+qtdSem+'× na semana</span>' : '<span class="sb status-missing">0 na semana</span>';
+    } else {
+        stBrief = qtdSem > 0 ? '<span style="font-weight:700;color:var(--blue)">'+qtdSem+'×</span>' : '<span style="color:var(--text2)">—</span>';
     }
+    var isBriefLimpo = !reqBriefing || qtdSem > 0;
 
     var limpo = (x.pendFaltantes === 0 && x.pendORH === 0 && isBriefLimpo);
     var stGeral = limpo ? '<span class="jok" style="font-weight:800; display:block; margin-bottom:4px;">✅ OK</span>' : '<span class="dc crit" style="font-weight:800; display:block; margin-bottom:4px;">🚨 Cobrar ação</span>';
@@ -1319,9 +1368,28 @@ function desenharGraficosORH() {
   var serieAdesao = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(((d.total-d.ofens)/d.total)*100) : 0; });
   var serieOfens  = diasKeys.map(function(k){ return porDia[k].ofens; }), serieMedio  = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(d.soma/d.total) : 0; });
   orhCharts.evoAdesao = new Chart(document.getElementById('chEvoAdesao'), { type: 'line', data: { labels: diasLabels, datasets: [{ label:'Adesão %', data: serieAdesao, borderColor:'#00a650', backgroundColor:'rgba(0,166,80,.12)', fill:true, tension:.3, pointRadius:4, pointBackgroundColor:'#00a650' }] }, options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true, max:100, ticks:{ callback:function(v){return v+'%';} } } } } });
-  orhCharts.evoOfensoras = new Chart(document.getElementById('chEvoOfensoras'), { data: { labels: diasLabels, datasets: [ { type:'bar', label:'Ofensoras', data: serieOfens, backgroundColor:'#e05252', yAxisID:'y' }, { type:'line', label:'ORH médio (h)', data: serieMedio.map(function(m){return +(m/60).toFixed(2);}), borderColor:'#ff9900', backgroundColor:'#ff9900', tension:.3, pointRadius:3, yAxisID:'y1' } ] }, options: { responsive:true, plugins:{ legend:{ position:'bottom' } }, scales:{ x:{ grid:{ color:grid } }, y:{ position:'left', grid:{ color:grid }, beginAtZero:true, title:{display:true,text:'Ofensoras'} }, y1:{ position:'right', grid:{ display:false }, beginAtZero:true, title:{display:true,text:'ORH médio (h)'} } } } });
+  var isMeli = !!(sessao && sessao.isMeli);
+  var PALETA = ['#e05252','#ff9900','#3483fa','#00a650','#603163','#358a9e','#f0a800','#737cbb','#62a8c4','#a799ca','#5a627b','#8888aa'];
+  var elTitAd = document.getElementById('chEvoAdesaoTitle'), elTitOf = document.getElementById('chEvoOfensorasTitle');
+  if (elTitAd) elTitAd.textContent = isMeli ? 'Comparativo dia a dia — Adesão % (geral)' : 'Comparativo dia a dia — Adesão %';
+  if (isMeli) {
+    if (elTitOf) elTitOf.textContent = 'Ofensoras por transportadora — dia a dia';
+    var transpSet = {}, porDiaT = {};
+    orhCacheFull.forEach(function(r){
+      if (r.orh_real_min === null || !r.ofensora) return;
+      var kd = dataChave(r.data_dia); if (!kd) return;
+      var td = grupoDaRota(r); transpSet[td] = true;
+      if (!porDiaT[kd]) porDiaT[kd] = {};
+      porDiaT[kd][td] = (porDiaT[kd][td] || 0) + 1;
+    });
+    var transpKeys = Object.keys(transpSet).sort();
+    var dsT = transpKeys.map(function(t, i){ return { label: t, data: diasKeys.map(function(k){ return (porDiaT[k] && porDiaT[k][t]) || 0; }), backgroundColor: PALETA[i % PALETA.length] }; });
+    orhCharts.evoOfensoras = new Chart(document.getElementById('chEvoOfensoras'), { type:'bar', data:{ labels: diasLabels, datasets: dsT }, options:{ responsive:true, plugins:{ legend:{ position:'bottom' }, tooltip:{ mode:'index' } }, scales:{ x:{ stacked:true, grid:{ color:grid } }, y:{ stacked:true, beginAtZero:true, grid:{ color:grid }, title:{ display:true, text:'Ofensoras' }, ticks:{ precision:0 } } } } });
+  } else {
+    if (elTitOf) elTitOf.textContent = 'Comparativo dia a dia — Ofensoras & ORH médio';
+    orhCharts.evoOfensoras = new Chart(document.getElementById('chEvoOfensoras'), { data: { labels: diasLabels, datasets: [ { type:'bar', label:'Ofensoras', data: serieOfens, backgroundColor:'#e05252', yAxisID:'y' }, { type:'line', label:'ORH médio (h)', data: serieMedio.map(function(m){return +(m/60).toFixed(2);}), borderColor:'#ff9900', backgroundColor:'#ff9900', tension:.3, pointRadius:3, yAxisID:'y1' } ] }, options: { responsive:true, plugins:{ legend:{ position:'bottom' } }, scales:{ x:{ grid:{ color:grid } }, y:{ position:'left', grid:{ color:grid }, beginAtZero:true, title:{display:true,text:'Ofensoras'} }, y1:{ position:'right', grid:{ display:false }, beginAtZero:true, title:{display:true,text:'ORH médio (h)'} } } } });
+  }
   var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; }), ofensoras = comReal.filter(function(r){ return r.ofensora; }), dentro = comReal.length - ofensoras.length;
-  orhCharts.adesao = new Chart(document.getElementById('chAdesao'), { type: 'doughnut', data: { labels: ['Dentro do ORH','Ofensoras'], datasets: [{ data: [dentro, ofensoras.length], backgroundColor: ['#00a650','#e05252'] }] }, options: { responsive:true, plugins:{ legend:{ position:'bottom' } } } });
   var ofPorT = {}; ofensoras.forEach(function(r){ var t=grupoDaRota(r); ofPorT[t]=(ofPorT[t]||0)+1; }); var ofKeys = Object.keys(ofPorT).sort(function(a,b){ return ofPorT[b]-ofPorT[a]; });
   orhCharts.ofTransp = new Chart(document.getElementById('chOfTransp'), { type: 'bar', data: { labels: ofKeys, datasets: [{ data: ofKeys.map(function(k){return ofPorT[k];}), backgroundColor: '#e05252' }] }, options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } } });
   var totPorT = {}; orhCache.forEach(function(r){ var t=grupoDaRota(r); totPorT[t]=(totPorT[t]||0)+1; }); var tKeys = Object.keys(totPorT).sort(function(a,b){ return totPorT[b]-totPorT[a]; });
@@ -1331,7 +1399,10 @@ function desenharGraficosORH() {
   var motivos = {}; ofensoras.forEach(function(r){ if (r.justificado && r.just_motivo_padrao) { var m = r.just_motivo_padrao; motivos[m] = (motivos[m]||0) + 1; } });
   var mKeys = Object.keys(motivos).sort(function(a,b){ return motivos[b]-motivos[a]; }), semJust = ofensoras.filter(function(r){ return !r.justificado; }).length;
   if (semJust > 0) { mKeys.push('(sem justificativa)'); motivos['(sem justificativa)'] = semJust; }
-  orhCharts.motivo = new Chart(document.getElementById('chMotivo'), { type: 'doughnut', data: { labels: mKeys, datasets: [{ data: mKeys.map(function(k){return motivos[k];}), backgroundColor: ['#e05252','#ff9900','#f0a800','#603163','#358a9e','#8888aa'] }] }, options: { responsive:true, plugins:{ legend:{ position:'bottom' } } } });
+  var motivoCores = mKeys.map(function(k, i){ return k === '(sem justificativa)' ? '#8888aa' : PALETA[i % PALETA.length]; });
+  var valLabelMotivo = { id:'valLabelMotivo', afterDatasetsDraw:function(ch){ var cx = ch.ctx; ch.data.datasets.forEach(function(ds, di){ var meta = ch.getDatasetMeta(di); meta.data.forEach(function(bar, i){ var val = ds.data[i]; if (val == null) return; cx.save(); cx.fillStyle = cor; cx.font = '700 11px Roboto, sans-serif'; cx.textBaseline = 'middle'; cx.textAlign = 'left'; cx.fillText(val, bar.x + 6, bar.y); cx.restore(); }); }); } };
+  if (document.getElementById('chMotivoTitle')) document.getElementById('chMotivoTitle').textContent = 'Ofensoras por motivo do atraso (qtde)';
+  orhCharts.motivo = new Chart(document.getElementById('chMotivo'), { type:'bar', data:{ labels: mKeys, datasets:[{ label:'Ofensoras', data: mKeys.map(function(k){return motivos[k];}), backgroundColor: motivoCores, borderRadius:4 }] }, options:{ indexAxis:'y', responsive:true, layout:{ padding:{ right:26 } }, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return ' ' + c.parsed.x + ' ofensora' + (c.parsed.x===1?'':'s'); } } } }, scales:{ x:{ beginAtZero:true, grid:{ color:grid }, ticks:{ precision:0 } }, y:{ grid:{ display:false } } } }, plugins:[valLabelMotivo] });
 }
 function renderORHTabela() {
   var f = orhFiltrar();
@@ -1407,7 +1478,7 @@ function carregarHisORH() {
     delete window[cb]; if (d.erro) { toast('Erro: ' + d.erro, 1); return; }
     var hist = d.historico || [];
     if (!sessao.isMeli) hist = hist.filter(function(r){ var t = normTransp(r.transportadora); if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') return t === normTransp('BLD LOGÍSTICA'); return t === normTransp(sessao.transp); });
-    renderHisORH(hist);
+    orhHisCache = hist; popularFiltrosHisORH(); renderHisORHFiltrado();
   };
   var s = document.createElement('script'); s.src = API + '?action=getHistoricoORH&callback=' + cb + '&t=' + Date.now(); document.head.appendChild(s);
 }
@@ -1422,10 +1493,43 @@ function renderHisORH(registros) {
   h += '</tbody></table></div>';
   document.getElementById('oTabelaHis').innerHTML = h;
 }
+var orhHisCache = [];
+function popularFiltrosHisORH() {
+  var datas = {}, transps = {};
+  orhHisCache.forEach(function(r){ var d = extractDateBR(r.data_hora); if (d) datas[d] = true; var t = (r.transportadora||'').trim(); if (t) transps[t] = true; });
+  var selD = document.getElementById('ojDataF');
+  if (selD) {
+    var atualD = selD.value;
+    var arr = Object.keys(datas).sort(function(a,b){ return a.split('/').reverse().join('') < b.split('/').reverse().join('') ? 1 : -1; });
+    selD.innerHTML = '<option value="">Todas as datas</option>' + arr.map(function(d){ return '<option value="'+e(d)+'">'+e(d)+'</option>'; }).join('');
+    if (arr.indexOf(atualD) !== -1) selD.value = atualD;
+  }
+  var selT = document.getElementById('ojTranspF');
+  if (selT) {
+    if (!sessao || !sessao.isMeli) { selT.style.display = 'none'; }
+    else {
+      var atualT = selT.value;
+      var arrT = Object.keys(transps).sort();
+      selT.innerHTML = '<option value="">Todas as transportadoras</option>' + arrT.map(function(t){ return '<option value="'+e(t)+'">'+e(t)+'</option>'; }).join('');
+      if (arrT.indexOf(atualT) !== -1) selT.value = atualT;
+      selT.style.display = '';
+    }
+  }
+}
+function renderHisORHFiltrado() {
+  var selD = document.getElementById('ojDataF'), selT = document.getElementById('ojTranspF');
+  var fd = selD ? selD.value : '', ft = selT ? selT.value : '';
+  var lista = orhHisCache.filter(function(r){
+    if (fd && extractDateBR(r.data_hora) !== fd) return false;
+    if (ft && (r.transportadora||'').trim() !== ft) return false;
+    return true;
+  });
+  renderHisORH(lista);
+}
 var orhSel = null;
 function onMotivoPadraoChange() {
   var v = document.getElementById('mMotivoPadrao').value;
-  document.getElementById('sub_AltoParadas').style.display = 'none'; document.getElementById('sub_Insucessos').style.display = 'none'; document.getElementById('sub_AtrasoDriver').style.display = 'none'; document.getElementById('sub_CidadesDispersas').style.display = 'none'; document.getElementById('sub_ProbMecanico').style.display = 'none'; document.getElementById('sub_AjudouDriver').style.display = 'none'; document.getElementById('mColetaIdWrap').style.display = 'none'; document.getElementById('wrap_Reporte18h').style.display = 'none';
+  document.getElementById('sub_AltoParadas').style.display = 'none'; document.getElementById('sub_Insucessos').style.display = 'none'; document.getElementById('sub_AtrasoDriver').style.display = 'none'; document.getElementById('sub_CidadesDispersas').style.display = 'none'; document.getElementById('sub_ProbMecanico').style.display = 'none'; document.getElementById('sub_AjudouDriver').style.display = 'none'; document.getElementById('sub_Outras').style.display = 'none'; document.getElementById('mColetaIdWrap').style.display = 'none'; document.getElementById('wrap_Reporte18h').style.display = 'none';
   var requerReporte = false;
   if (v === 'Número alto de paradas') { document.getElementById('sub_AltoParadas').style.display = 'flex'; requerReporte = true; }
   else if (v === 'Retorno de insucessos') { document.getElementById('sub_Insucessos').style.display = 'flex'; requerReporte = true; }
@@ -1434,10 +1538,15 @@ function onMotivoPadraoChange() {
   else if (v === 'Problemas mecânicos') { document.getElementById('sub_ProbMecanico').style.display = 'flex'; requerReporte = true; }
   else if (v === 'Ajudou outro driver') { document.getElementById('sub_AjudouDriver').style.display = 'flex'; requerReporte = true; }
   else if (v === 'Coleta fantasma') { document.getElementById('mColetaIdWrap').style.display = 'flex'; }
+  else if (v === 'Outras') { document.getElementById('sub_Outras').style.display = 'flex'; onOutrasRecorrenteChange(); requerReporte = true; }
   if (requerReporte) { document.getElementById('wrap_Reporte18h').style.display = 'block'; }
   var lbl = document.getElementById('mMotivoLabel'), ta = document.getElementById('mMotivo');
-  if (v === 'Outras') { lbl.textContent = 'Descreva o motivo detalhadamente *'; ta.placeholder = 'Descreva o motivo do atraso...'; }
+  if (v === 'Outras') { lbl.textContent = 'Outras informações / motivo detalhado *'; ta.placeholder = 'Acrescente o máximo de informações para análise...'; }
   else { lbl.textContent = 'Observações adicionais (opcional)'; ta.placeholder = 'Detalhes adicionais (opcional)...'; }
+}
+function onOutrasRecorrenteChange() {
+  var el = document.getElementById('i_ou_recorrente'); if (!el) return;
+  document.getElementById('i_ou_planoWrap').style.display = (el.value === 'SIM') ? 'flex' : 'none';
 }
 function abrirModalORH(idRota) {
   orhSel = orhCache.find(function(r){return r.id_rota===idRota;});
@@ -1449,6 +1558,7 @@ function abrirModalORH(idRota) {
   document.getElementById('mMotivoPadrao').value = jaTem ? (r.just_motivo_padrao || '') : '';
   document.getElementById('mColetaId').value = jaTem ? (r.just_coleta_id || '') : '';
   document.getElementById('mMotivo').value = jaTem ? (r.just_obs || '') : '';
+  ['i_ou_reincidente','i_ou_placa','i_ou_recorrente','i_ou_plano','i_ou_prazo','i_comum_reporte'].forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
   onMotivoPadraoChange();
   var bs = document.getElementById('bSave'); bs.classList.remove('disabled'); bs.textContent = 'Salvar';
   document.getElementById('modalJust').setAttribute('data-modo', 'orh');
@@ -1466,7 +1576,17 @@ function salvarORH() {
   else if (motivoPadrao === 'Problemas mecânicos') { var v1 = document.getElementById('i_pm_prob').value.trim(), v2 = document.getElementById('i_pm_hora_id').value, v3 = document.getElementById('i_pm_hora_fim').value; if (!v1 || !v2 || !v3 || !reporte18h) { toast('Preencha todos os campos do motivo.', 1); return; } detalhesFormatados = "Problema: " + v1 + " | Início: " + v2 + " | Fim: " + v3 + " | Reporte 18h: " + reporte18h; }
   else if (motivoPadrao === 'Ajudou outro driver') { var v1 = document.getElementById('i_aod_rota').value.trim(), v2 = document.getElementById('i_aod_mec').value, v3 = document.getElementById('i_aod_prob').value.trim(), v4 = document.getElementById('i_aod_entregas').value, v5 = document.getElementById('i_aod_tempo').value.trim(); if (!v1 || !v2 || !v4 || !v5 || !reporte18h) { toast('Preencha todos os campos obrigatórios.', 1); return; } detalhesFormatados = "Rota apoiada: " + v1 + " | Apoio Mecânico: " + v2 + (v3 ? " ("+v3+")" : "") + " | Apoio Entregas: " + v4 + " | Duração: " + v5 + " | Reporte 18h: " + reporte18h; }
   else if (motivoPadrao === 'Coleta fantasma') { if (!coletaId) { toast('Informe o ID da coleta fantasma.', 1); return; } detalhesFormatados = "ID: " + coletaId; }
-  else if (motivoPadrao === 'Outras') { if (!obs) { toast('Descreva o motivo detalhadamente.', 1); return; } }
+  else if (motivoPadrao === 'Outras') {
+    var ou_reinc = document.getElementById('i_ou_reincidente').value, ou_placa = document.getElementById('i_ou_placa').value.trim(), ou_recor = document.getElementById('i_ou_recorrente').value;
+    if (!obs) { toast('Descreva as outras informações / motivo detalhado.', 1); return; }
+    if (!reporte18h || !ou_reinc || !ou_placa || !ou_recor) { toast('Preencha todos os campos obrigatórios do motivo.', 1); return; }
+    detalhesFormatados = "Reporte 18h: " + reporte18h + " | Reincidente: " + ou_reinc + " | Placa: " + ou_placa + " | Recorrente: " + ou_recor;
+    if (ou_recor === 'SIM') {
+      var ou_plano = document.getElementById('i_ou_plano').value, ou_prazo = document.getElementById('i_ou_prazo').value.trim();
+      if (!ou_plano || !ou_prazo) { toast('Informe o plano de ação e o prazo.', 1); return; }
+      detalhesFormatados += " | Plano de ação: " + ou_plano + " | Prazo: " + ou_prazo;
+    }
+  }
   if (!orhSel) return;
   var motivoFinal = motivoPadrao; if (detalhesFormatados) motivoFinal += " [" + detalhesFormatados + "]"; if (obs) motivoFinal += (motivoPadrao === 'Outras' ? ': ' : ' — Obs: ') + obs;
   var btn = document.getElementById('bSave'); btn.classList.add('disabled'); btn.textContent = 'Salvando...';
@@ -1513,16 +1633,47 @@ function pkgLink(id) { if (!id) return ''; return '<a class="route-link" href="h
 function copiarId(id) { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(id).then(function(){ toast('ID ' + id + ' copiado!'); }, function(){ copiarFallback(id); }); } else { copiarFallback(id); } }
 function copiarFallback(id) { var ta = document.createElement('textarea'); ta.value = id; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('ID ' + id + ' copiado!'); } catch(e){ toast('Não consegui copiar', 1); } ta.remove(); }
 function pendFiltrar() {
-  var b = (document.getElementById('pBusca').value || '').toLowerCase(), j = document.getElementById('pJustF').value;
+  var b = (document.getElementById('pBusca').value || '').toLowerCase(), j = document.getElementById('pJustF').value; var selT = document.getElementById('pTranspF'), tr = selT ? selT.value : '';
   return pendCache.filter(function(p) {
+    if (tr) { var pt = (p.transportadora||'— Sem transp —').trim() || '— Sem transp —'; if (pt !== tr) return false; }
     if (j === 'sim' && !p.justificado) return false; if (j === 'nao' && p.justificado) return false;
     if (b) { var t = [p.id_pacote, p.rota, p.placa, p.produto, p.transportadora].join(' ').toLowerCase(); if (!t.includes(b)) return false; }
     return true;
   });
 }
+var pendChart = null;
+function popularTranspPend() {
+  var sel = document.getElementById('pTranspF'); if (!sel) return;
+  if (!sessao || !sessao.isMeli) { sel.style.display = 'none'; return; }
+  var atual = sel.value, ts = {};
+  pendCache.forEach(function(p){ var t = (p.transportadora||'— Sem transp —').trim() || '— Sem transp —'; ts[t] = true; });
+  var keys = Object.keys(ts).sort();
+  sel.innerHTML = '<option value="">Todas as transportadoras</option>' + keys.map(function(k){ return '<option value="'+e(k)+'">'+e(k)+'</option>'; }).join('');
+  if (keys.indexOf(atual) !== -1) sel.value = atual;
+  sel.style.display = '';
+}
+function pendBase() {
+  var sel = document.getElementById('pTranspF'), tr = sel ? sel.value : '';
+  return pendCache.filter(function(p){ if (tr) { var t = (p.transportadora||'— Sem transp —').trim() || '— Sem transp —'; if (t !== tr) return false; } return true; });
+}
+function desenharGraficoPend(just, pend) {
+  if (typeof Chart === 'undefined') return;
+  var box = document.getElementById('pChartBox'); if (!box) return;
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark', corp = dark ? '#8888aa' : '#6c757d';
+  Chart.defaults.color = corp; Chart.defaults.font.family = 'Roboto, sans-serif';
+  if (pendChart) { pendChart.destroy(); pendChart = null; }
+  if ((just + pend) === 0) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  pendChart = new Chart(document.getElementById('pChart'), { type:'doughnut', data:{ labels:['Justificados','Pendentes'], datasets:[{ data:[just, pend], backgroundColor:['#00a650','#e05252'] }] }, options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } } });
+}
 function renderPend() {
-  var tot = pendCache.length, just = pendCache.filter(function(p){return p.justificado;}).length;
-  document.getElementById('pendSub').textContent = tot + ' pendente' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '') + ' · ' + (tot-just) + ' sem justificativa';
+  popularTranspPend();
+  var base = pendBase();
+  var tot = base.length, just = base.filter(function(p){return p.justificado;}).length, pend = tot - just;
+  document.getElementById('pendSub').textContent = tot + ' pendente' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '') + ' · ' + pend + ' sem justificativa';
+  var kt = document.getElementById('pKTotal'), kj = document.getElementById('pKJust'), kp = document.getElementById('pKPend');
+  if (kt) kt.textContent = tot; if (kj) kj.textContent = just; if (kp) kp.textContent = pend;
+  desenharGraficoPend(just, pend);
   renderPendTabela();
 }
 function renderPendTabela() {
@@ -1638,52 +1789,6 @@ function renderBriefingPainel(registros) {
 document.querySelectorAll('[data-btab]').forEach(function(t){ t.addEventListener('click',function(){ document.querySelectorAll('[data-btab]').forEach(function(x){x.classList.remove('ativo');}); t.classList.add('ativo'); var n = t.getAttribute('data-btab'); document.getElementById('bPaneRegistrar').style.display = n==='registrar'?'block':'none'; document.getElementById('bPanePainel').style.display = n==='painel'?'block':'none'; if (n==='painel') carregarBriefingPainel(); }); });
 document.querySelectorAll('[data-tab]').forEach(function(t){ t.addEventListener('click',function(){ document.querySelectorAll('[data-tab]').forEach(function(x){x.classList.remove('ativo');}); t.classList.add('ativo'); var n = t.getAttribute('data-tab'); document.getElementById('panePac').style.display = n==='pac'?'block':'none'; document.getElementById('paneHis').style.display = n==='his'?'block':'none'; if (n==='his') carregarHis(); }); });
 ['fBusca','fStatus','fJust'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.addEventListener('input',render); el.addEventListener('change',render); } });
-</script>
-<script>
-// lobo.js — Lobo animado que monta as peças ao carregar a página
-// Injeta o SVG no elemento #loboContainer
-(function() {
-  var LOBO_SVG = `<svg class="lobo" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-132 160.8 346.8 472.2" preserveAspectRatio="xMidYMid meet">
-<style>
-.lb0{fill:#2B485F}.lb1{fill:#4C3B97}.lb2{fill:#493163}.lb3{fill:#603163}.lb4{fill:#49312D}.lb5{fill:#242059}.lb6{fill:#3A4F54}.lb7{fill:#B0D8E3}.lb8{fill:#EFDFCE}.lb9{fill:#E2D4CC}.lb10{fill:#CFCAE5}.lb11{fill:#E9E9EA}.lb12{fill:#D3C8C2}.lb13{fill:#C7B7AD}.lb14{fill:#B7BCCD}.lb15{fill:#A1B0B5}.lb16{fill:#B7A5BF}.lb17{fill:#C3C3C7}.lb18{fill:#D2D3D4}.lb19{fill:#A8BCDB}.lb20{fill:#787FA0}.lb21{fill:#626AB1}.lb22{fill:#7E91C1}.lb23{fill:#358A9E}.lb24{fill:#A7D0DB}.lb25{fill:#C0D3E2}.lb26{fill:#737CBB}.lb27{fill:#E9F3E3}.lb28{fill:#E0F3F9}.lb29{fill:#E5D9EB}.lb30{fill:#D6E8F7}.lb31{fill:#A799CA}.lb32{fill:#91A9D8}.lb33{fill:#9AAAC6}.lb34{fill:#5E679B}.lb35{fill:#5A627B}.lb36{fill:#585857}.lb37{fill:#69534D}.lb38{fill:#0B5C8D}.lb39{fill:#2B5C61}.lb40{fill:#AA9ECD}.lb41{fill:#A5C2D2}.lb42{fill:#C2E7EF}.lb43{fill:#FDFCE7}.lb44{fill:#FEF8CC}.lb45{fill:#C0B5DA}.lb46{fill:#6E877F}.lb47{fill:#454C4D}.lb48{fill:#526487}.lb49{fill:#88B0C4}.lb50{fill:#62A8C4}.lb51{fill:#8DCADB}.lb52{fill:#5D7ABC}.lb53{fill:#8A979B}.lb54{fill:#765A85}.lb55{fill:#53B1DA}.lb56{fill:#737372}.lb57{fill:#B2967D}.lb58{fill:#69ACDE}.lb59{fill:#7AB9DD}
-.lobo polygon, .lobo #Ojo-izquierdo, .lobo #Ojo-derecho { opacity: 0; }
-.lobo.go polygon { animation: lbup .35s ease-out forwards; }
-.lobo.go #Ojo-izquierdo, .lobo.go #Ojo-derecho { animation: lbfade .4s 1.6s forwards; }
-@keyframes lbup { from { opacity:0; transform: translateY(-30px) scale(.7);} to { opacity:1; transform:none; } }
-@keyframes lbfade { to { opacity:1; } }
-</style>
-<g id="Izquierda">
-<polygon class="lb0" points="-21.4,268.1 5.4,241.1 14.8,255.2"/><polygon class="lb1" points="5.4,241.1 -11.9,241.8 -21.4,268.1"/><polygon class="lb2" points="-11.9,241.8 -3.2,231.8 5.4,241.1"/><polygon class="lb3" points="-11.9,241.8 -19.1,231.8 -3.2,231.8"/><polygon class="lb4" points="-19.1,231.8 -20.4,213.4 -3.2,231.8"/><polygon class="lb5" points="-19.1,231.8 -38.3,209.5 -20.4,213.4"/><polygon class="lb6" points="-38.3,209.5 -38.8,193.8 -20.4,213.4"/><polygon class="lb2" points="-38.3,209.5 -57.2,192.4 -38.8,193.8"/><polygon class="lb1" points="-57.2,192.4 -47.1,181.5 -38.8,193.8"/><polygon class="lb6" points="-57.2,192.4 -56.1,177.6 -47.1,181.5"/><polygon class="lb0" points="-57.2,192.4 -74.4,193.9 -56.1,177.6"/><polygon class="lb1" points="-74.4,193.9 -67.2,200.4 -57.2,192.4"/><polygon class="lb5" points="-74.4,193.9 -79.3,213.6 -67.2,200.4"/><polygon class="lb2" points="-67.2,245.4 -53.7,248.7 -38.3,231.8"/><polygon class="lb6" points="-53.7,248.7 -53.8,276.4 -41.1,287.3"/><polygon class="lb7" points="-53.7,248.7 -21.4,268.1 -41.1,287.3"/><polygon class="lb8" points="-53.7,248.7 -38.3,231.8 -21.4,268.1"/><polygon class="lb9" points="-38.3,231.8 -19.1,231.8 -21.4,268.1"/><polygon class="lb10" points="-19.1,231.8 -11.9,241.8 -21.4,268.1"/><polygon class="lb11" points="-67.2,245.4 -85.3,237.7 -69.6,271.7"/><polygon class="lb8" points="-85.3,237.7 -79.3,213.6 -67.2,245.4"/><polygon class="lb12" points="-67.2,245.4 -53.8,276.4 -69.6,271.7"/><polygon class="lb13" points="-67.2,245.4 -53.8,276.4 -53.7,248.7"/><polygon class="lb14" points="-69.6,271.7 -58.3,299.8 -53.8,276.4"/><polygon class="lb15" points="-53.8,276.4 -41.1,287.3 -58.3,299.8"/><polygon class="lb16" points="-58.3,299.8 -90.6,279.6 -64.9,283.4"/><polygon class="lb17" points="-90.6,279.6 -69.6,271.7 -64.9,283.4"/><polygon class="lb18" points="-69.6,271.7 -88,260.9 -85.3,237.7"/><polygon class="lb19" points="-88,260.9 -84.3,277.2 -69.6,271.7"/><polygon class="lb20" points="-57.2,192.4 -38.3,231.8 -38.3,209.5"/><polygon class="lb21" points="-38.3,209.5 -19.1,231.8 -38.3,231.8"/><polygon class="lb22" points="-57.2,192.4 -67.2,200.4 -38.3,231.8"/><polygon class="lb23" points="-67.2,200.4 -79.3,213.6 -38.3,231.8"/><polygon class="lb24" points="-16.7,336.1 -33.6,340.3 0.7,350.1"/><polygon class="lb25" points="-33.6,340.3 -23.9,354.3 -2.7,348.7"/><polygon class="lb26" points="-79.3,213.6 -67.2,245.4 -38.3,231.8"/><polygon class="lb27" points="-23.9,354.3 -35.4,360.5 -13.9,367.7"/><polygon class="lb4" points="8.2,361.7 13.2,378.8 -3.3,370.7"/><polygon class="lb2" points="8.2,361.7 16.1,361.9 13.2,378.8"/><polygon class="lb20" points="-33.6,340.3 -2.7,332.7 -21.6,307.5"/><polygon class="lb20" points="15.1,315.3 -58.3,299.8 -41.1,287.3"/><polygon class="lb12" points="-2.7,332.7 3.8,352.5 -16.7,336.1"/><polygon class="lb28" points="-2.7,332.7 15.9,331.9 8.2,361.7 3.8,352.5"/><polygon class="lb29" points="15.1,315.3 15.9,331.9 -2.7,332.7"/><polygon class="lb11" points="15.1,315.3 27.8,332.7 15.9,331.9"/><polygon class="lb30" points="15.9,331.9 27.2,362.2 8.2,361.7"/><polygon class="lb24" points="15.9,331.9 27.8,332.7 27.2,362.2"/><polygon class="lb22" points="27.8,332.7 45.6,342.6 27.2,362.2"/><polygon class="lb31" points="27.2,362.2 45.6,386.8 45.6,342.6"/><polygon class="lb32" points="27.2,362.2 28.7,401.3 45.6,386.8"/><polygon class="lb33" points="28.7,401.3 45.6,437.1 45.6,386.8"/><polygon class="lb16" points="28.7,401.3 17.9,447.4 45.6,437.1"/><polygon class="lb18" points="13.2,378.8 27.2,362.2 16.1,361.9"/><polygon class="lb21" points="15.1,315.3 45.6,307.1 27.8,332.7"/><polygon class="lb23" points="27.8,332.7 45.6,307.1 45.6,342.6"/><polygon class="lb34" points="15.1,315.3 45.6,256.1 45.6,307.1"/><polygon class="lb35" points="15.1,315.3 14.8,255.2 33.7,279.1"/><polygon class="lb36" points="14.8,255.2 -21.4,268.1 15.1,315.3"/><polygon class="lb36" points="14.8,255.2 32.8,254.2 33.7,279.1"/><polygon class="lb37" points="14.8,255.2 22.3,236.5 32.8,254.2"/><polygon class="lb38" points="32.8,254.2 45.6,256.1 33.7,279.1"/><polygon class="lb1" points="32.8,254.2 39.2,235 45.6,256.1"/><polygon class="lb39" points="22.3,236.5 5.4,241.1 14.8,255.2"/><polygon class="lb21" points="-21.4,268.1 -41.1,287.3 15.1,315.3"/><polygon class="lb32" points="-2.7,332.7 15.1,315.3 -21.6,307.5"/><polygon class="lb26" points="-35.4,360.5 -46.5,389.2 -89.4,398.1"/><polygon class="lb32" points="-35.4,360.5 -24.8,379.4 -41.1,375.4"/><polygon class="lb40" points="-24.8,379.4 -25.5,400.4 -14.8,403.5"/><polygon class="lb15" points="-24.8,379.4 -41.1,375.4 -25.5,400.4"/><polygon class="lb15" points="-46.5,389.2 -49.7,411.3 -89.4,398.1"/><polygon class="lb41" points="-46.5,389.2 -36.8,424.4 -49.7,411.3"/><polygon class="lb41" points="-46.5,389.2 -41.1,375.4 -25.5,400.4"/><polygon class="lb42" points="17.9,447.4 18.2,459.9 35.2,440.9"/><polygon class="lb43" points="17.9,447.4 -7.9,467.6 20.2,475.7"/><polygon class="lb44" points="-7.9,467.6 -0.9,491.9 20.2,475.7"/><polygon class="lb27" points="17.9,447.4 -6.7,440.5 -7.9,467.6"/><polygon class="lb42" points="-6.7,440.5 28.7,401.3 17.9,447.4"/><polygon class="lb10" points="-7.9,467.6 -15.4,458.5 -6.7,440.5"/><polygon class="lb10" points="35.2,440.9 45.6,447.4 28.7,447.9"/><polygon class="lb45" points="35.2,440.9 45.6,437.1 45.6,447.4"/><polygon class="lb38" points="-15.4,458.5 -17.2,466.9 -7.9,467.6"/><polygon class="lb21" points="-17.2,466.9 -0.9,491.9 -7.9,467.6"/><polygon class="lb14" points="20.2,475.7 32.7,492.5 21.8,489.7"/><polygon class="lb11" points="-12.4,382.7 -3.2,370.7 -13.9,367.7"/><polygon class="lb18" points="20.2,475.7 21.8,489.7 -0.9,491.9"/><polygon class="lb46" points="45.6,495.8 21.8,489.7 25.6,498.7"/><polygon class="lb39" points="25.6,498.7 14.3,503 45.6,500.9 45.6,495.8"/><polygon class="lb0" points="14.3,503 31.1,509.5 45.6,508.9 45.6,500.9"/><polygon class="lb16" points="21.8,489.7 14.3,503 25.6,498.7"/><polygon class="lb14" points="21.8,489.7 -0.9,491.9 14.3,503"/><polygon class="lb44" points="-35.4,360.5 -13.9,367.7 -24.8,379.4"/><polygon class="lb27" points="-13.9,367.7 -12.4,382.7 -24.8,379.4"/><polygon class="lb42" points="-12.4,382.7 -14.8,403.5 -24.8,379.4"/><polygon class="lb7" points="-12.4,382.7 -7.6,408 -14.8,403.5"/><polygon class="lb14" points="-12.4,382.7 1.2,393.6 -7.6,408"/>
-<g id="Ojo-izquierdo"><path class="lb5" d="M-23.9,354.3c0,0,19.7-11.2,27.7-1.7l4.4,9.2c0,0-6.4,15.4-22.1,5.9C-13.9,367.7-18.9,363.6-23.9,354.3z"/><path class="lb23" d="M-5.3,355c3,0,5.6,2,6.4,4.7c0.2-0.6,0.3-1.3,0.3-2c0-3.7-3-6.7-6.7-6.7s-6.7,3-6.7,6.7c0,0.7,0.1,1.4,0.3,2C-10.9,357-8.3,355-5.3,355z"/><path class="lb42" d="M-5.3,364.4c3,0,5.6-2,6.4-4.7C0.2,357-2.3,355-5.3,355c-3,0-5.6,2-6.4,4.7C-10.9,362.5-8.3,364.4-5.3,364.4z"/><circle class="lb6" cx="-4.1" cy="356.4" r="1.9"/></g>
-<polygon class="lb30" points="-12.4,382.7 1.2,393.6 -3.2,370.7"/><polygon class="lb25" points="-3.2,370.7 13.2,378.8 1.2,393.6"/><polygon class="lb8" points="13.2,378.8 27.2,362.2 28.7,401.3"/><polygon class="lb9" points="13.2,378.8 1.2,393.6 28.7,401.3"/><polygon class="lb12" points="1.2,393.6 -7.6,408 28.7,401.3"/><polygon class="lb13" points="-7.6,408 -6.7,440.5 28.7,401.3"/><polygon class="lb18" points="-36.8,424.4 -7.6,408 -6.7,440.5"/><polygon class="lb9" points="-25.5,400.4 -36.8,424.4 -46.5,389.2"/><polygon class="lb11" points="-25.5,400.4 -18.6,414.2 -36.8,424.4"/><polygon class="lb11" points="-49.7,411.3 -73.7,437.1 -36.8,424.4"/><polygon class="lb44" points="-49.7,411.3 -73,413.9 -73.7,437.1"/><polygon class="lb29" points="-73,413.9 -69.5,404.7 -49.7,411.3"/><polygon class="lb29" points="-14.8,403.5 -18.6,414.2 -25.5,400.4"/><polygon class="lb10" points="-14.8,403.5 -7.6,408 -18.6,414.2"/><polygon class="lb45" points="-15.4,458.5 -36.8,424.4 -6.7,440.5"/><polygon class="lb18" points="-36.8,424.4 -45.5,452.7 -73.7,437.1"/><polygon class="lb9" points="-36.8,424.4 -15.4,458.5 -45.5,452.7"/><polygon class="lb9" points="-17.2,466.9 -47.7,476.3 -45.5,452.7"/><polygon class="lb47" points="32.7,492.5 45.6,480.5 45.6,495.8"/><polygon class="lb5" points="39.8,485.9 30.7,477.5 31.2,469.4 39.1,469.4"/><polygon class="lb48" points="20.2,475.7 30.7,477.5 18.9,459.2"/><polygon class="lb6" points="31.2,469.4 28.7,447.9 18.9,459.2"/><polygon class="lb5" points="28.7,447.9 45.6,462.1 45.6,447.4"/><polygon class="lb2" points="45.6,462.1 39.1,469.4 39.8,485.9 45.6,480.5"/><polygon class="lb3" points="39.1,469.4 28.7,447.9 45.6,462.1"/><polygon class="lb2" points="31.2,469.4 28.7,447.9 39.1,469.4"/><polygon class="lb0" points="31.2,469.4 30.7,477.5 18.9,459.2"/><polygon class="lb2" points="20.2,475.7 32.7,492.5 39.8,485.9 30.7,477.5"/><polygon class="lb21" points="-45.5,452.7 -73.7,437.1 -78.1,471.5"/><polygon class="lb26" points="-73.7,437.1 -89,448 -78.1,471.5"/><polygon class="lb22" points="-89,448 -95.6,421.6 -73.7,437.1"/><polygon class="lb31" points="-95.6,421.6 -73,413.9 -73.7,437.1"/><polygon class="lb49" points="-95.6,421.6 -89.4,398.1 -73,413.9"/><polygon class="lb50" points="-89.4,398.1 -73,413.9 -69.5,404.7"/><polygon class="lb51" points="-95.6,421.6 -109.3,488 -89,448"/><polygon class="lb50" points="-89,448 -78.1,471.5 -109.3,488"/><polygon class="lb41" points="-95.6,421.6 -118.1,424.9 -89.4,398.1"/><polygon class="lb21" points="-35.4,360.5 -89.9,379.1 -89.4,398.1"/><polygon class="lb52" points="-89.9,379.1 -88.7,357.6 -35.4,360.5"/><polygon class="lb53" points="-35.4,360.5 -33.6,340.3 -23.9,354.3"/><polygon class="lb53" points="-89.9,379.1 -115.7,392 -89.4,398.1"/><polygon class="lb54" points="-89.9,379.1 -112.9,378.6 -88.7,357.6"/><polygon class="lb31" points="-88.7,357.6 -85,343.1 -35.4,360.5"/><polygon class="lb22" points="-58.3,299.8 -33.6,340.3 -21.6,307.5"/><polygon class="lb20" points="-58.3,299.8 -70,314.8 -49.2,314.8"/><polygon class="lb26" points="-70,314.8 -74.6,330 -49.2,314.8"/><polygon class="lb55" points="-74.6,330 -35.4,360.5 -85,343.1"/><polygon class="lb22" points="-74.6,330 -33.6,340.3 -35.4,360.5"/><polygon class="lb55" points="-74.6,330 -49.2,314.8 -33.6,340.3"/><polygon class="lb34" points="-74.6,330 -98.5,317.5 -70,314.8"/><polygon class="lb23" points="-74.6,330 -103.1,331.6 -85,343.1"/><polygon class="lb20" points="-85,343.1 -107.4,363 -88.7,357.6"/><polygon class="lb56" points="-58.3,299.8 -70,314.8 -92.8,298.8"/><polygon class="lb57" points="-92.8,298.8 -81.1,285.5 -58.3,299.8"/><polygon class="lb14" points="-78.1,471.5 -50.9,506.4 -47.7,476.3"/><polygon class="lb45" points="-45.5,452.7 -47.7,476.3 -78.1,471.5"/><polygon class="lb30" points="-50.9,506.4 -17.2,466.9 -47.7,476.3"/><polygon class="lb8" points="-17.2,466.9 -33.7,500.1 -50.9,506.4"/><polygon class="lb18" points="-17.2,466.9 -0.9,491.9 -33.7,500.1"/><polygon class="lb18" points="-50.9,506.4 -36.9,518.7 -33.7,500.1"/><polygon class="lb49" points="-50.9,506.4 -98.9,501.6 -66.1,486.9"/><polygon class="lb58" points="-78.1,471.5 -98.9,501.6 -66.1,486.9"/><polygon class="lb22" points="-50.9,506.4 -83,526.7 -78.1,503.7"/><polygon class="lb32" points="-50.9,506.4 -36.9,518.7 -83,526.7"/><polygon class="lb13" points="-36.9,518.7 -0.9,491.9 -33.7,500.1"/><polygon class="lb15" points="-36.9,518.7 -76.9,548.5 -67.8,524.1"/><polygon class="lb53" points="-36.9,518.7 -47.7,548 -77.4,548.7"/><polygon class="lb19" points="-36.9,518.7 -15.5,537.1 -6.1,511.6"/><polygon class="lb14" points="-0.9,491.9 -6.1,511.6 -36.9,518.7"/><polygon class="lb11" points="14.3,503 29.3,516.6 31.1,509.5"/><polygon class="lb28" points="31.1,509.5 45.6,508.9 29.3,516.6"/><polygon class="lb27" points="29.3,516.6 45.6,518 45.6,508.9"/><polygon class="lb42" points="29.3,516.6 45.6,528.4 45.6,518"/><polygon class="lb45" points="7,526.4 -15.5,537.1 -4.2,549.9"/><polygon class="lb10" points="7,526.4 12.8,559.2 -4.2,549.9"/><polygon class="lb25" points="12.8,559.2 45.6,575.4 10.2,544.7"/><polygon class="lb42" points="12.8,559.2 28,605 45.6,575.4"/><polygon class="lb18" points="12.8,559.2 -7.9,589.2 -4.2,549.9"/><polygon class="lb11" points="12.8,559.2 1.1,576.2 28,605"/><polygon class="lb8" points="45.6,575.4 35.4,592.6 45.6,603"/><polygon class="lb44" points="35.4,592.6 45.6,616.9 45.6,603"/><polygon class="lb10" points="10.2,544.7 28.7,536.6 45.6,575.4"/><polygon class="lb18" points="28.7,536.6 45.6,528.4 45.6,575.4"/><polygon class="lb41" points="29.3,516.6 28.7,536.6 45.6,528.4"/><polygon class="lb45" points="29.3,516.6 10.2,544.7 28.7,536.6"/><polygon class="lb16" points="14.3,503 7,526.4 29.3,516.6"/><polygon class="lb41" points="29.3,516.6 10.2,544.7 7,526.4"/><polygon class="lb59" points="-0.9,491.9 14.3,503 -6.1,511.6"/><polygon class="lb40" points="-15.5,537.1 -34,572.5 -48.5,548"/><polygon class="lb14" points="-15.5,537.1 -7.9,589.2 -4.2,549.9"/><polygon class="lb15" points="-15.5,537.1 -27.5,560 -7.9,589.2"/><polygon class="lb33" points="-36.9,518.7 -15.5,537.1 -48.5,548"/><polygon class="lb13" points="-6.1,511.6 7,526.4 -15.5,537.1"/><polygon class="lb14" points="-6.1,511.6 14.3,503 7,526.4"/><polygon class="lb14" points="-15.4,458.5 -17.2,466.9 -45.5,452.7"/>
-</g>
-<g id="Derecha">
-<polygon class="lb0" points="112.3,267.8 85.5,240.7 76.1,254.8"/><polygon class="lb1" points="85.5,240.7 102.8,241.4 112.3,267.8"/><polygon class="lb2" points="102.8,241.4 94.1,231.4 85.5,240.7"/><polygon class="lb3" points="102.8,241.4 110,231.4 94.1,231.4"/><polygon class="lb4" points="110,231.4 111.3,213 94.1,231.4"/><polygon class="lb5" points="110,231.4 129.2,209.1 111.3,213"/><polygon class="lb6" points="129.2,209.1 129.8,193.4 111.3,213"/><polygon class="lb2" points="129.2,209.1 148.1,192 129.8,193.4"/><polygon class="lb1" points="148.1,192 138,181.1 129.8,193.4"/><polygon class="lb6" points="148.1,192 147,177.2 138,181.1"/><polygon class="lb0" points="148.1,192 165.3,193.5 147,177.2"/><polygon class="lb1" points="165.3,193.5 158.2,200 148.1,192"/><polygon class="lb5" points="165.3,193.5 170.2,213.2 158.2,200"/><polygon class="lb2" points="158.2,245.1 144.6,248.3 129.2,231.4"/><polygon class="lb6" points="144.6,248.3 144.8,276.1 132,286.9"/><polygon class="lb7" points="144.6,248.3 112.3,267.8 132,286.9"/><polygon class="lb8" points="144.6,248.3 129.2,231.4 112.3,267.8"/><polygon class="lb9" points="129.2,231.4 110,231.4 112.3,267.8"/><polygon class="lb10" points="110,231.4 102.8,241.4 112.3,267.8"/><polygon class="lb11" points="158.2,245.1 176.3,237.3 160.5,271.4"/><polygon class="lb8" points="176.3,237.3 170.2,213.2 158.2,245.1"/><polygon class="lb12" points="158.2,245.1 144.8,276.1 160.5,271.4"/><polygon class="lb13" points="158.2,245.1 144.8,276.1 144.6,248.3"/><polygon class="lb14" points="160.5,271.4 149.2,299.4 144.8,276.1"/><polygon class="lb16" points="149.2,299.4 181.5,279.2 155.8,283.1"/><polygon class="lb15" points="144.8,276.1 132,286.9 149.2,299.4"/><polygon class="lb17" points="181.5,279.2 160.5,271.4 155.8,283.1"/><polygon class="lb18" points="160.5,271.4 178.9,260.5 176.3,237.3"/><polygon class="lb19" points="178.9,260.5 175.2,276.9 160.5,271.4"/><polygon class="lb20" points="148.1,192 129.2,231.4 129.2,209.1"/><polygon class="lb21" points="129.2,209.1 110,231.4 129.2,231.4"/><polygon class="lb22" points="148.1,192 158.2,200 129.2,231.4"/><polygon class="lb23" points="158.2,200 170.2,213.2 129.2,231.4"/><polygon class="lb24" points="107.6,335.8 124.5,339.9 90.2,349.7"/><polygon class="lb25" points="124.5,339.9 114.8,353.9 93.6,348.4"/><polygon class="lb26" points="170.2,213.2 158.2,245.1 129.2,231.4"/><polygon class="lb27" points="114.8,353.9 126.3,360.2 104.9,367.3"/><polygon class="lb4" points="82.8,361.4 77.7,378.4 94.2,370.3"/><polygon class="lb2" points="82.8,361.4 74.8,361.5 77.7,378.4"/><polygon class="lb20" points="124.5,339.9 93.6,332.3 112.5,307.2"/><polygon class="lb20" points="75.8,314.9 149.2,299.4 132,286.9"/><polygon class="lb12" points="93.6,332.3 87.1,352.2 107.6,335.8"/><polygon class="lb28" points="93.6,332.3 75.1,331.5 82.8,361.4 87.1,352.2"/><polygon class="lb29" points="75.8,314.9 75.1,331.5 93.6,332.3"/><polygon class="lb11" points="75.8,314.9 63.1,332.3 75.1,331.5"/><polygon class="lb30" points="75.1,331.5 63.7,361.8 82.8,361.4"/><polygon class="lb24" points="75.1,331.5 63.1,332.3 63.7,361.8"/><polygon class="lb22" points="63.1,332.3 45.3,342.2 63.7,361.8"/><polygon class="lb31" points="63.7,361.8 45.3,386.4 45.3,342.2"/><polygon class="lb32" points="63.7,361.8 62.2,401 45.3,386.4"/><polygon class="lb33" points="62.2,401 45.3,436.7 45.3,386.4"/><polygon class="lb16" points="62.2,401 73,447 45.3,436.7"/><polygon class="lb18" points="77.7,378.4 63.7,361.8 74.8,361.5"/><polygon class="lb21" points="75.8,314.9 45.3,306.7 63.1,332.3"/><polygon class="lb23" points="63.1,332.3 45.3,306.7 45.3,342.2"/><polygon class="lb34" points="75.8,314.9 45.3,255.7 45.3,306.7"/><polygon class="lb35" points="75.8,314.9 76.1,254.8 57.2,278.8"/><polygon class="lb36" points="76.1,254.8 112.3,267.8 75.8,314.9"/><polygon class="lb36" points="76.1,254.8 58.1,253.9 57.2,278.8"/><polygon class="lb37" points="76.1,254.8 68.7,236.1 58.1,253.9"/><polygon class="lb38" points="58.1,253.9 45.3,255.7 57.2,278.8"/><polygon class="lb1" points="58.1,253.9 51.7,234.6 45.3,255.7"/><polygon class="lb39" points="68.7,236.1 85.5,240.7 76.1,254.8"/><polygon class="lb21" points="112.3,267.8 132,286.9 75.8,314.9"/><polygon class="lb32" points="93.6,332.3 75.8,314.9 112.5,307.2"/><polygon class="lb26" points="126.3,360.2 137.4,388.9 180.3,397.8"/><polygon class="lb32" points="126.3,360.2 115.8,379.1 132,375"/><polygon class="lb40" points="115.8,379.1 116.4,400 105.7,403.2"/><polygon class="lb15" points="115.8,379.1 132,375 116.4,400"/><polygon class="lb15" points="137.4,388.9 140.6,410.9 180.3,397.8"/><polygon class="lb41" points="137.4,388.9 127.8,424 140.6,410.9"/><polygon class="lb41" points="137.4,388.9 132,375 116.4,400"/><polygon class="lb42" points="73,447 72.7,459.6 55.7,440.5"/><polygon class="lb43" points="73,447 98.8,467.3 70.7,475.3"/><polygon class="lb44" points="98.8,467.3 91.8,491.5 70.7,475.3"/><polygon class="lb27" points="73,447 97.7,440.1 98.8,467.3"/><polygon class="lb42" points="97.7,440.1 62.2,401 73,447"/><polygon class="lb10" points="98.8,467.3 106.3,458.1 97.7,440.1"/><polygon class="lb10" points="55.7,440.5 45.3,447 62.2,447.6"/><polygon class="lb45" points="55.7,440.5 45.3,436.7 45.3,447"/><polygon class="lb38" points="106.3,458.1 108.1,466.5 98.8,467.3"/><polygon class="lb21" points="108.1,466.5 91.8,491.5 98.8,467.3"/><polygon class="lb14" points="70.7,475.3 58.2,492.1 69.1,489.3"/><polygon class="lb11" points="103.3,382.4 94.1,370.4 104.9,367.3"/><polygon class="lb18" points="70.7,475.3 69.1,489.3 91.8,491.5"/><polygon class="lb46" points="45.3,495.5 69.1,489.3 65.3,498.4"/><polygon class="lb39" points="65.3,498.4 76.6,502.6 45.3,500.5 45.3,495.5"/><polygon class="lb0" points="76.6,502.6 59.9,509.2 45.3,508.6 45.3,500.5"/><polygon class="lb16" points="69.1,489.3 76.6,502.6 65.3,498.4"/><polygon class="lb14" points="69.1,489.3 91.8,491.5 76.6,502.6"/><polygon class="lb44" points="126.3,360.2 104.9,367.3 115.8,379.1"/><polygon class="lb27" points="104.9,367.3 103.3,382.4 115.8,379.1"/><polygon class="lb42" points="103.3,382.4 105.7,403.2 115.8,379.1"/><polygon class="lb7" points="103.3,382.4 98.5,407.6 105.7,403.2"/><polygon class="lb14" points="103.3,382.4 89.7,393.2 98.5,407.6"/>
-<g id="Ojo-derecho"><path class="lb5" d="M114.8,353.9c0,0-19.7-11.2-27.7-1.7l-4.4,9.2c0,0,6.4,15.4,22.1,5.9C104.9,367.3,109.8,363.2,114.8,353.9z"/><path class="lb23" d="M96.2,354.6c-3,0-5.6,2-6.4,4.7c-0.2-0.6-0.3-1.3-0.3-2c0-3.7,3-6.7,6.7-6.7s6.7,3,6.7,6.7c0,0.7-0.1,1.4-0.3,2C101.8,356.6,99.3,354.6,96.2,354.6z"/><path class="lb42" d="M96.2,364.1c-3,0-5.6-2-6.4-4.7c0.9-2.7,3.4-4.7,6.4-4.7s5.6,2,6.4,4.7C101.8,362.1,99.3,364.1,96.2,364.1z"/><circle class="lb6" cx="95" cy="356.1" r="1.9"/></g>
-<polygon class="lb30" points="103.3,382.4 89.7,393.2 94.1,370.4"/><polygon class="lb25" points="94.1,370.4 77.7,378.4 89.7,393.2"/><polygon class="lb8" points="77.7,378.4 63.7,361.8 62.2,401"/><polygon class="lb9" points="77.7,378.4 89.7,393.2 62.2,401"/><polygon class="lb12" points="89.7,393.2 98.5,407.6 62.2,401"/><polygon class="lb13" points="98.5,407.6 97.7,440.1 62.2,401"/><polygon class="lb18" points="127.8,424 98.5,407.6 97.7,440.1"/><polygon class="lb9" points="116.4,400 127.8,424 137.4,388.9"/><polygon class="lb11" points="116.4,400 109.5,413.8 127.8,424"/><polygon class="lb11" points="140.6,410.9 164.6,436.7 127.8,424"/><polygon class="lb44" points="140.6,410.9 163.9,413.5 164.6,436.7"/><polygon class="lb29" points="163.9,413.5 160.4,404.4 140.6,410.9"/><polygon class="lb29" points="105.7,403.2 109.5,413.8 116.4,400"/><polygon class="lb10" points="105.7,403.2 98.5,407.6 109.5,413.8"/><polygon class="lb45" points="106.3,458.1 127.8,424 97.7,440.1"/><polygon class="lb18" points="127.8,424 136.4,452.3 164.6,436.7"/><polygon class="lb9" points="127.8,424 106.3,458.1 136.4,452.3"/><polygon class="lb9" points="108.1,466.5 138.6,475.9 136.4,452.3"/><polygon class="lb47" points="58.2,492.1 45.3,480.1 45.3,495.5"/><polygon class="lb5" points="51.1,485.5 60.2,477.1 59.7,469.1 51.8,469.1"/><polygon class="lb48" points="70.7,475.3 60.2,477.1 72.1,458.9"/><polygon class="lb6" points="59.7,469.1 62.2,447.6 72.1,458.9"/><polygon class="lb5" points="62.2,447.6 45.3,461.7 45.3,447"/><polygon class="lb2" points="45.3,461.7 51.8,469.1 51.1,485.5 45.3,480.1"/><polygon class="lb3" points="51.8,469.1 62.2,447.6 45.3,461.7"/><polygon class="lb2" points="59.7,469.1 62.2,447.6 51.8,469.1"/><polygon class="lb0" points="59.7,469.1 60.2,477.1 72.1,458.9"/><polygon class="lb2" points="70.7,475.3 58.2,492.1 51.1,485.5 60.2,477.1"/><polygon class="lb21" points="136.4,452.3 164.6,436.7 169,471.1"/><polygon class="lb26" points="164.6,436.7 179.9,447.6 169,471.1"/><polygon class="lb22" points="179.9,447.6 186.5,421.3 164.6,436.7"/><polygon class="lb31" points="186.5,421.3 163.9,413.5 164.6,436.7"/><polygon class="lb49" points="186.5,421.3 180.3,397.8 163.9,413.5"/><polygon class="lb50" points="180.3,397.8 163.9,413.5 160.4,404.4"/><polygon class="lb51" points="186.5,421.3 200.2,487.7 179.9,447.6"/><polygon class="lb50" points="179.9,447.6 169,471.1 200.2,487.7"/><polygon class="lb41" points="186.5,421.3 209,424.5 180.3,397.8"/><polygon class="lb21" points="126.3,360.2 180.8,378.7 180.3,397.8"/><polygon class="lb52" points="180.8,378.7 179.6,357.2 126.3,360.2"/><polygon class="lb53" points="126.3,360.2 124.5,339.9 114.8,353.9"/><polygon class="lb53" points="180.8,378.7 206.6,391.6 180.3,397.8"/><polygon class="lb54" points="180.8,378.7 203.8,378.3 179.6,357.2"/><polygon class="lb31" points="179.6,357.2 175.9,342.7 126.3,360.2"/><polygon class="lb22" points="149.2,299.4 124.5,339.9 112.5,307.2"/><polygon class="lb20" points="149.2,299.4 161,314.4 140.1,314.4"/><polygon class="lb26" points="161,314.4 165.5,329.6 140.1,314.4"/><polygon class="lb55" points="165.5,329.6 126.3,360.2 175.9,342.7"/><polygon class="lb22" points="165.5,329.6 124.5,339.9 126.3,360.2"/><polygon class="lb55" points="165.5,329.6 140.1,314.4 124.5,339.9"/><polygon class="lb34" points="165.5,329.6 189.4,317.1 161,314.4"/><polygon class="lb23" points="165.5,329.6 194,331.2 175.9,342.7"/><polygon class="lb20" points="175.9,342.7 198.4,362.6 179.6,357.2"/><polygon class="lb56" points="149.2,299.4 161,314.4 183.7,298.4"/><polygon class="lb57" points="183.7,298.4 172,285.2 149.2,299.4"/><polygon class="lb14" points="169,471.1 141.8,506.1 138.6,475.9"/><polygon class="lb45" points="136.4,452.3 138.6,475.9 169,471.1"/><polygon class="lb30" points="141.8,506.1 108.1,466.5 138.6,475.9"/><polygon class="lb8" points="108.1,466.5 124.7,499.7 141.8,506.1"/><polygon class="lb18" points="108.1,466.5 91.8,491.5 124.7,499.7"/><polygon class="lb18" points="141.8,506.1 127.8,518.3 124.7,499.7"/><polygon class="lb49" points="141.8,506.1 189.8,501.2 157,486.5"/><polygon class="lb58" points="169,471.1 189.8,501.2 157,486.5"/><polygon class="lb22" points="141.8,506.1 174,526.3 169,503.3"/><polygon class="lb32" points="141.8,506.1 127.8,518.3 174,526.3"/><polygon class="lb13" points="127.8,518.3 91.8,491.5 124.7,499.7"/><polygon class="lb15" points="127.8,518.3 167.9,548.1 158.7,523.7"/><polygon class="lb53" points="127.8,518.3 138.6,547.6 168.3,548.3"/><polygon class="lb19" points="127.8,518.3 106.4,536.8 97,511.2"/><polygon class="lb14" points="91.8,491.5 97,511.2 127.8,518.3"/><polygon class="lb11" points="76.6,502.6 61.6,516.2 59.9,509.2"/><polygon class="lb28" points="59.9,509.2 45.3,508.6 61.6,516.2"/><polygon class="lb27" points="61.6,516.2 45.3,517.6 45.3,508.6"/><polygon class="lb42" points="61.6,516.2 45.3,528 45.3,517.6"/><polygon class="lb45" points="83.9,526 106.4,536.8 95.1,549.5"/><polygon class="lb10" points="83.9,526 78.1,558.8 95.1,549.5"/><polygon class="lb25" points="78.1,558.8 45.3,575 80.7,544.3"/><polygon class="lb42" points="78.1,558.8 62.9,604.7 45.3,575"/><polygon class="lb18" points="78.1,558.8 98.8,588.9 95.1,549.5"/><polygon class="lb11" points="78.1,558.8 89.8,575.8 62.9,604.7"/><polygon class="lb8" points="45.3,575 55.5,592.2 45.3,602.6"/><polygon class="lb44" points="55.5,592.2 45.3,616.5 45.3,602.6"/><polygon class="lb10" points="80.7,544.3 62.2,536.2 45.3,575"/><polygon class="lb18" points="62.2,536.2 45.3,528 45.3,575"/><polygon class="lb41" points="61.6,516.2 62.2,536.2 45.3,528"/><polygon class="lb45" points="61.6,516.2 80.7,544.3 62.2,536.2"/><polygon class="lb16" points="76.6,502.6 83.9,526 61.6,516.2"/><polygon class="lb41" points="61.6,516.2 80.7,544.3 83.9,526"/><polygon class="lb59" points="91.8,491.5 76.6,502.6 97,511.2"/><polygon class="lb40" points="106.4,536.8 125,572.2 139.4,547.6"/><polygon class="lb14" points="106.4,536.8 98.8,588.9 95.1,549.5"/><polygon class="lb15" points="106.4,536.8 118.4,559.7 98.8,588.9"/><polygon class="lb33" points="127.8,518.3 106.4,536.8 139.4,547.6"/><polygon class="lb13" points="97,511.2 83.9,526 106.4,536.8"/><polygon class="lb14" points="97,511.2 76.6,502.6 83.9,526"/><polygon class="lb14" points="106.3,458.1 108.1,466.5 136.4,452.3"/>
-</g>
-</svg>`;
-  function initLobo() {
-    var c = document.getElementById('loboContainer');
-    if (!c) return;
-    c.innerHTML = LOBO_SVG;
-    var svg = c.querySelector('.lobo');
-    var polys = svg.querySelectorAll('polygon');
-    polys.forEach(function(p, i) {
-      p.style.animationDelay = (i * 0.008) + 's';
-    });
-    requestAnimationFrame(function() {
-      svg.classList.add('go');
-      svg.querySelector('#Izquierda').style.visibility = 'visible';
-      svg.querySelector('#Derecha').style.visibility = 'visible';
-    });
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initLobo);
-  } else {
-    initLobo();
-  }
-})();
 </script>
 </body>
 </html>
