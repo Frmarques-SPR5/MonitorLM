@@ -558,7 +558,6 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         <div class="chart-box"><div class="chart-title" id="chEvoAdesaoTitle">Comparativo dia a dia — Adesão %</div><canvas id="chEvoAdesao"></canvas></div>
         <div class="chart-box"><div class="chart-title" id="chEvoOfensorasTitle">Comparativo dia a dia — Ofensoras & ORH médio</div><canvas id="chEvoOfensoras"></canvas></div>
         <div class="chart-box"><div class="chart-title">Ofensoras por transportadora</div><canvas id="chOfTransp"></canvas></div>
-        <div class="chart-box"><div class="chart-title">Rotas por transportadora</div><canvas id="chRotasTransp"></canvas></div>
         <div class="chart-box"><div class="chart-title">Excedente de ORH (min) — top ofensoras</div><canvas id="chExcedente"></canvas></div>
         <div class="chart-box"><div class="chart-title" id="chMotivoTitle">Ofensoras por motivo do atraso</div><canvas id="chMotivo"></canvas></div>
       </div>
@@ -958,6 +957,10 @@ function extractDateBR(val) {
       var m = mBr[2].length < 2 ? '0' + mBr[2] : mBr[2];
       var a = mBr[3].length === 2 ? '20' + mBr[3] : mBr[3];
       return d + '/' + m + '/' + a;
+    }
+    var dt = new Date(str);
+    if (!isNaN(dt.getTime())) {
+      return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
     }
     return str.split(' ')[0];
   } catch(e) { return ''; }
@@ -1366,7 +1369,8 @@ function desenharGraficosORH() {
   var diasKeys = Object.keys(porDia).sort(), diasLabels = diasKeys.map(function(k){ return porDia[k].label; });
   var serieAdesao = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(((d.total-d.ofens)/d.total)*100) : 0; });
   var serieOfens  = diasKeys.map(function(k){ return porDia[k].ofens; }), serieMedio  = diasKeys.map(function(k){ var d=porDia[k]; return d.total ? Math.round(d.soma/d.total) : 0; });
-  orhCharts.evoAdesao = new Chart(document.getElementById('chEvoAdesao'), { type: 'line', data: { labels: diasLabels, datasets: [{ label:'Adesão %', data: serieAdesao, borderColor:'#00a650', backgroundColor:'rgba(0,166,80,.12)', fill:true, tension:.3, pointRadius:4, pointBackgroundColor:'#00a650' }] }, options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true, max:100, ticks:{ callback:function(v){return v+'%';} } } } } });
+  var valLabelAdesao = { id:'valLabelAdesao', afterDatasetsDraw:function(ch){ var cx = ch.ctx; var meta = ch.getDatasetMeta(0); meta.data.forEach(function(bar, i){ var val = ch.data.datasets[0].data[i]; if (val == null) return; cx.save(); cx.fillStyle = cor; cx.font = '700 11px Roboto, sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'bottom'; cx.fillText(val + '%', bar.x, bar.y - 4); cx.restore(); }); } };
+  orhCharts.evoAdesao = new Chart(document.getElementById('chEvoAdesao'), { type: 'bar', data: { labels: diasLabels, datasets: [{ label:'Adesão %', data: serieAdesao, backgroundColor:'#00a650', borderRadius:4, maxBarThickness:46 }] }, options: { responsive:true, layout:{ padding:{ top:18 } }, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return ' Adesão ' + c.parsed.y + '%'; } } } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true, max:100, ticks:{ callback:function(v){ return v + '%'; } } } } }, plugins:[valLabelAdesao] });
   var isMeli = !!(sessao && sessao.isMeli);
   var PALETA = ['#e05252','#ff9900','#3483fa','#00a650','#603163','#358a9e','#f0a800','#737cbb','#62a8c4','#a799ca','#5a627b','#8888aa'];
   var elTitAd = document.getElementById('chEvoAdesaoTitle'), elTitOf = document.getElementById('chEvoOfensorasTitle');
@@ -1391,8 +1395,6 @@ function desenharGraficosORH() {
   var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; }), ofensoras = comReal.filter(function(r){ return r.ofensora; }), dentro = comReal.length - ofensoras.length;
   var ofPorT = {}; ofensoras.forEach(function(r){ var t=grupoDaRota(r); ofPorT[t]=(ofPorT[t]||0)+1; }); var ofKeys = Object.keys(ofPorT).sort(function(a,b){ return ofPorT[b]-ofPorT[a]; });
   orhCharts.ofTransp = new Chart(document.getElementById('chOfTransp'), { type: 'bar', data: { labels: ofKeys, datasets: [{ data: ofKeys.map(function(k){return ofPorT[k];}), backgroundColor: '#e05252' }] }, options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } } });
-  var totPorT = {}; orhCache.forEach(function(r){ var t=grupoDaRota(r); totPorT[t]=(totPorT[t]||0)+1; }); var tKeys = Object.keys(totPorT).sort(function(a,b){ return totPorT[b]-totPorT[a]; });
-  orhCharts.rotasTransp = new Chart(document.getElementById('chRotasTransp'), { type: 'bar', data: { labels: tKeys, datasets: [{ data: tKeys.map(function(k){return totPorT[k];}), backgroundColor: '#3483fa' }] }, options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } } });
   var topEx = ofensoras.slice().sort(function(a,b){ return (b.excedente_min||0) - (a.excedente_min||0); }).slice(0, 12);
   orhCharts.excedente = new Chart(document.getElementById('chExcedente'), { type: 'bar', data: { labels: topEx.map(function(r){ return r.prefixo_rota || r.id_rota; }), datasets: [{ label:'min acima', data: topEx.map(function(r){ return Math.round(r.excedente_min); }), backgroundColor: '#ff9900' }] }, options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid } }, y:{ grid:{ color:grid }, beginAtZero:true } } } });
   var motivos = {}; ofensoras.forEach(function(r){ if (r.justificado && r.just_motivo_padrao) { var m = r.just_motivo_padrao; motivos[m] = (motivos[m]||0) + 1; } });
