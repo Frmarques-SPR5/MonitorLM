@@ -383,10 +383,6 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="dots_border"></div>
       <span class="nav-icon">📥</span> <span>Pendentes</span>
     </button>
-    <button class="nav-item" data-view="sleepover" onclick="abrirView('sleepover')">
-      <div class="dots_border"></div>
-      <span class="nav-icon">🌙</span> <span>SleepOver</span>
-    </button>
     <button class="nav-item" data-view="yms" onclick="abrirView('yms')">
       <div class="dots_border"></div>
       <span class="nav-icon">🚚</span> <span>Monitoramento de Pátio</span>
@@ -628,37 +624,6 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div id="pTabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
   </div>
-
-  <!-- AQUI COMEÇA A NOVA VIEW DO SLEEPOVER -->
-  <div class="view" id="viewSleepOver">
-    <div class="page-header">
-      <div class="page-title">🌙 SleepOver</div>
-      <div class="page-sub" id="soSub">Carregando...</div>
-    </div>
-    <div class="tabs">
-      <div class="tab ativo" data-sotab="lista">Registros</div>
-      <div class="tab" data-sotab="just">Justificativas</div>
-    </div>
-    
-    <div id="soPaneLista">
-      <div class="filtros">
-        <input type="text" id="soBusca" placeholder="Buscar placa, transportadora...">
-        <select id="soJustF">
-          <option value="">Todos</option>
-          <option value="nao">Pendentes de justificativa</option>
-          <option value="sim">Justificados</option>
-        </select>
-        <button class="btn-atualizar" onclick="carregarSleepOver()">↻ Atualizar</button>
-      </div>
-      <div id="soListaGrupos"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
-    </div>
-
-    <div id="soPaneJust" style="display:none">
-      <div id="soTabelaHis"><div class="empty"><span class="spinner"></span> Histórico de SleepOver em construção...</div></div>
-    </div>
-  </div>
-  <!-- AQUI TERMINA A NOVA VIEW DO SLEEPOVER -->
-
   <div class="view" id="viewBriefing">
     <div class="page-header">
       <div class="page-title">✅ Presenteísmo Briefing</div>
@@ -797,13 +762,8 @@ var cache  = [];
 var sessao = null;
 var pacSel = null;
 
-// SLEEPOVER VARIABLES
-var sleepCache = [];
-var sleepCarregado = false;
-var sleepSel = null;
-
 /* ════════════════════════════════════════════════════════════
-   HELPERS BÁSICOS 
+   HELPERS BÁSICOS (estavam faltando — causavam "e is not defined")
    ════════════════════════════════════════════════════════════ */
 function e(s) {
   if (s === null || s === undefined) return '';
@@ -900,8 +860,8 @@ function iniciarApp() {
 function sair() {
   sessionStorage.removeItem('spr5sessao');
   sessao = null; cache = [];
-  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false; sleepCarregado = false;
-  orhCache = []; pendCache = []; vgCachePend = []; vgCacheORH = []; vgCacheBrief = []; sleepCache = [];
+  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false;
+  orhCache = []; pendCache = []; vgCachePend = []; vgCacheORH = []; vgCacheBrief = [];
   document.querySelectorAll('.nav-item').forEach(function(b){ b.style.display = b.getAttribute('data-oculto') ? 'none' : 'flex'; });
   document.getElementById('overlayLogin').classList.remove('oculto');
   document.getElementById('headerUser').classList.remove('show');
@@ -910,7 +870,6 @@ function sair() {
   document.getElementById('selTransp').value = ''; document.getElementById('inputSenha').value = ''; document.getElementById('inputNome').value  = '';
   document.getElementById('pListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
   document.getElementById('vgLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
-  document.getElementById('soListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
 }
 var YMS_URL = 'https://frmarques-spr5.github.io/yms-spr5/';
 var ymsCarregado = false;
@@ -927,7 +886,6 @@ function abrirView(nome, semFechar) {
   document.getElementById('viewYms').classList.toggle('ativa', nome === 'yms');
   document.getElementById('viewOrh').classList.toggle('ativa', nome === 'orh');
   document.getElementById('viewPendentes').classList.toggle('ativa', nome === 'pendentes');
-  document.getElementById('viewSleepOver').classList.toggle('ativa', nome === 'sleepover');
   document.getElementById('viewBriefing').classList.toggle('ativa', nome === 'briefing');
   document.getElementById('viewGeral').classList.toggle('ativa', nome === 'geral');
   if (nome === 'geral' && sessao) {
@@ -944,7 +902,6 @@ function abrirView(nome, semFechar) {
   }
   if (nome === 'orh' && !orhCarregado && sessao) { carregarORH(); orhCarregado = true; }
   if (nome === 'pendentes' && !pendCarregado && sessao) { carregarPend(); pendCarregado = true; }
-  if (nome === 'sleepover' && !sleepCarregado && sessao) { carregarSleepOver(); sleepCarregado = true; }
   if (nome === 'briefing' && sessao) {
     var tB = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
     var elBT = document.getElementById('bTransp');
@@ -1269,12 +1226,11 @@ function abrirModal(id) {
   setTimeout(function(){document.getElementById('mMotivo').focus();},100);
 }
 function mi(l,v){ return '<div class="mi"><label>'+l+'</label><span>'+e(String(v))+'</span></div>'; }
-function fecharModal() { document.getElementById('modalJust').classList.remove('open'); pacSel=null; sleepSel=null; }
+function fecharModal() { document.getElementById('modalJust').classList.remove('open'); pacSel=null; }
 function salvar() {
   var md = document.getElementById('modalJust').getAttribute('data-modo');
   if (md === 'orh') return salvarORH();
   if (md === 'faltante') return salvarPend();
-  if (md === 'sleepover') return salvarJustSleepOver();
 
   var motivo = document.getElementById('mMotivo').value.trim();
   if (!motivo) { toast('Informe o motivo.',1); return; }
@@ -1794,130 +1750,6 @@ function salvarPend() {
 }
 document.querySelectorAll('[data-ptab]').forEach(function(t){ t.addEventListener('click',function(){ document.querySelectorAll('[data-ptab]').forEach(function(x){x.classList.remove('ativo');}); t.classList.add('ativo'); var n = t.getAttribute('data-ptab'); document.getElementById('pPaneLista').style.display = n==='lista'?'block':'none'; document.getElementById('pPaneJust').style.display  = n==='just'?'block':'none'; if (n==='just') carregarHisPend(); }); });
 ['pBusca','pJustF'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.addEventListener('input',renderPendTabela); el.addEventListener('change',renderPendTabela); } });
-
-// ════════════════════════════════════════════════════════════
-// SLEEPOVER
-// ════════════════════════════════════════════════════════════
-function carregarSleepOver() {
-  document.getElementById('soListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando registros...</div>';
-  var cb = 'cbso' + Date.now();
-  window[cb] = function(d) {
-    delete window[cb]; 
-    if (d.erro) { toast('Erro SleepOver: ' + d.erro, 1); return; }
-    sleepCache = sessao.isMeli ? (d.registros||[]) : (d.registros||[]).filter(function(r){ return normTransp(r.transportadora) === normTransp(sessao.transp); }); 
-    renderSleepOver();
-  };
-  var s = document.createElement('script'); 
-  s.src = API + '?action=getSleepOver&callback=' + cb + '&t=' + Date.now(); 
-  document.head.appendChild(s);
-}
-
-function renderSleepOver() {
-  var b = (document.getElementById('soBusca').value || '').toLowerCase();
-  var j = document.getElementById('soJustF').value;
-  
-  var f = sleepCache.filter(function(r) {
-    if (j === 'sim' && !r.justificado) return false; 
-    if (j === 'nao' && r.justificado) return false;
-    if (b) { var t = [r.placa, r.transportadora].join(' ').toLowerCase(); if (!t.includes(b)) return false; }
-    return true;
-  });
-
-  document.getElementById('soSub').textContent = f.length + ' registro(s)';
-
-  if (!f.length) { document.getElementById('soListaGrupos').innerHTML='<div class="empty">Nenhum registro encontrado.</div>'; return; }
-  
-  f.sort(function(a,b){ if(a.justificado!==b.justificado) return a.justificado?1:-1; return 0; });
-  
-  var grupos = {};
-  if (sessao.isMeli) { f.forEach(function(p){ var k=(p.transportadora||'— Sem transp —').trim()||'— Sem transp —'; if(!grupos[k]) grupos[k]=[]; grupos[k].push(p); }); }
-  else { grupos[sessao.transp] = f; }
-  
-  var keys = Object.keys(grupos).sort(function(a,b){ return grupos[b].length - grupos[a].length; });
-  var h = '';
-  
-  keys.forEach(function(tr) {
-    var ps = grupos[tr], pend = ps.filter(function(p){return !p.justificado;}).length;
-    h += '<div class="grupo open"><div class="gh" onclick="tog(this)"><div class="gh-left"><span>'+e(tr)+'</span><span class="bt">'+ps.length+' registro'+(ps.length>1?'s':'')+'</span>';
-    if(pend) h += '<span class="bp">'+pend+' pendente'+(pend>1?'s':'')+'</span>';
-    h += '</div><span class="chev">▾</span></div><div class="gb"><table><thead><tr><th>Dia</th><th>Placa</th><th>Status</th><th>Ação</th></tr></thead><tbody>';
-    ps.forEach(function(r) {
-      var statusBadge = r.status === 'ONLINE' ? '<span class="sb jok" style="background:rgba(0,166,80,.12)">ONLINE</span>' : '<span class="sb status-missing">NO SLEEPOVER</span>';
-      
-      h += '<tr><td style="white-space:nowrap">'+e(r.dia)+'</td><td><span style="font-family:monospace;font-weight:700">'+e(r.placa)+'</span></td><td>'+statusBadge+'</td>';
-      if (r.justificado) { 
-        h += '<td><span class="jok" title="'+e(r.just_motivo||'')+'">✓ Justificado</span> <button class="btn-just" style="background:transparent;color:var(--blue);border:1px solid var(--blue);padding:3px 9px" onclick="abrirModalSleepOver(\''+e(r.id_registro)+'\')">Reeditar</button></td>'; 
-      } else { 
-        h += '<td><button class="btn-just" onclick="abrirModalSleepOver(\''+e(r.id_registro)+'\')">Justificar</button></td>'; 
-      }
-      h += '</tr>';
-    });
-    h += '</tbody></table></div></div>';
-  });
-
-  document.getElementById('soListaGrupos').innerHTML = h;
-}
-
-function abrirModalSleepOver(id) {
-  sleepSel = sleepCache.find(function(r){ return r.id_registro === id; });
-  if (!sleepSel) return;
-  var r = sleepSel;
-  
-  document.getElementById('mInfo').innerHTML = mi('Dia', r.dia) + mi('Transportadora', r.transportadora) + mi('Placa', r.placa) + mi('Status', r.status);
-  document.getElementById('mMotivoPadraoWrap').style.display = 'none'; 
-  document.getElementById('mMotivoLabel').textContent = 'Motivo / Justificativa (SleepOver) *'; 
-  document.getElementById('mMotivo').value = (r.justificado && r.just_motivo) ? r.just_motivo : '';
-  
-  var bs = document.getElementById('bSave'); bs.classList.remove('disabled'); bs.textContent = 'Salvar';
-  document.getElementById('modalJust').setAttribute('data-modo', 'sleepover'); 
-  document.querySelector('#modalJust h3').textContent = r.justificado ? 'Reeditar justificativa SleepOver' : 'Justificar SleepOver'; 
-  document.getElementById('modalJust').classList.add('open');
-  setTimeout(function(){document.getElementById('mMotivo').focus();},100);
-}
-
-function salvarJustSleepOver() {
-  var motivo = document.getElementById('mMotivo').value.trim();
-  if (!motivo) { toast('Informe o motivo.',1); return; }
-  if (!sleepSel) return;
-  
-  var btn = document.getElementById('bSave'); btn.classList.add('disabled'); btn.textContent = 'Salvando...';
-  var r = sleepSel;
-  var params = { 
-    action: 'salvarJustificativaSleepOver', 
-    id_registro: r.id_registro, 
-    placa: r.placa, 
-    motivo: motivo, 
-    nome_dispatcher: sessao.nome + ' (' + sessao.transp + ')' 
-  };
-  
-  var cb = 'cbsso_' + Date.now(), timeout = setTimeout(function(){ if(window[cb]){ delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão.',1); } }, 12000);
-  window[cb] = function(d) {
-    clearTimeout(timeout); delete window[cb]; btn.classList.remove('disabled'); btn.textContent = 'Salvar';
-    if (d && d.ok) { 
-      var i = sleepCache.findIndex(function(x){ return x.id_registro === sleepSel.id_registro; }); 
-      if (i !== -1) { sleepCache[i].justificado = true; sleepCache[i].just_motivo = motivo; } 
-      fecharModal(); renderSleepOver(); toast('Justificativa salva!'); 
-    } else { toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1); }
-  };
-  
-  var qs = Object.keys(params).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
-  var s = document.createElement('script'); s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now(); s.onerror = function(){ clearTimeout(timeout); delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar'; toast('Erro de conexão.',1); s.remove(); };
-  document.head.appendChild(s);
-}
-
-document.querySelectorAll('[data-sotab]').forEach(function(t){ 
-  t.addEventListener('click',function(){ 
-    document.querySelectorAll('[data-sotab]').forEach(function(x){x.classList.remove('ativo');}); 
-    t.classList.add('ativo'); 
-    var n = t.getAttribute('data-sotab'); 
-    document.getElementById('soPaneLista').style.display = n==='lista'?'block':'none'; 
-    document.getElementById('soPaneJust').style.display = n==='just'?'block':'none'; 
-  }); 
-});
-['soBusca','soJustF'].forEach(function(id){ 
-  var el = document.getElementById(id); if(el){ el.addEventListener('input',renderSleepOver); el.addEventListener('change',renderSleepOver); } 
-});
-
 // ════════════════════════════════════════════════════════════
 // PRESENTEÍSMO BRIEFING
 // ════════════════════════════════════════════════════════════
@@ -1961,5 +1793,3 @@ document.querySelectorAll('[data-tab]').forEach(function(t){ t.addEventListener(
 </script>
 </body>
 </html>
-
-```
