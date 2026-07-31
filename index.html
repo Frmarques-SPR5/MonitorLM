@@ -9,12 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-/* ── TOKENS ANTIGO ── */
+/* ── TOKENS ── */
 :root {
   --bg:       #f0f2f5;
   --surface:  #ffffff;
   --card:     #ffffff;
-  --card-bg:  #ffffff;
   --border:   #e0e3e8;
   --blue:     #3483fa;
   --blue-d:   #2968c8;
@@ -24,38 +23,29 @@
   --ok:       #00a650;
   --text:     #1c1c1e;
   --text2:    #6c757d;
-  --muted:    #6c757d;
   --radius:   8px;
   --font:     'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --shadow:   0 2px 8px rgba(0,0,0,.10);
   --header-h: 56px;
-
-  /* TOKENS YMS NOVO */
-  --amarelo: #f2c94c;
-  --laranja: #ff9900;
-  --vermelho: #e5484d;
-  --azul: #2563eb;
 }
 [data-theme="dark"] {
   --bg:      #0f0f1a;
   --surface: #1a1a2e;
   --card:    #22223b;
-  --card-bg: #22223b;
   --border:  #2d2d4e;
   --text:    #e8e8f0;
   --text2:   #8888aa;
-  --muted:   #8888aa;
   --shadow:  0 2px 8px rgba(0,0,0,.35);
 }
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
 /* ── SCROLLBAR discreta ── */
-.gb, .hist-wrap, .tabs, .filtros { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-.gb::-webkit-scrollbar, .hist-wrap::-webkit-scrollbar, .tabs::-webkit-scrollbar, .filtros::-webkit-scrollbar { height: 6px; width: 6px; }
-.gb::-webkit-scrollbar-track, .hist-wrap::-webkit-scrollbar-track, .tabs::-webkit-scrollbar-track, .filtros::-webkit-scrollbar-track { background: transparent; }
-.gb::-webkit-scrollbar-thumb, .hist-wrap::-webkit-scrollbar-thumb, .tabs::-webkit-scrollbar-thumb, .filtros::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-.gb::-webkit-scrollbar-thumb:hover, .hist-wrap::-webkit-scrollbar-thumb:hover, .tabs::-webkit-scrollbar-thumb:hover, .filtros::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+.gb, .hist-wrap, .tabs { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.gb::-webkit-scrollbar, .hist-wrap::-webkit-scrollbar, .tabs::-webkit-scrollbar { height: 6px; width: 6px; }
+.gb::-webkit-scrollbar-track, .hist-wrap::-webkit-scrollbar-track, .tabs::-webkit-scrollbar-track { background: transparent; }
+.gb::-webkit-scrollbar-thumb, .hist-wrap::-webkit-scrollbar-thumb, .tabs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.gb::-webkit-scrollbar-thumb:hover, .hist-wrap::-webkit-scrollbar-thumb:hover, .tabs::-webkit-scrollbar-thumb:hover { background: var(--text2); }
 /* ── HEADER ── */
 header {
   background: var(--accent);
@@ -83,6 +73,7 @@ header {
 .logo-txt .logo-spr5 { color: #ffe600; font-weight: 700; }
 .logo-txt .logo-cl   { color: #1c1c1e; font-weight: 600; }
 [data-theme="dark"] .logo-txt .logo-cl { color: #ffe600; }
+/* lobo removido para simplificar o codigo e melhorar o mobile */
 .header-right { display: flex; align-items: center; gap: 10px; }
 /* toggle dark mode */
 .switch { position: relative; display: inline-block; width: 60px; height: 34px; flex-shrink: 0; transform: scale(.8); transform-origin: center; margin: 0 -6px; }
@@ -261,87 +252,6 @@ tr:hover td { background: rgba(52,131,250,.04); }
 .dc.ok   { color: var(--ok); }
 .valor-brl { font-weight: 700; font-size: 12px; white-space: nowrap; }
 .valor-alto { color: var(--danger); }
-
-/* ── ESTILOS NATIVOS NOVO YMS ── */
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
-.card .num { font-size: 28px; font-weight: 700; }
-.card .label { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.card.total .num { color: var(--text); }
-.card.ok .num { color: var(--ok); }
-.card.amarelo .num { color: var(--amarelo); }
-.card.laranja .num { color: var(--laranja); }
-.card.vermelho .num { color: var(--vermelho); }
-.chip { flex: 0 0 auto; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-.chip .chip-count { color: var(--muted); font-weight: 500; margin-left: 4px; }
-.chip.active { background: var(--azul); border-color: var(--azul); color: #fff; }
-.chip.active .chip-count { color: rgba(255,255,255,0.75); }
-.btn-confirmar { background: var(--azul); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-.btn-confirmar:disabled { opacity: 0.6; cursor: default; }
-.btn-aduana { background: transparent; color: var(--laranja); border: 1px solid var(--laranja); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
-.btn-aduana.ativa { background: var(--laranja); color: #1c1c1e; }
-.selo-aduana { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,153,0,0.2); color: var(--laranja); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
-.acoes-wrap { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.selo-monitorado { display: inline-flex; align-items: center; gap: 5px; background: rgba(22,163,74,0.18); color: #4ade80; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-.selo-monitorado .ponto { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; display: inline-block; }
-.proxima-checagem { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.comentario-wrap { display: flex; gap: 6px; align-items: center; }
-.comentario-input { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 8px; font-size: 12px; width: 160px; }
-.btn-salvar-comentario { background: var(--azul); color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
-.btn-salvar-comentario.salvo { background: var(--ok); }
-.comentario-full { margin-top: 8px; background: rgba(37,99,235,0.10); border: 1px solid var(--border); border-left: 3px solid var(--azul); border-radius: 6px; padding: 8px 10px; font-size: 13px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
-.comentario-full .cf-label { display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); margin-bottom:3px; font-weight:700; }
-.comentario-full .cf-empty { color: var(--muted); font-style: italic; }
-.mobile-list { display: none; }
-.truck-card { background: var(--card); border: 1px solid var(--border); border-left: 5px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
-.truck-card.tier-amarelo { border-left-color: var(--amarelo); }
-.truck-card.tier-laranja { border-left-color: var(--laranja); }
-.truck-card.tier-vermelho { border-left-color: var(--vermelho); }
-.truck-card.tier-ok { border-left-color: var(--ok); }
-.truck-card.compacto { padding: 8px 12px; border-left-color: var(--ok); }
-.truck-card .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.truck-card.compacto .top-row { margin-bottom: 0; }
-.truck-card .placa { font-size: 18px; font-weight: 700; }
-.truck-card.compacto .placa { font-size: 15px; }
-.truck-card .tempo-mobile { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; }
-.truck-card .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 13px; }
-.truck-card .info-grid .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; }
-.truck-card .bottom-row { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-.truck-card.compacto .compact-line { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.ondas-resumo { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
-.ondas-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(290px,1fr)); gap:14px; }
-.onda-card { background: var(--card); border:1px solid var(--border); border-left:5px solid var(--border); border-radius:12px; padding:16px; }
-.onda-card.est-futura { border-left-color: var(--muted); opacity:.85; }
-.onda-card.est-andamento { border-left-color: var(--azul); }
-.onda-card.est-alerta { border-left-color: var(--laranja); }
-.onda-card.est-encerrada-ok { border-left-color: var(--ok); }
-.onda-card.est-encerrada-pend { border-left-color: var(--vermelho); }
-.onda-card .oc-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:8px; }
-.onda-card .oc-titulo { font-size:16px; font-weight:700; }
-.onda-card .oc-janela { font-size:12px; color:var(--muted); margin-top:2px; }
-.onda-badge { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; }
-.onda-badge.est-futura { background: rgba(148,163,184,.18); color: var(--muted); }
-.onda-badge.est-andamento { background: rgba(37,99,235,.22); color:#93c5fd; }
-.onda-badge.est-alerta { background: rgba(255,153,0,.22); color:#ffb84d; }
-.onda-badge.est-encerrada-ok { background: rgba(22,163,74,.2); color:#4ade80; }
-.onda-badge.est-encerrada-pend { background: rgba(229,72,77,.28); color:#f87171; }
-.oc-nums { display:grid; grid-template-columns: repeat(4,1fr); gap:8px; margin-bottom:4px; }
-.oc-num { text-align:center; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 4px; }
-.oc-num .n { font-size:22px; font-weight:800; line-height:1; }
-.oc-num .l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; margin-top:4px; }
-.oc-num.n-carregando .n { color: var(--azul); }
-.oc-num.n-concluidas .n { color: var(--ok); }
-.oc-num.n-aguardando .n { color: var(--amarelo); }
-.oc-alerta { background: rgba(229,72,77,.14); border:1px solid rgba(229,72,77,.35); border-radius:8px; padding:10px 12px; font-size:13px; margin-top:12px; }
-.oc-alerta.laranja { background: rgba(255,153,0,.14); border-color: rgba(255,153,0,.4); }
-.oc-alerta.verde { background: rgba(22,163,74,.12); border-color: rgba(22,163,74,.35); }
-.oc-alerta .oa-linha { display:flex; justify-content:space-between; gap:8px; align-items:center; }
-.oc-alerta strong { font-weight:800; font-size:15px; }
-.oc-chips { display:flex; flex-wrap:wrap; gap:5px; margin:6px 0 2px; }
-.oc-chip { font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; background: rgba(255,255,255,.06); border:1px solid var(--border); font-variant-numeric:tabular-nums; }
-.oc-chip.aguardando { color: var(--amarelo); border-color: rgba(242,201,76,.4); }
-.oc-chip.nopatio { color:#ffb84d; border-color: rgba(255,153,0,.4); }
-
 /* MODAL */
 .moverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 300; align-items: center; justify-content: center; padding: 16px; }
 .moverlay.open { display: flex; }
@@ -465,7 +375,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="dots_border"></div>
       <span class="nav-icon">👁️</span> <span>Visão Geral</span>
     </button>
-    <button class="nav-item" data-view="pacotes" onclick="abrirView('pacotes')">
+    <button class="nav-item" data-view="pacotes" data-oculto="1" onclick="abrirView('pacotes')" style="display:none">
       <div class="dots_border"></div>
       <span class="nav-icon">📦</span> <span>Pacotes Faltantes</span>
     </button>
@@ -605,108 +515,9 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <div id="tabelaHis"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
   </div>
   </div>
-
-  <!-- YMS INTEGRADO NATIVO DO NOVO.TXT -->
-  <div class="view" id="viewYms">
-    <div class="page-header" style="margin-bottom:12px;">
-      <div class="page-title">🚚 Painel YMS — Guarapuava</div>
-      <div class="page-sub" id="ymsSubtitle">Carregando dados da planilha...</div>
-    </div>
-
-    <div class="error-banner" id="errorBanner" style="display:none; background:#7f1d1d; color:#fecaca; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-size:13px;"></div>
-
-    <div class="tabs" id="ymsTabs">
-      <div class="tab ativo" data-ymsmode="patio">No pátio</div>
-      <div class="tab" data-ymsmode="historico">Histórico de hoje</div>
-      <div class="tab" data-ymsmode="ondas">🌊 Ondas</div>
-      <div class="tab" data-ymsmode="feedback">💬 Feedback KN</div>
-    </div>
-
-    <div class="filtros" id="ymsFiltros"></div>
-
-    <div class="cards" id="cardsPatio">
-      <div class="card total"><div class="num" id="cardTotal">–</div><div class="label">No pátio</div></div>
-      <div class="card ok"><div class="num" id="cardOk">–</div><div class="label">Normal (&lt;15min)</div></div>
-      <div class="card amarelo"><div class="num" id="cardAmarelo">–</div><div class="label">⚠️ 15–20min</div></div>
-      <div class="card laranja"><div class="num" id="cardLaranja">–</div><div class="label">Atenção⚠️ 20–25min</div></div>
-      <div class="card vermelho"><div class="num" id="cardVermelho">–</div><div class="label">Possível ofensora⚠️ 25min+</div></div>
-    </div>
-
-    <div id="ymsPatioWrap">
-      <table id="tabelaPatio">
-        <thead>
-          <tr>
-            <th>Placa</th>
-            <th>Vaga</th>
-            <th class="col-secundaria">Tipo de veículo</th>
-            <th class="col-secundaria">Transportadora</th>
-            <th>Entrada</th>
-            <th class="col-secundaria">Tempo no pátio</th>
-            <th>Monitoramento</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="7" class="empty">Carregando...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div id="ymsHistoricoWrap" style="display:none;">
-      <table id="tabelaHistorico">
-        <thead>
-          <tr>
-            <th>Placa</th>
-            <th>Vaga</th>
-            <th>Tipo de veículo</th>
-            <th>Transportadora</th>
-            <th>Entrada</th>
-            <th>Saída</th>
-            <th>Tempo total</th>
-            <th>Comentário (motivo do atraso)</th>
-          </tr>
-        </thead>
-        <tbody id="tableBodyHistorico">
-          <tr><td colspan="8" class="empty">Carregando...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mobile-list" id="mobileList"></div>
-
-    <div id="feedbackWrap" style="display:none; max-width:640px;">
-      <div class="grupo open" style="padding:18px;">
-        <div style="font-size:16px; font-weight:700; margin-bottom:4px;">💬 Feedback sobre a KN — operação / carregamento</div>
-        <div style="font-size:13px; color: var(--text2); margin-bottom:16px;">Registre gaps e observações da operação para acompanharmos as melhorias.</div>
-
-        <label style="display:block; font-size:12px; color:var(--text2); margin-bottom:5px;">Seu nome *</label>
-        <input id="fbNome" type="text" placeholder="Nome completo" style="width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px 12px; font-size:14px; margin-bottom:14px;">
-
-        <label style="display:block; font-size:12px; color:var(--text2); margin-bottom:5px;">Tema *</label>
-        <select id="fbTema" style="width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px 12px; font-size:14px; margin-bottom:14px;">
-          <option value="">Selecione...</option>
-          <option value="Operação">Operação</option>
-          <option value="Carregamento">Carregamento</option>
-          <option value="Operação e Carregamento">Operação e Carregamento</option>
-          <option value="Outros">Outros</option>
-        </select>
-
-        <label style="display:block; font-size:12px; color:var(--text2); margin-bottom:5px;">Feedback / gap identificado *</label>
-        <textarea id="fbTexto" placeholder="Descreva o que aconteceu, o gap ou a sugestão..." style="width:100%; min-height:110px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px 12px; font-size:14px; resize:vertical; margin-bottom:14px;"></textarea>
-
-        <button id="fbEnviar" class="btn-salvar-just" onclick="enviarFeedbackKN()" style="width:100%">Enviar feedback</button>
-        <div id="fbMsg" style="margin-top:12px; font-size:13px;"></div>
-      </div>
-    </div>
-
-    <div id="ondasWrap" style="display:none;">
-      <div class="ondas-resumo" id="ondasResumo"></div>
-      <div class="ondas-grid" id="ondasGrid"><div class="empty">Carregando ondas...</div></div>
-      <div class="ondas-hint" id="ondasHint" style="margin-top:16px; color:var(--text2); font-size:12px; line-height:1.5;"></div>
-    </div>
-
-    <div class="footer" id="ymsFooter" style="margin-top:16px; color:var(--text2); font-size:12px; text-align:right;"></div>
+  <div class="view" id="viewYms" style="margin:-16px">
+    <iframe class="frame-tool" id="frameYms" title="Monitoramento de Pátio"></iframe>
   </div>
-
   <div class="view" id="viewOrh">
     <div class="page-header">
       <div class="page-title">📊 Análise ORH</div>
@@ -931,10 +742,8 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
   </div>
 </div>
 <div class="toast" id="toast"></div>
-
 <script>
-/* ── TODO O CÓDIGO JS ORIGINAL DO ANTIGO.TXT É MANTIDO INTEGRALMENTE ── */
-var API     = 'https://script.google.com/macros/s/AKfycbI3Dk6Tz345aALZo-BmWLzDXrtUSOKJjQ245Ztf3_9ZBdz1BnfjvuIaPtb2QcyzUuR/exec';
+var API     = 'https://script.google.com/macros/s/AKfycbxI3Dk6Tz345aALZo-BmWLzDXrtUSOKJjQ245Ztf3_9ZBdz1BnfjvuIaPtb2QcyzUuR/exec';
 var USD_BRL = 5.75;
 var ACESSOS = {
   'MELI'           : 'spr5top',
@@ -953,6 +762,9 @@ var cache  = [];
 var sessao = null;
 var pacSel = null;
 
+/* ════════════════════════════════════════════════════════════
+   HELPERS BÁSICOS (estavam faltando — causavam "e is not defined")
+   ════════════════════════════════════════════════════════════ */
 function e(s) {
   if (s === null || s === undefined) return '';
   return String(s)
@@ -1036,6 +848,7 @@ function iniciarApp() {
   var permitidas = FERRAMENTAS_RESTRITAS[sessao.transp] || null;
   document.querySelectorAll('.nav-item').forEach(function(b){
     var v = b.getAttribute('data-view');
+    if (b.getAttribute('data-oculto')) { b.style.display = 'none'; return; }
     b.style.display = (!permitidas || permitidas.indexOf(v) !== -1) ? 'flex' : 'none';
   });
   if (permitidas) {
@@ -1049,7 +862,7 @@ function sair() {
   sessao = null; cache = [];
   ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false;
   orhCache = []; pendCache = []; vgCachePend = []; vgCacheORH = []; vgCacheBrief = [];
-  document.querySelectorAll('.nav-item').forEach(function(b){ b.style.display = 'flex'; });
+  document.querySelectorAll('.nav-item').forEach(function(b){ b.style.display = b.getAttribute('data-oculto') ? 'none' : 'flex'; });
   document.getElementById('overlayLogin').classList.remove('oculto');
   document.getElementById('headerUser').classList.remove('show');
   document.getElementById('btnMenu').style.display = 'none';
@@ -1058,16 +871,14 @@ function sair() {
   document.getElementById('pListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
   document.getElementById('vgLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
 }
-
+var YMS_URL = 'https://frmarques-spr5.github.io/yms-spr5/';
 var ymsCarregado = false;
 var orhCarregado = false, orhCache = [], orhCacheFull = [], orhCharts = {};
 var pendCarregado = false, pendCache = [];
 var briefingCarregado = false;
 var vgCachePend = [], vgCacheORH = [], vgCacheBrief = [];
-
 function abrirMenu() { document.getElementById('sidebar').classList.add('aberto'); document.getElementById('backdrop').classList.add('aberto'); }
 function fecharMenu() { document.getElementById('sidebar').classList.remove('aberto'); document.getElementById('backdrop').classList.remove('aberto'); }
-
 function abrirView(nome, semFechar) {
   document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.toggle('ativo', b.getAttribute('data-view') === nome); });
 
@@ -1077,15 +888,17 @@ function abrirView(nome, semFechar) {
   document.getElementById('viewPendentes').classList.toggle('ativa', nome === 'pendentes');
   document.getElementById('viewBriefing').classList.toggle('ativa', nome === 'briefing');
   document.getElementById('viewGeral').classList.toggle('ativa', nome === 'geral');
-
   if (nome === 'geral' && sessao) {
     carregarVisaoGeral();
   }
-  if (nome === 'pacotes' && sessao) {
-    carregar();
-  }
-  if (nome === 'yms' && sessao) {
-    iniciarYmsNativo();
+  if (nome === 'yms' && !ymsCarregado && sessao) {
+    var url = YMS_URL;
+    if (!sessao.isMeli) {
+      var transpYms = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
+      url += '?transp=' + encodeURIComponent(transpYms);
+    }
+    document.getElementById('frameYms').src = url;
+    ymsCarregado = true;
   }
   if (nome === 'orh' && !orhCarregado && sessao) { carregarORH(); orhCarregado = true; }
   if (nome === 'pendentes' && !pendCarregado && sessao) { carregarPend(); pendCarregado = true; }
@@ -1097,7 +910,6 @@ function abrirView(nome, semFechar) {
   }
   if (!semFechar) fecharMenu();
 }
-
 function toggleSenha() {
   var i = document.getElementById('inputSenha'); i.type = i.type === 'password' ? 'text' : 'password';
 }
@@ -1105,11 +917,13 @@ function brl(usd) { var v = parseFloat(String(usd).replace(',','.')) || 0; retur
 function routeLink(id) { if (!id) return '<span style="color:var(--text2);font-size:11px">—</span>'; return '<a class="route-link" href="https://envios.adminml.com/logistics/monitoring-distribution/detail/' + id + '?site=MLB" target="_blank" rel="noopener">' + e(id) + '</a>'; }
 function shipmentLink(id) { if (!id) return '<span style="color:var(--text2);font-size:11px">—</span>'; return '<a class="route-link" href="https://envios.adminml.com/logistics/package-management/package/' + id + '" target="_blank" rel="noopener" style="font-family:monospace;font-weight:700">' + e(id) + '</a>'; }
 function normTransp(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().replace(/\s+/g, ' ').toUpperCase(); }
-
-/* VISÃO GERAL ORIGINAL */
+// ════════════════════════════════════════════════════════════
+// VISÃO GERAL (TORRE DE CONTROLE LIDERANÇA)
+// ════════════════════════════════════════════════════════════
 function fetchMacroAPI(action) {
   return new Promise(function(resolve, reject) {
     var cb = 'cbmacro_' + action + '_' + Date.now() + Math.floor(Math.random()*1000);
+
     var timeout = setTimeout(function() {
       if (window[cb]) { delete window[cb]; reject('Tempo esgotado ao carregar ' + action); }
     }, 15000);
@@ -1296,8 +1110,9 @@ function renderVisaoGeral(dataSel, transpSel) {
   h += '</tbody></table></div>';
   document.getElementById('vgLista').innerHTML = h;
 }
-
-/* PACOTES FALTANTES ORIGINAL */
+// ════════════════════════════════════════════════════════════
+// PACOTES FALTANTES
+// ════════════════════════════════════════════════════════════
 function carregar() {
   document.getElementById('listaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando pacotes...</div>';
   var cb = 'cb' + Date.now();
@@ -1357,7 +1172,7 @@ function render() {
   document.getElementById('kJust').textContent  = jus; document.getElementById('kPend').textContent  = tot - jus; document.getElementById('kValor').textContent = valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
   document.getElementById('pageSub').textContent = tot + ' pacote' + (tot!==1?'s':'') + (sessao ? ' — ' + sessao.transp : '');
   var f = filtrar();
-  if (!f.length) { document.getElementById('listaGrupos').innerHTML='<div class="empty">Nenum pacote encontrado.</div>'; return; }
+  if (!f.length) { document.getElementById('listaGrupos').innerHTML='<div class="empty">Nenhum pacote encontrado.</div>'; return; }
   f.sort(function(a,b){ var va = parseFloat(String(a.custo_usd).replace(',','.')) || 0; var vb = parseFloat(String(b.custo_usd).replace(',','.')) || 0; return vb - va; });
   var grupos = {};
   if (sessao.isMeli) { f.forEach(function(p){ var k=grupoDoPacote(p); if(!grupos[k]) grupos[k]=[]; grupos[k].push(p); }); }
@@ -1433,229 +1248,9 @@ function salvar() {
   var qs = Object.keys(params).map(function(k){ return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
   var s = document.createElement('script'); s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now(); s.onerror = function(){ clearTimeout(timeout); delete window[cb]; btn.classList.remove('disabled'); btn.textContent = 'Salvar'; toast('Erro de conexão.', 1); s.remove(); }; document.head.appendChild(s);
 }
-
-/* ── CÓDIGO NATIVO YMS DO NOVO.TXT INTEGRAMOS AQUI ── */
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwLHh0bBrkcQjv8mBDZthaq33MP9riVQ5dvZcE_LWIxd0qUY4govgU3_-JOS-FWWuXjJw/exec';
-var ONDAS_SHEET_ID = '1zyUJTIFCxgT_UPW5atnkCqxg-mknsvScizSbHoligTY';
-var ONDAS_GID = '132623047';
-
-var caminhoes = [], historico = [], aduanaPorPlaca = {}, ymsModo = 'patio', ymsIntervalRefetch, ymsIntervalTick;
-var historicoCarregado = false, ondasCarregado = false, ondasRotas = [];
-
-function chamarWebApp(params, onResult, onErro) {
-  var cbName = 'ymsCb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-  var script = document.createElement('script');
-  window[cbName] = function (resp) { onResult(resp); delete window[cbName]; script.remove(); };
-  var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
-  script.src = WEBAPP_URL + '?' + qs + (qs ? '&' : '') + 'callback=' + cbName + '&_=' + Date.now();
-  script.onerror = function () { if(onErro) onErro('Falha na conexão com YMS.'); delete window[cbName]; script.remove(); };
-  document.body.appendChild(script);
-}
-
-function iniciarYmsNativo() {
-  trocarModoYms(ymsModo);
-  clearInterval(ymsIntervalRefetch); clearInterval(ymsIntervalTick);
-  carregarPatioYms(); carregarOndasYms();
-  ymsIntervalRefetch = setInterval(function () {
-    carregarPatioYms();
-    if (ymsModo === 'historico') carregarHistoricoYms();
-    if (ymsModo === 'ondas') { carregarHistoricoYms(); carregarOndasYms(); }
-  }, 30000);
-  ymsIntervalTick = setInterval(function () { if (ymsModo === 'patio' || ymsModo === 'ondas') renderYms(); }, 1000);
-}
-
-function trocarModoYms(modo) {
-  ymsModo = modo;
-  document.querySelectorAll('[data-ymsmode]').forEach(function(b){ b.classList.toggle('ativo', b.getAttribute('data-ymsmode') === modo); });
-  document.getElementById('cardsPatio').style.display = (modo === 'patio') ? 'grid' : 'none';
-  document.getElementById('ymsPatioWrap').style.display = (modo === 'patio') ? 'block' : 'none';
-  document.getElementById('ymsHistoricoWrap').style.display = (modo === 'historico') ? 'block' : 'none';
-  document.getElementById('feedbackWrap').style.display = (modo === 'feedback') ? 'block' : 'none';
-  document.getElementById('ondasWrap').style.display = (modo === 'ondas') ? 'block' : 'none';
-  document.getElementById('mobileList').style.display = (modo === 'feedback' || modo === 'ondas') ? 'none' : 'block';
-
-  if (modo === 'historico' && !historicoCarregado) carregarHistoricoYms();
-  if (modo === 'ondas') carregarOndasYms();
-  renderYms();
-}
-
-document.querySelectorAll('[data-ymsmode]').forEach(function(t){
-  t.addEventListener('click', function(){ trocarModoYms(t.getAttribute('data-ymsmode')); });
-});
-
-function carregarPatioYms() {
-  chamarWebApp({}, function (resp) {
-    caminhoes = (resp.caminhoes || []).map(function (item) {
-      return {
-        placa: item.placa, vaga: item.vaga || '', tipo: item.tipo || '', transportadora: item.transportadora || '',
-        entrada: new Date(item.entradaISO), confirmadoEm: item.confirmadoEmISO ? new Date(item.confirmadoEmISO) : null,
-        confirmacaoCount: item.confirmacaoCount || 0
-      };
-    });
-    document.getElementById('ymsSubtitle').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
-    carregarAduanaYms(renderYms);
-  });
-}
-
-function carregarHistoricoYms() {
-  chamarWebApp({ action: 'historico' }, function (resp) {
-    historico = (resp.historico || []).map(function (item) {
-      return {
-        placa: item.placa, vaga: item.vaga || '', tipo: item.tipo || '', transportadora: item.transportadora || '',
-        entrada: new Date(item.entradaISO), saida: item.saidaISO ? new Date(item.saidaISO) : null,
-        tempoMinutos: item.tempoMinutos, registradoEmISO: item.registradoEmISO, comentario: item.comentario || ''
-      };
-    });
-    historicoCarregado = true;
-    renderYms();
-  });
-}
-
-function carregarAduanaYms(cb) {
-  chamarWebApp({ action: 'getAduana' }, function (resp) {
-    aduanaPorPlaca = {};
-    (resp.aduana || []).forEach(function (a) { if (a && a.placa) aduanaPorPlaca[String(a.placa).trim().toUpperCase()] = true; });
-    if (cb) cb();
-  });
-}
-
-function estaComAduana(placa) { return !!aduanaPorPlaca[String(placa || '').trim().toUpperCase()]; }
-
-function marcarAduana(placa, btn) {
-  var jaMarcado = estaComAduana(placa), novoValor = jaMarcado ? 'NAO' : 'SIM';
-  btn.disabled = true;
-  chamarWebApp({ action: 'marcarAduana', placa: placa, valor: novoValor }, function (resp) {
-    btn.disabled = false;
-    if (resp && resp.ok) {
-      var k = String(placa).trim().toUpperCase();
-      if (novoValor === 'SIM') aduanaPorPlaca[k] = true; else delete aduanaPorPlaca[k];
-      renderYms();
-    }
-  });
-}
-
-function confirmarMonitoramento(placa, btn) {
-  btn.disabled = true; btn.textContent = 'Confirmando...';
-  chamarWebApp({ action: 'confirmar', placa: placa }, function (resp) {
-    if (resp.ok) {
-      var item = caminhoes.find(function (c) { return c.placa === placa; });
-      if (item) { item.confirmadoEm = new Date(resp.confirmadoEmISO); item.confirmacaoCount = resp.confirmacaoCount; }
-      renderYms();
-    }
-  });
-}
-
-function salvarComentarioYms(placa, registradoEmISO, texto, btn) {
-  btn.disabled = true; btn.textContent = 'Salvando...';
-  chamarWebApp({ action: 'comentario', placa: placa, registradoEm: registradoEmISO, texto: texto }, function (resp) {
-    btn.disabled = false;
-    if (resp.ok) {
-      btn.textContent = 'Salvo ✓';
-      var item = historico.find(function (h) { return h.placa === placa && h.registradoEmISO === registradoEmISO; });
-      if (item) item.comentario = texto;
-      setTimeout(function () { btn.textContent = 'Salvar'; }, 2000);
-    }
-  });
-}
-
-function enviarFeedbackKN() {
-  var nome  = document.getElementById('fbNome').value.trim();
-  var tema  = document.getElementById('fbTema').value;
-  var texto = document.getElementById('fbTexto').value.trim();
-  var msg   = document.getElementById('fbMsg');
-  if (!nome || !tema || !texto) { msg.style.color = 'var(--danger)'; msg.textContent = 'Preencha todos os campos.'; return; }
-  var btn = document.getElementById('fbEnviar'); btn.disabled = true;
-  chamarWebApp({ action: 'salvarFeedback', transportadora: 'KN', nome: nome, tema: tema, texto: texto }, function (resp) {
-    btn.disabled = false;
-    if (resp && resp.ok) {
-      document.getElementById('fbNome').value = ''; document.getElementById('fbTexto').value = '';
-      msg.style.color = 'var(--ok)'; msg.textContent = '✓ Feedback registrado!';
-    } else { msg.style.color = 'var(--danger)'; msg.textContent = 'Erro ao salvar.'; }
-  });
-}
-
-function carregarOndasYms() {
-  var cbName = 'ymsOndasCb_' + Date.now();
-  var script = document.createElement('script');
-  window[cbName] = function (resp) {
-    try {
-      var rows = (resp && resp.table && resp.table.rows) || [];
-      var arr = [];
-      rows.forEach(function (r) {
-        var c = r.c || [];
-        var placa = (c[0] && c[0].v != null) ? c[0].v : '';
-        var onda = parseInt((c[1] && c[1].v != null) ? c[1].v : '', 10);
-        var pn = String(placa).toUpperCase().replace(/\s+/g, '').replace(/^SDD-/, '');
-        if (pn && onda >= 1 && onda <= 4) arr.push({ placa: pn, onda: onda });
-      });
-      ondasRotas = arr; ondasCarregado = true; renderOndasYms();
-    } catch (err) {}
-    delete window[cbName]; script.remove();
-  };
-  var tq = encodeURIComponent('select C, F');
-  script.src = 'https://docs.google.com/spreadsheets/d/' + ONDAS_SHEET_ID + '/gviz/tq?gid=' + ONDAS_GID + '&tq=' + tq + '&tqx=out:json;responseHandler:' + cbName;
-  document.body.appendChild(script);
-}
-
-function renderYms() {
-  if (ymsModo === 'patio') renderPatioYms();
-  else if (ymsModo === 'historico') renderHistoricoYms();
-  else if (ymsModo === 'ondas') renderOndasYms();
-}
-
-function fmtTempoYms(min) {
-  if (min == null || isNaN(min)) return '—';
-  var sec = Math.floor(min * 60), h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
-  return (h > 0 ? String(h).padStart(2,'0') + ':' : '') + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-}
-
-function renderPatioYms() {
-  var agora = new Date();
-  var list = caminhoes.map(function(c){
-    var min = (agora.getTime() - c.entrada.getTime()) / 60000;
-    var tier = min >= 25 ? 'vermelho' : (min >= 20 ? 'laranja' : (min >= 15 ? 'amarelo' : 'ok'));
-    return Object.assign({}, c, { min: min, tier: tier });
-  });
-
-  document.getElementById('cardTotal').textContent = list.length;
-  document.getElementById('cardOk').textContent = list.filter(function(x){return x.tier==='ok';}).length;
-  document.getElementById('cardAmarelo').textContent = list.filter(function(x){return x.tier==='amarelo';}).length;
-  document.getElementById('cardLaranja').textContent = list.filter(function(x){return x.tier==='laranja';}).length;
-  document.getElementById('cardVermelho').textContent = list.filter(function(x){return x.tier==='vermelho';}).length;
-
-  var tbody = document.getElementById('tableBody');
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum caminhão no pátio 🎉</td></tr>'; return; }
-
-  tbody.innerHTML = list.map(function(c){
-    var aduanaAtiva = estaComAduana(c.placa);
-    var btnA = '<button class="btn-aduana' + (aduanaAtiva ? ' ativa' : '') + '" onclick="marcarAduana(\''+c.placa+'\', this)">🛃 Aduana</button>';
-    var btnC = '<button class="btn-confirmar" onclick="confirmarMonitoramento(\''+c.placa+'\', this)">👁️ Confirmar</button>';
-    return '<tr class="row-'+c.tier+'"><td><strong>'+e(c.placa)+'</strong></td><td>'+e(c.vaga)+'</td><td>'+e(c.tipo)+'</td><td>'+e(c.transportadora)+'</td><td>'+c.entrada.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</td><td class="dc '+c.tier+'">'+fmtTempoYms(c.min)+'</td><td>'+btnC+' '+btnA+'</td></tr>';
-  }).join('');
-}
-
-function renderHistoricoYms() {
-  var tbody = document.getElementById('tableBodyHistorico');
-  if (!historico.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum registro no histórico.</td></tr>'; return; }
-
-  tbody.innerHTML = historico.map(function(h, idx){
-    var inpId = 'coment_' + idx;
-    return '<tr><td><strong>'+e(h.placa)+'</strong></td><td>'+e(h.vaga)+'</td><td>'+e(h.tipo)+'</td><td>'+e(h.transportadora)+'</td><td>'+(h.entrada?h.entrada.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—')+'</td><td>'+(h.saida?h.saida.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—')+'</td><td>'+fmtTempoYms(h.tempoMinutos)+'</td><td><div class="comentario-wrap"><input class="comentario-input" id="'+inpId+'" value="'+e(h.comentario)+'"><button class="btn-salvar-comentario" onclick="salvarComentarioYms(\''+h.placa+'\', \''+h.registradoEmISO+'\', document.getElementById(\''+inpId+'\').value, this)">Salvar</button></div></td></tr>';
-  }).join('');
-}
-
-function renderOndasYms() {
-  var grid = document.getElementById('ondasGrid');
-  if (!ondasCarregado) { grid.innerHTML = '<div class="empty">Carregando ondas...</div>'; return; }
-  var defs = [ {n:1,ini:'08:45',fim:'09:15'}, {n:2,ini:'09:15',fim:'09:45'}, {n:3,ini:'09:45',fim:'10:15'}, {n:4,ini:'10:15',fim:'10:45'} ];
-  
-  grid.innerHTML = defs.map(function(d){
-    var rotas = ondasRotas.filter(function(r){ return r.onda === d.n; });
-    return '<div class="onda-card est-andamento"><div class="oc-head"><div><div class="oc-titulo">'+d.n+'ª Onda</div><div class="oc-janela">'+d.ini+' - '+d.fim+'</div></div></div><div class="oc-nums"><div class="oc-num"><div class="n">'+rotas.length+'</div><div class="l">Total Rotas</div></div></div></div>';
-  }).join('');
-}
-
-/* ── ANÁLISE ORH ORIGINAL ── */
+// ════════════════════════════════════════════════════════════
+// ANÁLISE ORH (rotas — ORH_REAL vs ORH_CONTRATO)
+// ════════════════════════════════════════════════════════════
 function carregarORH() {
   document.getElementById('oListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando rotas ORH...</div>';
   var cb = 'cborh' + Date.now();
@@ -1797,7 +1392,7 @@ function desenharGraficosORH() {
     if (elTitOf) elTitOf.textContent = 'Comparativo dia a dia — Ofensoras & ORH médio';
     orhCharts.evoOfensoras = new Chart(document.getElementById('chEvoOfensoras'), { data: { labels: diasLabels, datasets: [ { type:'bar', label:'Ofensoras', data: serieOfens, backgroundColor:'#e05252', yAxisID:'y' }, { type:'line', label:'ORH médio (h)', data: serieMedio.map(function(m){return +(m/60).toFixed(2);}), borderColor:'#ff9900', backgroundColor:'#ff9900', tension:.3, pointRadius:3, yAxisID:'y1' } ] }, options: { responsive:true, plugins:{ legend:{ position:'bottom' } }, scales:{ x:{ grid:{ color:grid } }, y:{ position:'left', grid:{ color:grid }, beginAtZero:true, title:{display:true,text:'Ofensoras'} }, y1:{ position:'right', grid:{ display:false }, beginAtZero:true, title:{display:true,text:'ORH médio (h)'} } } } });
   }
-  var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; }), ofensoras = comReal.filter(function(r){ return r.ofensora; });
+  var comReal = orhCache.filter(function(r){ return r.orh_real_min !== null; }), ofensoras = comReal.filter(function(r){ return r.ofensora; }), dentro = comReal.length - ofensoras.length;
   var ofPorT = {}; ofensoras.forEach(function(r){ var t=grupoDaRota(r); ofPorT[t]=(ofPorT[t]||0)+1; }); var ofKeys = Object.keys(ofPorT).sort(function(a,b){ return ofPorT[b]-ofPorT[a]; });
   orhCharts.ofTransp = new Chart(document.getElementById('chOfTransp'), { type: 'bar', data: { labels: ofKeys, datasets: [{ data: ofKeys.map(function(k){return ofPorT[k];}), backgroundColor: '#e05252' }] }, options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ grid:{ color:grid }, beginAtZero:true }, y:{ grid:{ color:grid } } } } });
   var topEx = ofensoras.slice().sort(function(a,b){ return (b.excedente_min||0) - (a.excedente_min||0); }).slice(0, 12);
@@ -2017,8 +1612,9 @@ document.querySelectorAll('[data-otab]').forEach(function(t){
 });
 ['oBusca','oOfensoraF'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.addEventListener('input',renderORHTabela); el.addEventListener('change',renderORHTabela); } });
 (function(){ var tipo = document.getElementById('oPeriodoTipo'), valor = document.getElementById('oPeriodoValor'); if (tipo) tipo.addEventListener('change', function(){ popularFiltroPeriodo(); aplicarPeriodo(); }); if (valor) valor.addEventListener('change', aplicarPeriodo); })();
-
-/* PENDENTES ORIGINAL */
+// ════════════════════════════════════════════════════════════
+// PENDENTES (aba "faltantes")
+// ════════════════════════════════════════════════════════════
 function carregarPend() {
   document.getElementById('pListaGrupos').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando pendentes...</div>';
   var cb = 'cbpend' + Date.now();
@@ -2154,8 +1750,9 @@ function salvarPend() {
 }
 document.querySelectorAll('[data-ptab]').forEach(function(t){ t.addEventListener('click',function(){ document.querySelectorAll('[data-ptab]').forEach(function(x){x.classList.remove('ativo');}); t.classList.add('ativo'); var n = t.getAttribute('data-ptab'); document.getElementById('pPaneLista').style.display = n==='lista'?'block':'none'; document.getElementById('pPaneJust').style.display  = n==='just'?'block':'none'; if (n==='just') carregarHisPend(); }); });
 ['pBusca','pJustF'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.addEventListener('input',renderPendTabela); el.addEventListener('change',renderPendTabela); } });
-
-/* BRIEFING ORIGINAL */
+// ════════════════════════════════════════════════════════════
+// PRESENTEÍSMO BRIEFING
+// ════════════════════════════════════════════════════════════
 function salvarBriefing() {
   var nome = document.getElementById('bNome').value.trim(), transp = document.getElementById('bTransp').value.trim(), tema = document.getElementById('bTema').value.trim();
   if (!nome) { toast('Informe o nome.',1); return; } if (!tema) { toast('Informe o tema do briefing.',1); return; }
