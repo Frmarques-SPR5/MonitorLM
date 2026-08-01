@@ -1239,7 +1239,11 @@ function abrirView(nome, semFechar) {
       var transpYms = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT')
         ? 'BLD LOGÍSTICA' : sessao.transp;
       url += '?transp=' + encodeURIComponent(transpYms);
+    } else {
+      url += '?';
     }
+    // &_v= evita que o navegador use versão cacheada do YMS
+    url += '&_v=' + Date.now();
     document.getElementById('frameYms').src = url;
     ymsCarregado = true;
   }
