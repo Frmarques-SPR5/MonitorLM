@@ -1234,17 +1234,15 @@ function abrirView(nome, semFechar) {
   // carrega o iframe do YMS só na primeira vez, já filtrado pela transportadora
   if (nome === 'yms' && !ymsCarregado && sessao) {
     var url = YMS_URL;
+    var params = [];
     if (!sessao.isMeli) {
-      // passa a transportadora do login; BLD SVC/XPT viram BLD LOGÍSTICA
       var transpYms = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT')
         ? 'BLD LOGÍSTICA' : sessao.transp;
-      url += '?transp=' + encodeURIComponent(transpYms);
-    } else {
-      url += '?';
+      params.push('transp=' + encodeURIComponent(transpYms));
     }
-    // &_v= evita que o navegador use versão cacheada do YMS
-    url += '&_v=' + Date.now();
-    document.getElementById('frameYms').src = url;
+    // _v= evita cache do navegador
+    params.push('_v=' + Date.now());
+    document.getElementById('frameYms').src = url + '?' + params.join('&');
     ymsCarregado = true;
   }
 
