@@ -3014,12 +3014,20 @@ function renderTeleDrivers(dados) {
     if (r.data > por[k].dataRecente) por[k].dataRecente = r.data;
   });
 
+  var META_SCORE = 90; // meta de score — abaixo disso precisa justificar
+
   var lista = Object.values(por)
-    .filter(function(d){ return d.eventos > 0; })
-    .sort(function(a,b){ return b.eventos - a.eventos; })
+    .filter(function(d){ return d.nScore > 0; }) // só drivers com score calculado
+    .map(function(d){ d.scoreM = d.nScore ? d.somaScore / d.nScore : null; return d; })
+    .sort(function(a,b){
+      // Score nulo vai pro final; abaixo da meta vem primeiro (pior → melhor)
+      var sa = a.scoreM !== null ? a.scoreM : 999;
+      var sb = b.scoreM !== null ? b.scoreM : 999;
+      return sa - sb;
+    })
     .slice(0, 20);
 
-  if (!lista.length) { document.getElementById('teleDriversLista').innerHTML = '<div class="empty">Nenhum evento registrado no período filtrado.</div>'; return; }
+  if (!lista.length) { document.getElementById('teleDriversLista').innerHTML = '<div class="empty">Nenhum driver com score no período filtrado.</div>'; return; }
 
   var h = '<div class="hist-wrap"><table class="htable"><thead><tr>' +
     '<th>#</th><th>Driver ID</th><th>Transportadora</th><th>Placas</th><th>Rotas</th>' +
@@ -3027,18 +3035,25 @@ function renderTeleDrivers(dados) {
     '<th>Justificativa</th></tr></thead><tbody>';
 
   lista.forEach(function(d, i) {
-    var scoreM = d.nScore ? d.somaScore / d.nScore : null;
+    var scoreM = d.scoreM; // já calculado na ordenação
     var cor = scoreCorTele(scoreM);
-    var justificado = teleJaJustificado(d.driver);
+    var META_SCORE = 90;
+    var precisaJust = scoreM !== null && scoreM < META_SCORE;
+    var justificado = precisaJust && teleJaJustificado(d.driver);
     var placasArr = [...d.placas];
     var placa1 = placasArr[0] || '';
-    var btnJust = justificado
-      ? '<span class="tag-just-ok">✓ Justificado</span>'
-      : '<button class="btn-justificar-tele" onclick="abrirModalTele(\'' +
-          e(d.driver) + '\',\'' + e(placa1) + '\',\'' + e(d.mlp) + '\',\'' +
-          e(d.dataRecente) + '\',' + d.eventos + ')">Justificar</button>';
+    var btnJust = '';
+    if (precisaJust) {
+      btnJust = justificado
+        ? '<span class="tag-just-ok">✓ Justificado</span>'
+        : '<button class="btn-justificar-tele" onclick="abrirModalTele(\'' +
+            e(d.driver) + '\',\'' + e(placa1) + '\',\'' + e(d.mlp) + '\',\'' +
+            e(d.dataRecente) + '\',' + d.eventos + ')">Justificar</button>';
+    } else {
+      btnJust = '<span style="font-size:11px;color:var(--ok)">✓ Dentro da meta</span>';
+    }
 
-    h += '<tr' + (justificado ? '' : ' style="background:rgba(239,68,68,.04)"') + '>' +
+        h += '<tr' + (precisaJust && !justificado ? ' style="background:rgba(239,68,68,.04)"' : '') + '>' +
       '<td style="color:var(--text2)">' + (i+1) + '</td>' +
       '<td class="sid">' + e(d.driver) + '</td>' +
       '<td style="font-size:11px">' + e(d.mlp) + '</td>' +
