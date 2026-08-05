@@ -2810,9 +2810,14 @@ function salvarJustTele() {
   document.head.appendChild(s);
 }
 
-// Fecha modal ao clicar fora
-document.getElementById('modalTele').addEventListener('click', function(ev){
-  if (ev.target === this) fecharModalTele();
+// Fecha modal ao clicar fora — usa DOMContentLoaded pois o modal está após o script
+document.addEventListener('DOMContentLoaded', function() {
+  var _mTele = document.getElementById('modalTele');
+  if (_mTele) {
+    _mTele.addEventListener('click', function(ev){
+      if (ev.target === this) fecharModalTele();
+    });
+  }
 });
 document.addEventListener('keydown', function(ev){
   if (ev.key === 'Escape' && document.getElementById('modalTele').classList.contains('open')) fecharModalTele();
