@@ -2698,6 +2698,24 @@ function teleJaJustificado(driverId) {
   return teleJustCache.some(function(r) { return r.driver_id === String(driverId); });
 }
 
+// Mostra card de calibração quando motorista alega problema no equipamento
+function toggleCalibracao() {
+  var p3val  = radVal('mt_p3');
+  var just   = (document.getElementById('mt_p3_just').value || '').toLowerCase();
+  var card   = document.getElementById('mt_card_calibracao');
+  // Palavras-chave que sugerem alegação de equipamento
+  var palavras = ['calibra', 'equipamento', 'sensor', 'telemetria', 'gps', 'radar',
+                  'velocim', 'sistema', 'erro no', 'falha no', 'defeito'];
+  var mencionouEquip = palavras.some(function(p){ return just.includes(p); });
+  // Mostra se respondeu "Sim" E mencionou equipamento, OU se o usuário já tinha aberto
+  var mostrar = p3val === 'Sim' && mencionouEquip;
+  card.style.display = mostrar ? 'block' : 'none';
+  if (!mostrar) {
+    document.getElementById('mt_chamado_calib').value = '';
+    document.getElementById('mt_chamado_data').value  = '';
+  }
+}
+
 function abrirModalTele(driverId, placa, mlp, dataOcorrencia, totalEventos) {
   teleModalCtx = { driverId: driverId, placa: placa, mlp: mlp };
   // Pré-preenche campos automáticos
@@ -2717,6 +2735,10 @@ function abrirModalTele(driverId, placa, mlp, dataOcorrencia, totalEventos) {
   ['mt_ori1','mt_ori2','mt_ori3','mt_ori4','mt_ori5','mt_declaracao'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.checked = false;
   });
+  // Reseta card de calibração
+  document.getElementById('mt_card_calibracao').style.display = 'none';
+  document.getElementById('mt_chamado_calib').value = '';
+  document.getElementById('mt_chamado_data').value  = '';
   var btn = document.getElementById('btnSaveTele');
   btn.disabled = false; btn.textContent = 'Salvar justificativa';
   document.getElementById('modalTele').classList.add('open');
@@ -2788,7 +2810,9 @@ function salvarJustTele() {
     p7_detalhes        : document.getElementById('mt_p7_detalhes').value.trim(),
     p8_compromisso     : radVal('mt_p8'),
     orientacoes        : orientacoes.join('; '),
-    declaracao_aceita  : 'true'
+    declaracao_aceita  : 'true',
+    chamado_calibracao : document.getElementById('mt_chamado_calib').value.trim(),
+    chamado_data       : document.getElementById('mt_chamado_data').value
   };
 
   var cbName = 'cbsavetele_' + Date.now();
@@ -3305,10 +3329,41 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModa
           <div class="mt-field">
             <label class="mt-label">3. O motorista consegue explicar o motivo do excesso de velocidade?<span class="req">*</span></label>
             <div class="mt-radio-group">
-              <label class="mt-radio-item"><input type="radio" name="mt_p3" value="Sim"> Sim</label>
-              <label class="mt-radio-item"><input type="radio" name="mt_p3" value="Não / Não justificou"> Não / Não justificou</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p3" value="Sim" onchange="toggleCalibracao()"> Sim</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p3" value="Não / Não justificou" onchange="toggleCalibracao()"> Não / Não justificou</label>
             </div>
-            <textarea class="mt-textarea" id="mt_p3_just" placeholder="Registrar a justificativa apresentada pelo motorista" style="margin-top:6px"></textarea>
+            <textarea class="mt-textarea" id="mt_p3_just" placeholder="Registrar a justificativa apresentada pelo motorista" style="margin-top:6px" oninput="toggleCalibracao()"></textarea>
+          </div>
+
+          <!-- Card de calibração — aparece quando motorista alega problema no equipamento -->
+          <div id="mt_card_calibracao" style="display:none">
+            <div style="background:rgba(234,179,8,.08);border:1.5px solid rgba(234,179,8,.5);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <span style="font-size:20px;flex-shrink:0">⚙️</span>
+                <div>
+                  <div style="font-weight:700;font-size:13px;color:#fde047;margin-bottom:4px">Alegação de equipamento — Chamado de calibração obrigatório</div>
+                  <div style="font-size:12px;color:var(--text2);line-height:1.6">
+                    Quando o motorista alega que o veículo estava na velocidade correta e o equipamento registrou erro, é <strong style="color:#fde047">obrigatória</strong> a abertura de chamado de calibração junto ao suporte técnico.<br><br>
+                    ⚠️ <strong>Atenção:</strong> este número de chamado poderá ser <strong>solicitado por e-mail</strong> pela gestão a qualquer momento. <strong>Guarde as evidências</strong> da abertura do chamado (print, protocolo, e-mail de confirmação) para eventuais contestações.
+                  </div>
+                </div>
+              </div>
+              <div class="mt-field">
+                <label class="mt-label">Número do chamado de calibração<span class="req">*</span></label>
+                <input class="mt-input" id="mt_chamado_calib" type="text" placeholder="Ex: INC-2026-001234" style="background:#1e293b">
+              </div>
+              <div class="mt-field">
+                <label class="mt-label">Data de abertura do chamado</label>
+                <input class="mt-input" id="mt_chamado_data" type="date" style="background:#1e293b">
+              </div>
+              <div style="background:rgba(234,179,8,.05);border:1px solid rgba(234,179,8,.2);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.6">
+                📎 <strong style="color:#fde047">Evidências que devem ser preservadas:</strong><br>
+                • Print da tela com o protocolo/número do chamado<br>
+                • E-mail de confirmação de abertura do chamado<br>
+                • Resposta do suporte técnico (quando disponível)<br>
+                • Qualquer comprovante de que o equipamento foi verificado
+              </div>
+            </div>
           </div>
 
           <div class="mt-field">
