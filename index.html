@@ -2703,11 +2703,29 @@ function toggleCalibracao() {
   var p3val  = radVal('mt_p3');
   var just   = (document.getElementById('mt_p3_just').value || '').toLowerCase();
   var card   = document.getElementById('mt_card_calibracao');
-  // Palavras-chave que sugerem alegação de equipamento
-  var palavras = ['calibra', 'equipamento', 'sensor', 'telemetria', 'gps', 'radar',
-                  'velocim', 'sistema', 'erro no', 'falha no', 'defeito'];
+
+  // Palavras-chave baseadas em justificativas reais dos motoristas
+  var palavras = [
+    // Equipamento / sistema
+    'calibra', 'equipamento', 'sensor', 'telemetria', 'gps', 'radar',
+    'velocim', 'sistema', 'erro', 'falha', 'defeito', 'problema',
+    // Alegação de velocidade correta
+    'estava abaixo', 'abaixo da velocidade', 'dentro da velocidade',
+    'na velocidade', 'velocidade correta', 'respeitando',
+    'não estava passando', 'não passando', 'não ultrapassando',
+    'estava correto', 'corretamente',
+    // Sinalização / limite da via
+    'sinaliza', 'placa', 'limite da via', 'limite de velocidade',
+    'velocidade da via', 'velocidade permitida', 'velocidade máxima',
+    '80km', '60km', '40km', '100km', '110km',
+    // O sistema "acusando" / registrando errado
+    'acusava', 'acusando', 'acusa', 'constando', 'constava',
+    'registrando', 'marcando', 'apontando', 'indicando',
+    'mesmo assim', 'mesmo na velocidade', 'mesmo estando',
+    'porém estava', 'porem estava', 'mas estava', 'porém acusava'
+  ];
+
   var mencionouEquip = palavras.some(function(p){ return just.includes(p); });
-  // Mostra se respondeu "Sim" E mencionou equipamento, OU se o usuário já tinha aberto
   var mostrar = p3val === 'Sim' && mencionouEquip;
   card.style.display = mostrar ? 'block' : 'none';
   if (!mostrar) {
