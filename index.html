@@ -849,9 +849,9 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         <div style="display:flex;gap:6px;align-items:center">
           <select id="telePeriodoTipo" style="width:120px">
             <option value="livre">Datas livres</option>
-            <option value="hoje">Hoje</option>
+            <option value="ontem" selected>Ontem</option>
             <option value="semana">Esta semana</option>
-            <option value="7dias" selected>Últimos 7 dias</option>
+            <option value="7dias">Últimos 7 dias</option>
             <option value="30dias">Últimos 30 dias</option>
           </select>
           <input type="date" id="teleDe"  title="De" style="width:140px">
@@ -2818,8 +2818,9 @@ document.getElementById('telePeriodoTipo').addEventListener('change', function()
   function fmtISO(d) { return d.toISOString().slice(0,10); }
   function subDias(d, n) { var r = new Date(d); r.setDate(r.getDate() - n); return r; }
 
-  if (tipo === 'hoje') {
-    deEl.value = fmtISO(hoje); ateEl.value = fmtISO(hoje);
+  if (tipo === 'ontem') {
+    var ont = subDias(hoje, 1);
+    deEl.value = fmtISO(ont); ateEl.value = fmtISO(ont);
   } else if (tipo === 'semana') {
     // segunda-feira desta semana
     var dow = (hoje.getDay() + 6) % 7; // 0=seg
@@ -2836,12 +2837,12 @@ document.getElementById('telePeriodoTipo').addEventListener('change', function()
   if (tipo !== 'livre') carregarTelemetria();
 });
 
-// Inicializa com últimos 7 dias ao abrir a view
+// Inicializa com ontem ao abrir a view (dados são D-1)
 (function() {
-  var hoje = new Date();
-  var de7  = new Date(hoje); de7.setDate(de7.getDate() - 6);
-  document.getElementById('teleDe').value  = de7.toISOString().slice(0,10);
-  document.getElementById('teleAte').value = hoje.toISOString().slice(0,10);
+  var ontem = new Date(); ontem.setDate(ontem.getDate() - 1);
+  var s = ontem.toISOString().slice(0,10);
+  document.getElementById('teleDe').value  = s;
+  document.getElementById('teleAte').value = s;
 })();
 
 // Abas internas da view Telemetria
