@@ -819,7 +819,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="dots_border"></div>
       <span class="nav-icon">📦</span> <span>Pacotes Faltantes</span>
     </button>
-    <button class="nav-item ativo" data-view="pendentes" onclick="abrirView('pendentes')">
+    <button class="nav-item" data-view="pendentes" onclick="abrirView('pendentes')">
       <div class="dots_border"></div>
       <span class="nav-icon">📥</span> <span>Pendentes</span>
     </button>
@@ -827,7 +827,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="dots_border"></div>
       <span class="nav-icon">🚚</span> <span>Monitoramento de Pátio</span>
     </button>
-    <button class="nav-item" data-view="telemetria" onclick="abrirView('telemetria')">
+    <button class="nav-item ativo" data-view="telemetria" onclick="abrirView('telemetria')">
       <div class="dots_border"></div>
       <span class="nav-icon">📡</span> <span>Telemetria</span>
     </button>
@@ -1327,11 +1327,10 @@ function iniciarApp() {
   });
 
   if (permitidas) {
-    // abre direto a primeira ferramenta permitida e carrega os dados dela
     abrirView(permitidas[0], true);
   } else {
-    // Pendentes é a tela de entrada padrão (Pacotes Faltantes foi desativado)
-    abrirView('pendentes', true);
+    // Telemetria é a tela de entrada padrão
+    abrirView('telemetria', true);
   }
 }
 
@@ -1349,7 +1348,7 @@ function sair() {
   document.getElementById('headerUser').classList.remove('show');
   document.getElementById('btnMenu').style.display = 'none';
   fecharMenu();
-  abrirView('pendentes', true);
+  abrirView('telemetria', true);
   document.getElementById('selTransp').value = '';
   document.getElementById('inputSenha').value = '';
   document.getElementById('inputNome').value  = '';
@@ -2843,6 +2842,7 @@ function carregarTelemetria() {
     if (d && !d.erro) {
       teleCache = d.registros || [];
       teleCarregado = true;
+      populaFiltrosTele(); // popula dropdowns uma vez
       // Carrega histórico de justificativas em paralelo
       carregarJustTele(function() { renderTelemetria(); });
     } else {
@@ -2890,26 +2890,27 @@ function scoreLabelTele(s) {
 function fmt1(n) { return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('pt-BR', {maximumFractionDigits:1}); }
 function fmtInt2(n) { return (n === null || n === undefined || n === 0) ? '—' : Math.round(n).toLocaleString('pt-BR'); }
 
+// Popula dropdowns UMA VEZ quando os dados chegam — não a cada render
+function populaFiltrosTele() {
+  var transpSet = {}, tipoSet = {};
+  teleCache.forEach(function(r){
+    if (r.mlp)  transpSet[r.mlp]  = true;
+    if (r.tipo) tipoSet[r.tipo]   = true;
+  });
+  var sel = document.getElementById('teleFiltroTransp');
+  sel.innerHTML = '<option value="">Todas as transportadoras</option>' +
+    Object.keys(transpSet).sort().map(function(t){
+      return '<option value="' + e(t) + '">' + e(t) + '</option>';
+    }).join('');
+  var selTipo = document.getElementById('teleFiltroTipo');
+  selTipo.innerHTML = '<option value="">Todos os tipos (Facility)</option>' +
+    Object.keys(tipoSet).sort().map(function(t){
+      return '<option value="' + e(t) + '">' + e(t) + '</option>';
+    }).join('');
+}
+
 function renderTelemetria() {
   var dados = teleFiltrar();
-
-  // Popula filtro de transportadoras
-  var transpSet = {};
-  teleCache.forEach(function(r){ if(r.mlp) transpSet[r.mlp] = true; });
-  var transpList = Object.keys(transpSet).sort();
-  var sel = document.getElementById('teleFiltroTransp');
-  var curVal = sel.value;
-  sel.innerHTML = '<option value="">Todas as transportadoras</option>' +
-    transpList.map(function(t){ return '<option value="' + e(t) + '"' + (t === curVal ? ' selected' : '') + '>' + e(t) + '</option>'; }).join('');
-
-  // Popula filtro de tipo_operacao dinamicamente
-  var tipoSet = {};
-  teleCache.forEach(function(r){ if(r.tipo) tipoSet[r.tipo] = true; });
-  var tipoList = Object.keys(tipoSet).sort();
-  var selTipo = document.getElementById('teleFiltroTipo');
-  var curTipo = selTipo.value;
-  selTipo.innerHTML = '<option value="">Todos os tipos</option>' +
-    tipoList.map(function(t){ return '<option value="' + e(t) + '"' + (t === curTipo ? ' selected' : '') + '>' + e(t) + '</option>'; }).join('');
 
   // KPIs
   var driversSet = {}, totalEvt = 0, totalRotas = 0, criticos = 0, somaScore = 0, nScore = 0;
@@ -3140,12 +3141,13 @@ document.querySelectorAll('[data-teletab]').forEach(function(t){
     document.getElementById('telePaneTransp').style.display  = n==='transp'?'block':'none';
     document.getElementById('telePaneDrivers').style.display = n==='drivers'?'block':'none';
     document.getElementById('telePaneDetalhe').style.display = n==='detalhe'?'block':'none';
+    // Renderiza o painel ativo quando troca de aba
+    if (teleCarregado) renderTelemetria();
   });
 });
 
 // ── ABAS ─────────────────────────────────────────────────────
-// ── ABAS ─────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(function(t){
+document.querySelectorAll('.tab[data-tab], .tab[data-otab], .tab[data-ondastab]').forEach(function(t){
   t.addEventListener('click',function(){
     document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('ativo');});
     t.classList.add('ativo');
