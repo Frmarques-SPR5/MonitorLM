@@ -2740,9 +2740,9 @@ function salvarJustTele() {
 
   // Validações
   var erros = [];
-  if (!document.getElementById('mt_nome').value.trim()) erros.push('Nome do motorista');
-  if (!document.getElementById('mt_cpf').value.trim()) erros.push('CPF');
-  if (!document.getElementById('mt_cnh').value.trim()) erros.push('CNH');
+  if (!document.getElementById('mt_nome').value.trim()) erros.push('Primeiro nome do motorista');
+  if (!document.getElementById('mt_cpf').value.trim() || document.getElementById('mt_cpf').value.trim().length !== 4) erros.push('CPF (4 dígitos)');
+  if (!document.getElementById('mt_cnh').value.trim() || document.getElementById('mt_cnh').value.trim().length !== 4) erros.push('CNH (4 dígitos)');
   if (!document.getElementById('mt_cnh_cat').value) erros.push('Categoria da CNH');
   if (!document.getElementById('mt_cnh_validade').value) erros.push('Validade da CNH');
   if (!document.getElementById('mt_total_ocorrencias').value) erros.push('Total de ocorrências');
@@ -3229,20 +3229,20 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModa
         <div class="modal-tele-secao-titulo">👤 1. Identificação</div>
         <div class="mt-grid">
           <div class="mt-field">
-            <label class="mt-label">Nome completo do motorista<span class="req">*</span></label>
-            <input class="mt-input" id="mt_nome" type="text" placeholder="Nome completo">
+            <label class="mt-label">Primeiro nome do motorista<span class="req">*</span></label>
+            <input class="mt-input" id="mt_nome" type="text" placeholder="Primeiro nome" maxlength="50">
           </div>
           <div class="mt-field">
             <label class="mt-label">ID Driver<span class="req">*</span></label>
             <input class="mt-input" id="mt_driver_id" type="text" readonly style="opacity:.7">
           </div>
           <div class="mt-field">
-            <label class="mt-label">CPF<span class="req">*</span></label>
-            <input class="mt-input" id="mt_cpf" type="text" placeholder="000.000.000-00">
+            <label class="mt-label">CPF (últimos 4 dígitos)<span class="req">*</span></label>
+            <input class="mt-input" id="mt_cpf" type="text" placeholder="ex: 1234" maxlength="4" pattern="[0-9]{4}">
           </div>
           <div class="mt-field">
-            <label class="mt-label">CNH (número)<span class="req">*</span></label>
-            <input class="mt-input" id="mt_cnh" type="text" placeholder="Número da CNH">
+            <label class="mt-label">CNH (últimos 4 dígitos)<span class="req">*</span></label>
+            <input class="mt-input" id="mt_cnh" type="text" placeholder="ex: 5678" maxlength="4" pattern="[0-9]{4}">
           </div>
           <div class="mt-field">
             <label class="mt-label">CNH (categoria)<span class="req">*</span></label>
