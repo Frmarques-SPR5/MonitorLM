@@ -642,6 +642,115 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 
 /* SVG helper */
 .arrow-svg { display: inline-block; }
+
+/* ===== MODAL JUSTIFICATIVA TELEMETRIA ===== */
+.modal-tele-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.72); z-index: 600;
+  align-items: flex-start; justify-content: center;
+  padding: 16px; overflow-y: auto;
+}
+.modal-tele-overlay.open { display: flex; }
+.modal-tele-card {
+  background: #1e293b; border: 1px solid #334155;
+  border-radius: 14px; padding: 0; width: 100%;
+  max-width: 680px; margin: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  overflow: hidden;
+}
+.modal-tele-header {
+  background: linear-gradient(135deg,#1e3a5f,#1e293b);
+  padding: 18px 22px; border-bottom: 1px solid #334155;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-tele-header h3 { font-size: 15px; font-weight: 700; margin: 0; }
+.modal-tele-header .close-btn {
+  background: none; border: none; color: var(--text2);
+  font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1;
+}
+.modal-tele-header .close-btn:hover { color: #fff; }
+.modal-tele-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 18px; }
+.modal-tele-secao {
+  background: #0f172a; border: 1px solid #334155;
+  border-radius: 10px; padding: 14px 16px;
+}
+.modal-tele-secao-titulo {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--azul);
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid #1e293b;
+  display: flex; align-items: center; gap: 6px;
+}
+.mt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mt-grid.full { grid-template-columns: 1fr; }
+.mt-field { display: flex; flex-direction: column; gap: 4px; }
+.mt-label { font-size: 11px; color: var(--text2); font-weight: 600; }
+.mt-label .req { color: var(--danger); margin-left: 2px; }
+.mt-input, .mt-select, .mt-textarea {
+  background: #1e293b; border: 1.5px solid #334155;
+  border-radius: 6px; padding: 8px 10px; color: var(--text);
+  font-size: 13px; font-family: inherit; outline: none;
+  transition: border-color .15s;
+}
+.mt-input:focus, .mt-select:focus, .mt-textarea:focus { border-color: var(--azul); }
+.mt-textarea { resize: vertical; min-height: 60px; }
+.mt-radio-group { display: flex; flex-direction: column; gap: 6px; }
+.mt-radio-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; cursor: pointer;
+  padding: 6px 10px; border-radius: 6px;
+  border: 1px solid transparent; transition: background .12s;
+}
+.mt-radio-item:hover { background: rgba(255,255,255,.04); }
+.mt-radio-item input[type=radio] { accent-color: var(--azul); width: 15px; height: 15px; }
+.mt-check-group { display: flex; flex-direction: column; gap: 6px; }
+.mt-check-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; cursor: pointer; padding: 5px 8px;
+  border-radius: 6px; border: 1px solid transparent;
+  transition: background .12s; line-height: 1.4;
+}
+.mt-check-item:hover { background: rgba(255,255,255,.04); }
+.mt-check-item input[type=checkbox] { accent-color: var(--azul); width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+.mt-decl {
+  background: rgba(37,99,235,.1); border: 1px solid rgba(37,99,235,.3);
+  border-radius: 8px; padding: 12px 14px; font-size: 12px;
+  color: var(--text2); line-height: 1.6;
+}
+.mt-decl strong { color: var(--text); display: block; margin-bottom: 6px; }
+.mt-decl-check {
+  display: flex; align-items: flex-start; gap: 10px; margin-top: 12px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.mt-decl-check input { accent-color: var(--ok); width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+.modal-tele-footer {
+  padding: 14px 22px; border-top: 1px solid #334155;
+  display: flex; gap: 10px; justify-content: flex-end;
+  background: #0f172a;
+}
+.btn-tele-cancel {
+  background: none; border: 1px solid #334155; border-radius: 6px;
+  padding: 9px 18px; color: var(--text2); font-size: 13px; cursor: pointer; font-weight: 600;
+}
+.btn-tele-save {
+  background: var(--azul); color: #fff; border: none;
+  padding: 9px 24px; border-radius: 6px; font-size: 13px;
+  font-weight: 700; cursor: pointer;
+}
+.btn-tele-save:disabled { opacity: .5; cursor: default; }
+.tag-just-ok { font-size: 11px; color: var(--ok); font-weight: 700; }
+.tag-just-pend { font-size: 11px; color: var(--warn); font-weight: 700; }
+.btn-justificar-tele {
+  background: transparent; color: var(--amarelo);
+  border: 1px solid var(--amarelo); padding: 3px 10px;
+  border-radius: 6px; font-size: 11px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+.btn-justificar-tele:hover { background: rgba(242,201,76,.15); }
+@media (max-width: 600px) {
+  .mt-grid { grid-template-columns: 1fr; }
+  .modal-tele-card { margin: 0; border-radius: 10px; }
+}
 </style>
 </head>
 <body>
@@ -844,25 +953,32 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 
     <!-- Filtros -->
     <div class="filtros" style="flex-wrap:wrap;gap:8px;margin-bottom:14px">
-      <div style="display:flex;flex-direction:column;gap:3px">
+      <!-- Linha 1: período (D-1 em destaque) -->
+      <div style="display:flex;flex-direction:column;gap:3px;width:100%">
         <label style="font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Período</label>
-        <div style="display:flex;gap:6px;align-items:center">
-          <select id="telePeriodoTipo" style="width:120px">
-            <option value="livre">Datas livres</option>
-            <option value="ontem" selected>Ontem</option>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <select id="telePeriodoTipo" style="width:140px">
+            <option value="ontem" selected>📅 Ontem (D-1)</option>
             <option value="semana">Esta semana</option>
             <option value="7dias">Últimos 7 dias</option>
             <option value="30dias">Últimos 30 dias</option>
+            <option value="livre">Datas livres</option>
           </select>
-          <input type="date" id="teleDe"  title="De" style="width:140px">
+          <input type="date" id="teleDe"  title="De"  style="width:140px">
           <span style="color:var(--text2);font-size:12px">até</span>
           <input type="date" id="teleAte" title="Até" style="width:140px">
         </div>
       </div>
-      <select id="teleFiltroTransp" style="min-width:160px;align-self:flex-end">
+      <!-- Linha 2: outros filtros -->
+      <select id="teleFiltroTipo" style="min-width:140px">
+        <option value="">Todos os tipos</option>
+        <option value="SVC">SVC</option>
+        <option value="EPR13">EPR13</option>
+      </select>
+      <select id="teleFiltroTransp" style="min-width:160px">
         <option value="">Todas as transportadoras</option>
       </select>
-      <input type="text" id="teleBuscaDriver" placeholder="Buscar driver ID ou placa..." style="min-width:200px;align-self:flex-end">
+      <input type="text" id="teleBuscaDriver" placeholder="Buscar driver ID ou placa..." style="min-width:200px">
       <button class="btn-atualizar" onclick="carregarTelemetria()" style="align-self:flex-end">↻ Buscar</button>
     </div>
 
@@ -2556,7 +2672,152 @@ document.querySelectorAll('[data-btab]').forEach(function(t){
 });
 
 // ════════════════════════════════════════════════════════════
-// TELEMETRIA — MonitorLM
+// JUSTIFICATIVAS TELEMETRIA
+// ════════════════════════════════════════════════════════════
+var teleJustCache = []; // histórico de justificativas já salvas
+var teleJustCarregado = false;
+var teleModalCtx = null; // contexto do driver que está sendo justificado
+
+function carregarJustTele(cb) {
+  var params = 'action=getJustTele';
+  if (sessao && !sessao.isMeli) params += '&transportadora=' + encodeURIComponent(sessao.transp);
+  var cbName = 'cbjusttele_' + Date.now();
+  window[cbName] = function(d) {
+    delete window[cbName];
+    teleJustCache = (d && d.registros) ? d.registros : [];
+    teleJustCarregado = true;
+    if (cb) cb();
+  };
+  var s = document.createElement('script');
+  s.src = API + '?' + params + '&callback=' + cbName + '&t=' + Date.now();
+  document.head.appendChild(s);
+}
+
+// Verifica se um driver_id já foi justificado no cache
+function teleJaJustificado(driverId) {
+  return teleJustCache.some(function(r) { return r.driver_id === String(driverId); });
+}
+
+function abrirModalTele(driverId, placa, mlp, dataOcorrencia, totalEventos) {
+  teleModalCtx = { driverId: driverId, placa: placa, mlp: mlp };
+  // Pré-preenche campos automáticos
+  document.getElementById('mt_driver_id').value        = driverId || '';
+  document.getElementById('mt_placa').value            = placa || '';
+  document.getElementById('mt_data_ocorrencia').value  = dataOcorrencia || '';
+  document.getElementById('mt_total_ocorrencias').value= totalEventos || '';
+  // Limpa campos editáveis
+  ['mt_nome','mt_cpf','mt_cnh','mt_cnh_validade','mt_p1_obs','mt_p2_obs',
+   'mt_p3_just','mt_p4_detalhes','mt_p6_obs','mt_p7_detalhes'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('mt_cnh_cat').value = '';
+  ['mt_p1','mt_p2','mt_p3','mt_p4','mt_p5','mt_p6','mt_p7','mt_p8'].forEach(function(name){
+    document.querySelectorAll('input[name="'+name+'"]').forEach(function(r){ r.checked = false; });
+  });
+  ['mt_ori1','mt_ori2','mt_ori3','mt_ori4','mt_ori5','mt_declaracao'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.checked = false;
+  });
+  var btn = document.getElementById('btnSaveTele');
+  btn.disabled = false; btn.textContent = 'Salvar justificativa';
+  document.getElementById('modalTele').classList.add('open');
+  document.getElementById('modalTele').scrollTop = 0;
+  setTimeout(function(){ document.getElementById('mt_nome').focus(); }, 100);
+}
+
+function fecharModalTele() {
+  document.getElementById('modalTele').classList.remove('open');
+  teleModalCtx = null;
+}
+
+function radVal(name) {
+  var sel = document.querySelector('input[name="'+name+'"]:checked');
+  return sel ? sel.value : '';
+}
+
+function salvarJustTele() {
+  var ctx = teleModalCtx;
+  if (!ctx) return;
+
+  // Validações
+  var erros = [];
+  if (!document.getElementById('mt_nome').value.trim()) erros.push('Nome do motorista');
+  if (!document.getElementById('mt_cpf').value.trim()) erros.push('CPF');
+  if (!document.getElementById('mt_cnh').value.trim()) erros.push('CNH');
+  if (!document.getElementById('mt_cnh_cat').value) erros.push('Categoria da CNH');
+  if (!document.getElementById('mt_cnh_validade').value) erros.push('Validade da CNH');
+  if (!document.getElementById('mt_total_ocorrencias').value) erros.push('Total de ocorrências');
+  ['mt_p1','mt_p2','mt_p3','mt_p4','mt_p5','mt_p6','mt_p7','mt_p8'].forEach(function(n){
+    if (!radVal(n)) erros.push('Pergunta ' + n.replace('mt_p','') + ' da entrevista');
+  });
+  if (!document.getElementById('mt_declaracao').checked) erros.push('Aceitar a declaração');
+  if (erros.length) { toast('Preencha: ' + erros.slice(0,3).join(', ') + (erros.length>3?' e mais '+( erros.length-3)+'...':''), 1); return; }
+
+  var orientacoes = [];
+  ['mt_ori1','mt_ori2','mt_ori3','mt_ori4','mt_ori5'].forEach(function(id,i){
+    if (document.getElementById(id).checked) orientacoes.push('Orientação '+(i+1));
+  });
+
+  var btn = document.getElementById('btnSaveTele');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  var payload = {
+    action             : 'salvarJustTele',
+    transportadora     : ctx.mlp || (sessao ? sessao.transp : ''),
+    responsavel        : sessao ? sessao.nome || sessao.transp : '',
+    driver_id          : ctx.driverId,
+    nome_motorista     : document.getElementById('mt_nome').value.trim(),
+    cpf                : document.getElementById('mt_cpf').value.trim(),
+    cnh                : document.getElementById('mt_cnh').value.trim(),
+    cnh_cat            : document.getElementById('mt_cnh_cat').value,
+    cnh_validade       : document.getElementById('mt_cnh_validade').value,
+    placa              : ctx.placa,
+    data_ocorrencia    : document.getElementById('mt_data_ocorrencia').value,
+    total_ocorrencias  : document.getElementById('mt_total_ocorrencias').value,
+    p1_confirma        : radVal('mt_p1'),
+    p1_obs             : document.getElementById('mt_p1_obs').value.trim(),
+    p2_ciente_limite   : radVal('mt_p2'),
+    p2_obs             : document.getElementById('mt_p2_obs').value.trim(),
+    p3_explica         : radVal('mt_p3'),
+    p3_justificativa   : document.getElementById('mt_p3_just').value.trim(),
+    p4_alertado        : radVal('mt_p4'),
+    p4_detalhes        : document.getElementById('mt_p4_detalhes').value.trim(),
+    p5_conhece_politica: radVal('mt_p5'),
+    p6_pressao         : radVal('mt_p6'),
+    p6_obs             : document.getElementById('mt_p6_obs').value.trim(),
+    p7_fatores         : radVal('mt_p7'),
+    p7_detalhes        : document.getElementById('mt_p7_detalhes').value.trim(),
+    p8_compromisso     : radVal('mt_p8'),
+    orientacoes        : orientacoes.join('; '),
+    declaracao_aceita  : 'true'
+  };
+
+  var cbName = 'cbsavetele_' + Date.now();
+  window[cbName] = function(d) {
+    delete window[cbName];
+    btn.disabled = false; btn.textContent = 'Salvar justificativa';
+    if (d && d.ok) {
+      // Marca localmente como justificado
+      teleJustCache.push({ driver_id: String(ctx.driverId), transportadora: payload.transportadora, data_registro: d.ts });
+      fecharModalTele();
+      toast('Justificativa salva com sucesso! ✓', 0);
+      renderTelemetria(); // atualiza o ranking
+    } else {
+      toast('Erro ao salvar: ' + ((d && d.erro) || 'desconhecido'), 1);
+    }
+  };
+  var qs = Object.keys(payload).map(function(k){ return k + '=' + encodeURIComponent(payload[k]); }).join('&');
+  var s = document.createElement('script');
+  s.src = API + '?' + qs + '&callback=' + cbName;
+  document.head.appendChild(s);
+}
+
+// Fecha modal ao clicar fora
+document.getElementById('modalTele').addEventListener('click', function(ev){
+  if (ev.target === this) fecharModalTele();
+});
+document.addEventListener('keydown', function(ev){
+  if (ev.key === 'Escape' && document.getElementById('modalTele').classList.contains('open')) fecharModalTele();
+});
 // Lê dados da aba "tele" via API do MonitorLM
 // ════════════════════════════════════════════════════════════
 var teleCache = [];
@@ -2582,7 +2843,8 @@ function carregarTelemetria() {
     if (d && !d.erro) {
       teleCache = d.registros || [];
       teleCarregado = true;
-      renderTelemetria();
+      // Carrega histórico de justificativas em paralelo
+      carregarJustTele(function() { renderTelemetria(); });
     } else {
       document.getElementById('teleSub').textContent = 'Erro: ' + ((d && d.erro) || 'desconhecido');
     }
@@ -2597,12 +2859,13 @@ function carregarTelemetria() {
 
 function teleFiltrar() {
   var transp = document.getElementById('teleFiltroTransp').value;
+  var tipo   = document.getElementById('teleFiltroTipo').value;
   var busca  = (document.getElementById('teleBuscaDriver').value || '').toLowerCase().trim();
   return teleCache.filter(function(r) {
-    if (transp && r.mlp !== transp) return false;
-    if (busca && !r.driver.toLowerCase().includes(busca) && !r.placa.toLowerCase().includes(busca)) return false;
+    if (tipo   && r.tipo !== tipo) return false;
+    if (transp && r.mlp  !== transp) return false;
+    if (busca && !(r.driver||'').toLowerCase().includes(busca) && !(r.placa||'').toLowerCase().includes(busca)) return false;
     if (!sessao.isMeli) {
-      // filtra pela transportadora do login
       var mN = normTransp(r.mlp);
       if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') return mN === normTransp('BLD LOGÍSTICA');
       return mN === normTransp(sessao.transp);
@@ -2638,6 +2901,15 @@ function renderTelemetria() {
   var curVal = sel.value;
   sel.innerHTML = '<option value="">Todas as transportadoras</option>' +
     transpList.map(function(t){ return '<option value="' + e(t) + '"' + (t === curVal ? ' selected' : '') + '>' + e(t) + '</option>'; }).join('');
+
+  // Popula filtro de tipo_operacao dinamicamente
+  var tipoSet = {};
+  teleCache.forEach(function(r){ if(r.tipo) tipoSet[r.tipo] = true; });
+  var tipoList = Object.keys(tipoSet).sort();
+  var selTipo = document.getElementById('teleFiltroTipo');
+  var curTipo = selTipo.value;
+  selTipo.innerHTML = '<option value="">Todos os tipos</option>' +
+    tipoList.map(function(t){ return '<option value="' + e(t) + '"' + (t === curTipo ? ' selected' : '') + '>' + e(t) + '</option>'; }).join('');
 
   // KPIs
   var driversSet = {}, totalEvt = 0, totalRotas = 0, criticos = 0, somaScore = 0, nScore = 0;
@@ -2718,8 +2990,9 @@ function renderTeleDrivers(dados) {
   dados.forEach(function(r) {
     var k = r.driver;
     if (!k) return;
-    if (!por[k]) por[k] = { driver:k, mlp:r.mlp||'—', n:0, nScore:0, somaScore:0, eventos:0, placas:new Set(),
-      vel_via:0, curva:0, aceler:0, frenagem:0, cinto:0 };
+    if (!por[k]) por[k] = { driver:k, mlp:r.mlp||'—', n:0, nScore:0, somaScore:0, eventos:0,
+      placas:new Set(), vel_via:0, curva:0, aceler:0, frenagem:0, cinto:0,
+      dataRecente: r.data || '' };
     por[k].n++;
     por[k].eventos += r.eventos || 0;
     por[k].placas.add(r.placa);
@@ -2729,6 +3002,7 @@ function renderTeleDrivers(dados) {
     por[k].aceler    += r.aceler    || 0;
     por[k].frenagem  += r.frenagem  || 0;
     por[k].cinto     += r.cinto     || 0;
+    if (r.data > por[k].dataRecente) por[k].dataRecente = r.data;
   });
 
   var lista = Object.values(por)
@@ -2741,16 +3015,25 @@ function renderTeleDrivers(dados) {
   var h = '<div class="hist-wrap"><table class="htable"><thead><tr>' +
     '<th>#</th><th>Driver ID</th><th>Transportadora</th><th>Placas</th><th>Rotas</th>' +
     '<th>Score</th><th>Eventos</th><th>Vel. via</th><th>Curva</th><th>Aceleração</th><th>Frenagem</th><th>Cinto</th>' +
-    '</tr></thead><tbody>';
+    '<th>Justificativa</th></tr></thead><tbody>';
 
   lista.forEach(function(d, i) {
     var scoreM = d.nScore ? d.somaScore / d.nScore : null;
     var cor = scoreCorTele(scoreM);
-    h += '<tr>' +
+    var justificado = teleJaJustificado(d.driver);
+    var placasArr = [...d.placas];
+    var placa1 = placasArr[0] || '';
+    var btnJust = justificado
+      ? '<span class="tag-just-ok">✓ Justificado</span>'
+      : '<button class="btn-justificar-tele" onclick="abrirModalTele(\'' +
+          e(d.driver) + '\',\'' + e(placa1) + '\',\'' + e(d.mlp) + '\',\'' +
+          e(d.dataRecente) + '\',' + d.eventos + ')">Justificar</button>';
+
+    h += '<tr' + (justificado ? '' : ' style="background:rgba(239,68,68,.04)"') + '>' +
       '<td style="color:var(--text2)">' + (i+1) + '</td>' +
       '<td class="sid">' + e(d.driver) + '</td>' +
       '<td style="font-size:11px">' + e(d.mlp) + '</td>' +
-      '<td style="font-size:11px;color:var(--text2)">' + [...d.placas].join(', ') + '</td>' +
+      '<td style="font-size:11px;color:var(--text2)">' + placasArr.join(', ') + '</td>' +
       '<td style="text-align:center">' + d.n + '</td>' +
       '<td><span style="font-weight:700;color:' + cor + '">' + (scoreM !== null ? fmt1(scoreM) : '—') + '</span></td>' +
       '<td style="text-align:center;font-weight:800;color:var(--danger)">' + d.eventos + '</td>' +
@@ -2759,6 +3042,7 @@ function renderTeleDrivers(dados) {
       '<td style="text-align:center">' + (d.aceler||'0') + '</td>' +
       '<td style="text-align:center">' + (d.frenagem||'0') + '</td>' +
       '<td style="text-align:center">' + (d.cinto||'0') + '</td>' +
+      '<td>' + btnJust + '</td>' +
       '</tr>';
   });
   h += '</tbody></table></div>';
@@ -2778,7 +3062,7 @@ function renderTeleDetalhe(dados) {
   });
 
   var h = '<div class="hist-wrap" style="max-height:500px;overflow-y:auto"><table class="htable"><thead><tr>' +
-    '<th>Data</th><th>Driver</th><th>Placa</th><th>Transp.</th>' +
+    '<th>Data</th><th>Tipo</th><th>Driver</th><th>Placa</th><th>Transp.</th>' +
     '<th>Score</th><th>Eventos</th><th>Vel.via</th><th>Curva</th><th>Acel.</th><th>Fren.</th>' +
     '<th>SPR</th><th>ORH</th>' +
     '</tr></thead><tbody>';
@@ -2787,6 +3071,7 @@ function renderTeleDetalhe(dados) {
     var cor = scoreCorTele(r.score);
     h += '<tr>' +
       '<td style="white-space:nowrap;font-size:11px;color:var(--text2)">' + e(r.data) + '</td>' +
+      '<td><span style="font-size:10px;font-weight:700;background:rgba(52,131,250,.15);color:#60a5fa;padding:1px 7px;border-radius:999px">' + e(r.tipo||'—') + '</span></td>' +
       '<td class="sid">' + e(r.driver) + '</td>' +
       '<td style="font-size:11px">' + e(r.placa) + '</td>' +
       '<td style="font-size:11px;color:var(--text2)">' + e(r.mlp||'—') + '</td>' +
@@ -2806,6 +3091,7 @@ function renderTeleDetalhe(dados) {
 
 // Filtros da view Telemetria
 document.getElementById('teleFiltroTransp').addEventListener('change', function(){ if(teleCarregado) renderTelemetria(); });
+document.getElementById('teleFiltroTipo').addEventListener('change', function(){ if(teleCarregado) renderTelemetria(); });
 document.getElementById('teleBuscaDriver').addEventListener('input', function(){ if(teleCarregado) renderTelemetria(); });
 
 // Período rápido: preenche as datas automaticamente
@@ -2942,5 +3228,183 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModa
 })();
 
 </script>
+<!-- MODAL: JUSTIFICATIVA TELEMETRIA -->
+<div class="modal-tele-overlay" id="modalTele">
+  <div class="modal-tele-card">
+    <div class="modal-tele-header">
+      <h3>📋 Justificativa de Desvio — Telemetria</h3>
+      <button class="close-btn" onclick="fecharModalTele()">✕</button>
+    </div>
+    <div class="modal-tele-body">
+
+      <!-- 1. Identificação -->
+      <div class="modal-tele-secao">
+        <div class="modal-tele-secao-titulo">👤 1. Identificação</div>
+        <div class="mt-grid">
+          <div class="mt-field">
+            <label class="mt-label">Nome completo do motorista<span class="req">*</span></label>
+            <input class="mt-input" id="mt_nome" type="text" placeholder="Nome completo">
+          </div>
+          <div class="mt-field">
+            <label class="mt-label">ID Driver<span class="req">*</span></label>
+            <input class="mt-input" id="mt_driver_id" type="text" readonly style="opacity:.7">
+          </div>
+          <div class="mt-field">
+            <label class="mt-label">CPF<span class="req">*</span></label>
+            <input class="mt-input" id="mt_cpf" type="text" placeholder="000.000.000-00">
+          </div>
+          <div class="mt-field">
+            <label class="mt-label">CNH (número)<span class="req">*</span></label>
+            <input class="mt-input" id="mt_cnh" type="text" placeholder="Número da CNH">
+          </div>
+          <div class="mt-field">
+            <label class="mt-label">CNH (categoria)<span class="req">*</span></label>
+            <select class="mt-select" id="mt_cnh_cat">
+              <option value="">Selecione</option>
+              <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+            </select>
+          </div>
+          <div class="mt-field">
+            <label class="mt-label">Validade da CNH<span class="req">*</span></label>
+            <input class="mt-input" id="mt_cnh_validade" type="date">
+          </div>
+          <div class="mt-field">
+            <label class="mt-label">Veículo (placa)<span class="req">*</span></label>
+            <input class="mt-input" id="mt_placa" type="text" readonly style="opacity:.7">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Dados da Telemetria -->
+      <div class="modal-tele-secao">
+        <div class="modal-tele-secao-titulo">📡 2. Dados da Telemetria</div>
+        <div class="mt-grid">
+          <div class="mt-field">
+            <label class="mt-label">Data da ocorrência<span class="req">*</span></label>
+            <input class="mt-input" id="mt_data_ocorrencia" type="text" readonly style="opacity:.7">
+          </div>
+          <div class="mt-field">
+            <label class="mt-label">Total de ocorrências no período<span class="req">*</span></label>
+            <input class="mt-input" id="mt_total_ocorrencias" type="number" min="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Entrevista -->
+      <div class="modal-tele-secao">
+        <div class="modal-tele-secao-titulo">🗣️ 3. Entrevista com o Motorista</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div class="mt-field">
+            <label class="mt-label">1. O motorista confirma que estava conduzindo durante a ocorrência?<span class="req">*</span></label>
+            <div class="mt-radio-group" id="mt_p1">
+              <label class="mt-radio-item"><input type="radio" name="mt_p1" value="Sim"> Sim</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p1" value="Não"> Não</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p1" value="Não sabe informar"> Não sabe informar</label>
+            </div>
+            <input class="mt-input" id="mt_p1_obs" type="text" placeholder="Observações (se necessário)" style="margin-top:6px">
+          </div>
+
+          <div class="mt-field">
+            <label class="mt-label">2. O motorista estava ciente do limite de velocidade da via?<span class="req">*</span></label>
+            <div class="mt-radio-group">
+              <label class="mt-radio-item"><input type="radio" name="mt_p2" value="Sim"> Sim</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p2" value="Não"> Não</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p2" value="Em parte"> Em parte</label>
+            </div>
+            <input class="mt-input" id="mt_p2_obs" type="text" placeholder="Observações (se necessário)" style="margin-top:6px">
+          </div>
+
+          <div class="mt-field">
+            <label class="mt-label">3. O motorista consegue explicar o motivo do excesso de velocidade?<span class="req">*</span></label>
+            <div class="mt-radio-group">
+              <label class="mt-radio-item"><input type="radio" name="mt_p3" value="Sim"> Sim</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p3" value="Não / Não justificou"> Não / Não justificou</label>
+            </div>
+            <textarea class="mt-textarea" id="mt_p3_just" placeholder="Registrar a justificativa apresentada pelo motorista" style="margin-top:6px"></textarea>
+          </div>
+
+          <div class="mt-field">
+            <label class="mt-label">4. O motorista já havia sido alertado anteriormente?<span class="req">*</span></label>
+            <div class="mt-radio-group">
+              <label class="mt-radio-item"><input type="radio" name="mt_p4" value="Sim"> Sim</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p4" value="Não"> Não</label>
+            </div>
+            <input class="mt-input" id="mt_p4_detalhes" type="text" placeholder="Se sim: datas e formas dos alertas anteriores" style="margin-top:6px">
+          </div>
+
+          <div class="mt-field">
+            <label class="mt-label">5. O motorista tem conhecimento da Política de Segurança e suas consequências?<span class="req">*</span></label>
+            <div class="mt-radio-group">
+              <label class="mt-radio-item"><input type="radio" name="mt_p5" value="Sim"> Sim</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p5" value="Não"> Não</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p5" value="Conhece em parte"> Conhece em parte</label>
+            </div>
+          </div>
+
+          <div class="mt-field">
+            <label class="mt-label">6. O prazo/meta de entrega pressiona para dirigir acima do limite?<span class="req">*</span></label>
+            <div class="mt-radio-group">
+              <label class="mt-radio-item"><input type="radio" name="mt_p6" value="Sim"> Sim</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p6" value="Não"> Não</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p6" value="Às vezes"> Às vezes</label>
+            </div>
+            <input class="mt-input" id="mt_p6_obs" type="text" placeholder="Observações" style="margin-top:6px">
+          </div>
+
+          <div class="mt-field">
+            <label class="mt-label">7. O motorista identifica situações que contribuíram para o comportamento?<span class="req">*</span></label>
+            <div class="mt-radio-group">
+              <label class="mt-radio-item"><input type="radio" name="mt_p7" value="Sim"> Sim</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p7" value="Não"> Não</label>
+            </div>
+            <input class="mt-input" id="mt_p7_detalhes" type="text" placeholder="Fatores mencionados (cansaço, pressão, distração...)" style="margin-top:6px">
+          </div>
+
+          <div class="mt-field">
+            <label class="mt-label">8. O motorista se compromete a respeitar os limites nas próximas rotas?<span class="req">*</span></label>
+            <div class="mt-radio-group">
+              <label class="mt-radio-item"><input type="radio" name="mt_p8" value="Sim, expressamente"> Sim, expressamente</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p8" value="Não se comprometeu"> Não se comprometeu</label>
+              <label class="mt-radio-item"><input type="radio" name="mt_p8" value="Omitiu resposta"> Omitiu resposta</label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 4. Orientações -->
+      <div class="modal-tele-secao">
+        <div class="modal-tele-secao-titulo">📌 4. Orientações Comunicadas ao Motorista</div>
+        <div class="mt-check-group">
+          <label class="mt-check-item"><input type="checkbox" id="mt_ori1"> O motorista foi informado sobre o limite de velocidade da via</label>
+          <label class="mt-check-item"><input type="checkbox" id="mt_ori2"> Foram explicados os riscos à própria vida, a terceiros e à carga</label>
+          <label class="mt-check-item"><input type="checkbox" id="mt_ori3"> Foi comunicado sobre as medidas disciplinares em caso de reincidência</label>
+          <label class="mt-check-item"><input type="checkbox" id="mt_ori4"> O motorista foi orientado a adequar o planejamento de rota e horários</label>
+          <label class="mt-check-item"><input type="checkbox" id="mt_ori5"> O motorista foi informado que o monitoramento por telemetria é contínuo</label>
+        </div>
+      </div>
+
+      <!-- Declaração -->
+      <div class="mt-decl">
+        <strong>📜 Declaração</strong>
+        Ao submeter este formulário, o responsável pelo preenchimento declara que:
+        (a) o motorista foi comunicado sobre as ocorrências registradas pela telemetria;
+        (b) o motorista recebeu orientações sobre os riscos e as normas internas;
+        (c) o motorista está ciente das consequências em caso de reincidência.
+        <label class="mt-decl-check">
+          <input type="checkbox" id="mt_declaracao">
+          <span>Li e declaro que as informações acima são verdadeiras<span class="req">*</span></span>
+        </label>
+      </div>
+
+    </div>
+    <div class="modal-tele-footer">
+      <button class="btn-tele-cancel" onclick="fecharModalTele()">Cancelar</button>
+      <button class="btn-tele-save" id="btnSaveTele" onclick="salvarJustTele()">Salvar justificativa</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
