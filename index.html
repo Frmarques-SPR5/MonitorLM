@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SPR5 CONTROLE LIDERANÇAS</title>
+<title>SPR5 - Controle Last Mile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -760,8 +760,8 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <button class="hamburguer" id="btnMenu" onclick="abrirMenu()" style="display:none">
       <span></span><span></span><span></span>
     </button>
-    <div id="loboContainer"></div>
-    <div class="logo-txt" id="logoTexto"><span class="logo-spr5">SPR5</span> <span class="logo-cl">CONTROLE LIDERANÇAS</span></div>
+    <div id="loboContainer" style="display:none"></div>
+    <div class="logo-txt" id="logoTexto"><span class="logo-spr5">SPR5</span> <span class="logo-cl">Controle Last Mile</span></div>
   </div>
   <div class="header-right">
 
@@ -3107,7 +3107,9 @@ function renderTeleDrivers(dados) {
       '<td style="text-align:center">' + (d.curva||'0') + '</td>' +
       '<td style="text-align:center">' + (d.aceler||'0') + '</td>' +
       '<td style="text-align:center">' + (d.frenagem||'0') + '</td>' +
-      '<td style="text-align:center">' + (d.cinto||'0') + '</td>' +
+      '<td style="text-align:center">' + (d.cinto > 0
+        ? '<span style="color:#f59e0b;font-weight:800">' + d.cinto + ' ⭐</span>'
+        : '0') + '</td>' +
       '<td>' + btnJust + '</td>' +
       '</tr>';
   });
