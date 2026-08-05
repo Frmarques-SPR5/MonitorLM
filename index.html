@@ -844,11 +844,26 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 
     <!-- Filtros -->
     <div class="filtros" style="flex-wrap:wrap;gap:8px;margin-bottom:14px">
-      <select id="teleFiltroTransp" style="min-width:160px">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Período</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="telePeriodoTipo" style="width:120px">
+            <option value="livre">Datas livres</option>
+            <option value="hoje">Hoje</option>
+            <option value="semana">Esta semana</option>
+            <option value="7dias" selected>Últimos 7 dias</option>
+            <option value="30dias">Últimos 30 dias</option>
+          </select>
+          <input type="date" id="teleDe"  title="De" style="width:140px">
+          <span style="color:var(--text2);font-size:12px">até</span>
+          <input type="date" id="teleAte" title="Até" style="width:140px">
+        </div>
+      </div>
+      <select id="teleFiltroTransp" style="min-width:160px;align-self:flex-end">
         <option value="">Todas as transportadoras</option>
       </select>
-      <input type="text" id="teleBuscaDriver" placeholder="Buscar driver ID ou placa..." style="min-width:200px">
-      <button class="btn-atualizar" onclick="carregarTelemetria()">↻ Atualizar</button>
+      <input type="text" id="teleBuscaDriver" placeholder="Buscar driver ID ou placa..." style="min-width:200px;align-self:flex-end">
+      <button class="btn-atualizar" onclick="carregarTelemetria()" style="align-self:flex-end">↻ Buscar</button>
     </div>
 
     <!-- KPIs -->
@@ -2548,7 +2563,19 @@ var teleCache = [];
 var teleCarregado = false;
 
 function carregarTelemetria() {
-  document.getElementById('teleSub').textContent = 'Carregando...';
+  var de  = document.getElementById('teleDe').value;
+  var ate = document.getElementById('teleAte').value;
+
+  // Converte aaaa-mm-dd (input date) → dd/mm/aaaa (formato da planilha)
+  function isoParaBR(s) {
+    if (!s) return '';
+    var p = s.split('-');
+    return p.length === 3 ? (p[2] + '/' + p[1] + '/' + p[0]) : s;
+  }
+
+  document.getElementById('teleSub').textContent = 'Carregando' + (de ? ' de ' + isoParaBR(de) : '') + (ate ? ' até ' + isoParaBR(ate) : '') + '...';
+  teleCarregado = false;
+
   var cb = 'cbtele_' + Date.now();
   window[cb] = function(d) {
     delete window[cb];
@@ -2560,8 +2587,11 @@ function carregarTelemetria() {
       document.getElementById('teleSub').textContent = 'Erro: ' + ((d && d.erro) || 'desconhecido');
     }
   };
+  var params = 'action=getTelemetria&callback=' + cb + '&t=' + Date.now();
+  if (de)  params += '&de='  + encodeURIComponent(isoParaBR(de));
+  if (ate) params += '&ate=' + encodeURIComponent(isoParaBR(ate));
   var s = document.createElement('script');
-  s.src = API + '?action=getTelemetria&callback=' + cb + '&t=' + Date.now();
+  s.src = API + '?' + params;
   document.head.appendChild(s);
 }
 
@@ -2750,7 +2780,7 @@ function renderTeleDetalhe(dados) {
   var h = '<div class="hist-wrap" style="max-height:500px;overflow-y:auto"><table class="htable"><thead><tr>' +
     '<th>Data</th><th>Driver</th><th>Placa</th><th>Transp.</th>' +
     '<th>Score</th><th>Eventos</th><th>Vel.via</th><th>Curva</th><th>Acel.</th><th>Fren.</th>' +
-    '<th>SPR</th><th>Entregas</th><th>ORH</th><th>DPR(km)</th>' +
+    '<th>SPR</th><th>ORH</th>' +
     '</tr></thead><tbody>';
 
   sorted.forEach(function(r) {
@@ -2767,9 +2797,7 @@ function renderTeleDetalhe(dados) {
       '<td style="text-align:center">' + (r.aceler||'0') + '</td>' +
       '<td style="text-align:center">' + (r.frenagem||'0') + '</td>' +
       '<td style="text-align:center">' + fmtInt2(r.spr) + '</td>' +
-      '<td style="text-align:center">' + fmtInt2(r.entregas) + '</td>' +
       '<td style="text-align:center">' + fmt1(r.orh) + '</td>' +
-      '<td style="text-align:center">' + fmt1(r.dpr) + '</td>' +
       '</tr>';
   });
   h += '</tbody></table></div>';
@@ -2779,6 +2807,42 @@ function renderTeleDetalhe(dados) {
 // Filtros da view Telemetria
 document.getElementById('teleFiltroTransp').addEventListener('change', function(){ if(teleCarregado) renderTelemetria(); });
 document.getElementById('teleBuscaDriver').addEventListener('input', function(){ if(teleCarregado) renderTelemetria(); });
+
+// Período rápido: preenche as datas automaticamente
+document.getElementById('telePeriodoTipo').addEventListener('change', function() {
+  var tipo = this.value;
+  var hoje = new Date();
+  var deEl  = document.getElementById('teleDe');
+  var ateEl = document.getElementById('teleAte');
+
+  function fmtISO(d) { return d.toISOString().slice(0,10); }
+  function subDias(d, n) { var r = new Date(d); r.setDate(r.getDate() - n); return r; }
+
+  if (tipo === 'hoje') {
+    deEl.value = fmtISO(hoje); ateEl.value = fmtISO(hoje);
+  } else if (tipo === 'semana') {
+    // segunda-feira desta semana
+    var dow = (hoje.getDay() + 6) % 7; // 0=seg
+    var seg = subDias(hoje, dow);
+    deEl.value = fmtISO(seg); ateEl.value = fmtISO(hoje);
+  } else if (tipo === '7dias') {
+    deEl.value = fmtISO(subDias(hoje, 6)); ateEl.value = fmtISO(hoje);
+  } else if (tipo === '30dias') {
+    deEl.value = fmtISO(subDias(hoje, 29)); ateEl.value = fmtISO(hoje);
+  } else {
+    // livre: não limpa, deixa o usuário editar
+  }
+  // Se não for "livre", busca automaticamente
+  if (tipo !== 'livre') carregarTelemetria();
+});
+
+// Inicializa com últimos 7 dias ao abrir a view
+(function() {
+  var hoje = new Date();
+  var de7  = new Date(hoje); de7.setDate(de7.getDate() - 6);
+  document.getElementById('teleDe').value  = de7.toISOString().slice(0,10);
+  document.getElementById('teleAte').value = hoje.toISOString().slice(0,10);
+})();
 
 // Abas internas da view Telemetria
 document.querySelectorAll('[data-teletab]').forEach(function(t){
