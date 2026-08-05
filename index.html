@@ -2673,7 +2673,8 @@ document.querySelectorAll('[data-btab]').forEach(function(t){
 // ════════════════════════════════════════════════════════════
 // JUSTIFICATIVAS TELEMETRIA
 // ════════════════════════════════════════════════════════════
-var teleJustCache = []; // histórico de justificativas já salvas
+var teleJustCache = [];
+var abaAtivaTele = 'transp'; // controla qual painel renderizar // histórico de justificativas já salvas
 var teleJustCarregado = false;
 var teleModalCtx = null; // contexto do driver que está sendo justificado
 
@@ -2938,9 +2939,10 @@ function renderTelemetria() {
     totalRotas + ' registros' + (sessao ? ' — ' + sessao.transp : '') +
     (dados.length < teleCache.length ? ' (filtrado de ' + teleCache.length + ')' : '');
 
-  renderTeleTransp(dados);
-  renderTeleDrivers(dados);
-  renderTeleDetalhe(dados);
+  // Renderiza só o painel ativo — performance
+  if (abaAtivaTele === 'transp')   renderTeleTransp(dados);
+  else if (abaAtivaTele === 'drivers') renderTeleDrivers(dados);
+  else if (abaAtivaTele === 'detalhe') renderTeleDetalhe(dados);
 }
 
 // ── Ranking por transportadora ──
@@ -3057,16 +3059,19 @@ function renderTeleDrivers(dados) {
 }
 
 // ── Detalhe completo ──
+var TELE_DETALHE_LIMITE = 100; // máximo de linhas no detalhe
+
 function renderTeleDetalhe(dados) {
   if (!dados.length) { document.getElementById('teleDetalheLista').innerHTML = '<div class="empty">Sem dados.</div>'; return; }
 
   var sorted = dados.slice().sort(function(a,b){
-    // ordena por eventos desc, depois score asc
     if (b.eventos !== a.eventos) return b.eventos - a.eventos;
     var sa = a.score !== null ? a.score : 999;
     var sb = b.score !== null ? b.score : 999;
     return sa - sb;
   });
+  var total = sorted.length;
+  sorted = sorted.slice(0, TELE_DETALHE_LIMITE); // limita para performance
 
   var h = '<div class="hist-wrap" style="max-height:500px;overflow-y:auto"><table class="htable"><thead><tr>' +
     '<th>Data</th><th>Tipo</th><th>Driver</th><th>Placa</th><th>Transp.</th>' +
@@ -3093,6 +3098,9 @@ function renderTeleDetalhe(dados) {
       '</tr>';
   });
   h += '</tbody></table></div>';
+    if (total > TELE_DETALHE_LIMITE) {
+    h += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando ' + TELE_DETALHE_LIMITE + ' de ' + total + ' registros (ordenados por mais eventos)</div>';
+  }
   document.getElementById('teleDetalheLista').innerHTML = h;
 }
 
@@ -3108,6 +3116,14 @@ document.getElementById('teleBuscaDriver').addEventListener('input', function(){
 });
 
 // Período rápido: preenche as datas automaticamente
+// Dispara busca ao mudar as datas manualmente
+document.getElementById('teleDe').addEventListener('change', function(){
+  document.getElementById('telePeriodoTipo').value = 'livre';
+});
+document.getElementById('teleAte').addEventListener('change', function(){
+  document.getElementById('telePeriodoTipo').value = 'livre';
+});
+
 document.getElementById('telePeriodoTipo').addEventListener('change', function() {
   var tipo = this.value;
   var hoje = new Date();
@@ -3150,10 +3166,10 @@ document.querySelectorAll('[data-teletab]').forEach(function(t){
     document.querySelectorAll('[data-teletab]').forEach(function(x){ x.classList.remove('ativo'); });
     t.classList.add('ativo');
     var n = t.getAttribute('data-teletab');
+    abaAtivaTele = n; // atualiza aba ativa
     document.getElementById('telePaneTransp').style.display  = n==='transp'?'block':'none';
     document.getElementById('telePaneDrivers').style.display = n==='drivers'?'block':'none';
     document.getElementById('telePaneDetalhe').style.display = n==='detalhe'?'block':'none';
-    // Renderiza o painel ativo quando troca de aba
     if (teleCarregado) renderTelemetria();
   });
 });
