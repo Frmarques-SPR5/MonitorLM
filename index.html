@@ -3045,7 +3045,9 @@ function renderTeleTransp(dados) {
 function renderTeleDrivers(dados) {
   var META_SCORE = 90;
 
-  // Agrupa por driver + data — uma linha por dia por driver
+  // Agrupa por driver + data — uma linha por driver por dia
+  // O score é único por driver/dia na telemetria (mesmo valor em todas as linhas do dia)
+  // Os eventos são somados pois podem ter linhas por tipo_operacao diferentes
   var por = {};
   dados.forEach(function(r) {
     var k = r.driver + '||' + (r.data || '');
@@ -3053,14 +3055,16 @@ function renderTeleDrivers(dados) {
     if (!por[k]) por[k] = {
       driver: r.driver, mlp: r.mlp||'—',
       data: r.data || '', n: 0,
-      nScore: 0, somaScore: 0, eventos: 0,
+      score: null, // score único do dia
+      eventos: 0,
       placas: new Set(),
       vel_via: 0, curva: 0, aceler: 0, frenagem: 0, cinto: 0
     };
     por[k].n++;
     por[k].eventos  += r.eventos  || 0;
     por[k].placas.add(r.placa);
-    if (r.score !== null) { por[k].somaScore += r.score; por[k].nScore++; }
+    // Score é o mesmo para todas as linhas do driver no dia — pega o primeiro não nulo
+    if (por[k].score === null && r.score !== null) por[k].score = r.score;
     por[k].vel_via  += r.vel_via  || 0;
     por[k].curva    += r.curva    || 0;
     por[k].aceler   += r.aceler   || 0;
@@ -3069,7 +3073,7 @@ function renderTeleDrivers(dados) {
   });
 
   var lista = Object.values(por)
-    .map(function(d){ d.scoreM = d.nScore ? d.somaScore / d.nScore : null; return d; })
+    .map(function(d){ d.scoreM = d.score; return d; })
     .sort(function(a,b){
       // Abaixo da meta primeiro, depois sem score, depois dentro da meta
       var sa = a.scoreM !== null ? a.scoreM : 998; // sem score antes de "dentro da meta"
