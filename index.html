@@ -984,7 +984,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 
     <!-- KPIs -->
     <div class="kpi-bar" id="teleKpis" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:16px">
-      <div class="kpi"><div class="kpi-label">Drivers</div><div class="kpi-val b" id="tK_drivers">—</div></div>
+      <div class="kpi"><div class="kpi-label">Drivers únicos</div><div class="kpi-val b" id="tK_drivers">—</div></div>
       <div class="kpi"><div class="kpi-label">Score médio</div><div class="kpi-val" id="tK_score">—</div></div>
       <div class="kpi"><div class="kpi-label">Total de eventos</div><div class="kpi-val d" id="tK_eventos">—</div></div>
       <div class="kpi"><div class="kpi-label">Rotas executadas</div><div class="kpi-val" id="tK_rotas">—</div></div>
@@ -3069,19 +3069,29 @@ function renderTeleDrivers(dados) {
   });
 
   var lista = Object.values(por)
-    .filter(function(d){ return d.nScore > 0; })
     .map(function(d){ d.scoreM = d.nScore ? d.somaScore / d.nScore : null; return d; })
     .sort(function(a,b){
-      var sa = a.scoreM !== null ? a.scoreM : 999;
-      var sb = b.scoreM !== null ? b.scoreM : 999;
+      // Abaixo da meta primeiro, depois sem score, depois dentro da meta
+      var sa = a.scoreM !== null ? a.scoreM : 998; // sem score antes de "dentro da meta"
+      var sb = b.scoreM !== null ? b.scoreM : 998;
       if (sa !== sb) return sa - sb;
+      // Empate de score → mais eventos primeiro
+      if (b.eventos !== a.eventos) return b.eventos - a.eventos;
       return b.data > a.data ? 1 : -1;
     })
-    .slice(0, 30);
+    .slice(0, 50);
 
-  if (!lista.length) { document.getElementById('teleDriversLista').innerHTML = '<div class="empty">Nenhum driver com score no período filtrado.</div>'; return; }
+  if (!lista.length) { document.getElementById('teleDriversLista').innerHTML = '<div class="empty">Nenhum driver no período filtrado.</div>'; return; }
 
-  var h = '<div class="hist-wrap"><table class="htable"><thead><tr>' +
+  // Conta drivers únicos nas linhas exibidas
+  var driversUnicos = new Set(lista.map(function(d){ return d.driver; })).size;
+
+  var h = '<div style="font-size:11px;color:var(--text2);margin-bottom:8px">' +
+    '📋 Uma linha por driver por dia · Driver pode reaparecer em datas diferentes em caso de reincidência · ' +
+    '<strong style="color:var(--text)">' + driversUnicos + ' driver(s) único(s)</strong> · ' +
+    '<strong style="color:var(--text)">' + lista.length + ' registro(s) no período</strong>' +
+    '</div>' +
+    '<div class="hist-wrap"><table class="htable"><thead><tr>' +
     '<th>#</th><th>Driver ID</th><th>Data</th><th>Transportadora</th><th>Placas</th>' +
     '<th>Score</th><th>Eventos</th><th>Vel. via</th><th>Curva</th><th>Aceleração</th><th>Frenagem</th><th>Cinto</th>' +
     '<th>Justificativa</th></tr></thead><tbody>';
@@ -3090,6 +3100,7 @@ function renderTeleDrivers(dados) {
     var scoreM = d.scoreM;
     var cor = scoreCorTele(scoreM);
     var precisaJust = scoreM !== null && scoreM < META_SCORE;
+    var semScore    = scoreM === null;
     var justificado = precisaJust && teleJaJustificado(d.driver, d.data);
     var placasArr = [...d.placas];
     var placa1 = placasArr[0] || '';
@@ -3101,6 +3112,8 @@ function renderTeleDrivers(dados) {
         : '<button class="btn-justificar-tele" onclick="abrirModalTele(\''+
             e(d.driver)+'\',\''+e(placa1)+'\',\''+e(d.mlp)+'\',\''+
             e(d.data)+'\',' + d.eventos + ')">Justificar</button>';
+    } else if (semScore) {
+      btnJust = '<span style="font-size:11px;color:var(--text2)">Sem score</span>';
     } else {
       btnJust = '<span style="font-size:11px;color:var(--ok)">\u2713 Dentro da meta</span>';
     }
