@@ -643,6 +643,58 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 /* SVG helper */
 .arrow-svg { display: inline-block; }
 
+/* ── SLEEPOVER ──────────────────────────────────── */
+.sl-btn-per {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text2);
+  font-family: var(--font);
+  transition: all .15s;
+  white-space: nowrap;
+}
+.sl-btn-per:hover { border-color: var(--blue); color: var(--blue); }
+.sl-btn-per.ativo  { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+.sl-grid-transp {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.sl-tc {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .15s, transform .15s;
+  box-shadow: var(--shadow);
+}
+.sl-tc:hover { border-color: var(--blue); transform: translateY(-2px); }
+.sl-tc.ativo  { border-color: var(--blue); background: rgba(52,131,250,.07); }
+.sl-tc-nome   { font-size: 11px; color: var(--text2); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.sl-tc-pct    { font-size: 2rem; font-weight: 800; line-height: 1; }
+.sl-tc-sub    { font-size: 10px; color: var(--text2); margin-bottom: 10px; }
+.sl-bar-wrap  { background: var(--border); border-radius: 4px; height: 4px; margin: 0 0 10px; overflow: hidden; }
+.sl-bar-fill  { height: 100%; border-radius: 4px; transition: width .4s; }
+.sl-tc-pills  { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+.sl-tc-pill   { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 5px; }
+.sl-tc-total  { font-size: 10px; color: var(--text2); margin-top: 8px; }
+
+.sl-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 640px; }
+.sl-table th { background: var(--bg); padding: 7px 11px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); border-bottom: 1.5px solid var(--border); font-weight: 700; white-space: nowrap; }
+.sl-table td { padding: 8px 11px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.sl-table tr:last-child td { border-bottom: none; }
+.sl-table tr:hover td { background: rgba(52,131,250,.04); }
+.sl-online { color: var(--ok);     font-weight: 700; }
+.sl-offline { color: var(--warn);  font-weight: 700; }
+.sl-nao    { color: var(--danger); font-weight: 700; }
+
 /* ===== MODAL JUSTIFICATIVA TELEMETRIA ===== */
 .modal-tele-overlay {
   display: none; position: fixed; inset: 0;
@@ -838,6 +890,10 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <button class="nav-item" data-view="briefing" onclick="abrirView('briefing')">
       <div class="dots_border"></div>
       <span class="nav-icon">✅</span> <span>Presenteísmo Briefing</span>
+    </button>
+    <button class="nav-item" data-view="sleepover" onclick="abrirView('sleepover')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">💤</span> <span>SleepOver</span>
     </button>
   </nav>
 </aside>
@@ -1174,6 +1230,65 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     </div>
   </div>
 
+  <!-- VIEW: SLEEPOVER -->
+  <div class="view" id="viewSleepOver">
+    <div class="page-header">
+      <div class="page-title">💤 SleepOver — Retorno Pausado</div>
+      <div class="page-sub">Aderência de motoristas ao retorno pausado, por transportadora</div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros" style="align-items:flex-end;gap:10px;margin-bottom:16px">
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="sl-btn-per ativo" data-p="ontem"  onclick="slSetPeriodo('ontem')">Ontem</button>
+          <button class="sl-btn-per"       data-p="semana" onclick="slSetPeriodo('semana')">Esta semana</button>
+          <button class="sl-btn-per"       data-p="7d"     onclick="slSetPeriodo('7d')">Últimos 7d</button>
+          <button class="sl-btn-per"       data-p="livre"  onclick="slSetPeriodo('livre')">Livre</button>
+        </div>
+        <div id="slDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <input type="text" id="slDe"  placeholder="dd/mm/aaaa" style="width:120px">
+          <span style="color:var(--text2);font-size:12px">até</span>
+          <input type="text" id="slAte" placeholder="dd/mm/aaaa" style="width:120px">
+          <button class="btn-atualizar" onclick="slCarregar()" style="margin:0">Buscar</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
+        <select id="slSelTransp" onchange="slRenderizar()" style="min-width:160px">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <button class="btn-atualizar" onclick="slCarregar()" style="margin-left:auto" title="Recarregar">↺ Atualizar</button>
+    </div>
+
+    <!-- KPI bar -->
+    <div class="kpi-bar" id="slKpis" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px">
+      <div class="kpi"><div class="kpi-label">Total de Rotas</div><div class="kpi-val" id="slKTotal">—</div></div>
+      <div class="kpi" style="border-color:var(--ok)"><div class="kpi-label">✅ Online</div><div class="kpi-val g" id="slKOnline">—</div></div>
+      <div class="kpi" style="border-color:var(--warn)"><div class="kpi-label">📴 Offline</div><div class="kpi-val w" id="slKOffline">—</div></div>
+      <div class="kpi" style="border-color:var(--danger)"><div class="kpi-label">🚫 Não Aceitou</div><div class="kpi-val d" id="slKNao">—</div></div>
+      <div class="kpi"><div class="kpi-label">📊 Aderência</div><div class="kpi-val b" id="slKAder">—</div></div>
+    </div>
+
+    <!-- Cards por transportadora -->
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:10px">Por Transportadora</div>
+    <div id="slGridTransp" class="sl-grid-transp" style="margin-bottom:20px"></div>
+
+    <!-- Ranking não aderentes -->
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:10px">🚨 Não Aderentes</div>
+    <div class="hist-wrap" id="slOfensores" style="margin-bottom:16px">
+      <div class="empty"><span class="spinner"></span> Carregando...</div>
+    </div>
+
+    <!-- Tabela completa colapsável -->
+    <details>
+      <summary style="cursor:pointer;font-size:12px;color:var(--blue);font-weight:600;user-select:none;margin-bottom:8px">📋 Ver tabela completa</summary>
+      <div class="hist-wrap" id="slTabela" style="margin-top:8px"></div>
+    </details>
+  </div>
+
 </div>
 
 <!-- MODAL -->
@@ -1338,7 +1453,7 @@ function sair() {
   sessionStorage.removeItem('spr5sessao');
   sessao = null; cache = [];
   // reseta flags de carregamento das ferramentas
-  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false;
+  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false; sleepCarregado = false;
   orhCache = []; pendCache = [];
   // restaura os itens do menu (exceto os marcados como ocultos, ex: Pacotes desativado)
   document.querySelectorAll('.nav-item').forEach(function(b){
@@ -1366,6 +1481,7 @@ var orhCharts = {};
 var pendCarregado = false;
 var pendCache = [];
 var briefingCarregado = false;
+var sleepCarregado    = false;
 
 function abrirMenu() {
   document.getElementById('sidebar').classList.add('aberto');
@@ -1388,6 +1504,7 @@ function abrirView(nome, semFechar) {
   document.getElementById('viewPendentes').classList.toggle('ativa', nome === 'pendentes');
   document.getElementById('viewBriefing').classList.toggle('ativa', nome === 'briefing');
   document.getElementById('viewTelemetria').classList.toggle('ativa', nome === 'telemetria');
+  document.getElementById('viewSleepOver').classList.toggle('ativa', nome === 'sleepover');
 
   if (nome === 'telemetria' && sessao && !teleCarregado) carregarTelemetria();
 
@@ -1416,6 +1533,12 @@ function abrirView(nome, semFechar) {
   if (nome === 'pendentes' && !pendCarregado && sessao) {
     carregarPend();
     pendCarregado = true;
+  }
+
+  // SleepOver: carrega na primeira abertura
+  if (nome === 'sleepover' && sessao && !sleepCarregado) {
+    sleepCarregado = true;
+    slSetPeriodo('ontem');
   }
 
   // Briefing: trava a transportadora do login e carrega painel na 1ª vez
@@ -3285,6 +3408,229 @@ function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=m
 
 document.getElementById('modalJust').addEventListener('click',function(ev){if(ev.target===this)fecharModal();});
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModal();});
+
+// ════════════════════════════════════════════════════════
+//  SLEEPOVER
+// ════════════════════════════════════════════════════════
+var slDadosRaw     = [];
+var slPeriodoAtivo = 'ontem';
+
+function slFmtDatas(tipo) {
+  var hoje = new Date();
+  function fmt(d) { return d.toLocaleDateString('pt-BR'); }
+  if (tipo === 'ontem')  { var v = new Date(hoje); v.setDate(hoje.getDate()-1); return { de: fmt(v), ate: fmt(v) }; }
+  if (tipo === 'semana') { var ini = new Date(hoje); ini.setDate(hoje.getDate()-hoje.getDay()); return { de: fmt(ini), ate: fmt(hoje) }; }
+  if (tipo === '7d')     { var s = new Date(hoje); s.setDate(hoje.getDate()-6); return { de: fmt(s), ate: fmt(hoje) }; }
+  return null;
+}
+
+function slSetPeriodo(p) {
+  slPeriodoAtivo = p;
+  document.querySelectorAll('.sl-btn-per').forEach(function(b){
+    b.classList.toggle('ativo', b.dataset.p === p);
+  });
+  document.getElementById('slDatasLivres').style.display = p === 'livre' ? 'flex' : 'none';
+  if (p !== 'livre') slCarregar();
+}
+
+function slCarregar() {
+  var datas = slPeriodoAtivo === 'livre'
+    ? { de: document.getElementById('slDe').value.trim(), ate: document.getElementById('slAte').value.trim() }
+    : slFmtDatas(slPeriodoAtivo);
+  if (!datas || !datas.de) return;
+
+  // feedback visual
+  document.getElementById('slKTotal').textContent  = '—';
+  document.getElementById('slKOnline').textContent  = '—';
+  document.getElementById('slKOffline').textContent = '—';
+  document.getElementById('slKNao').textContent     = '—';
+  document.getElementById('slKAder').textContent    = '—';
+  document.getElementById('slOfensores').innerHTML  = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+  document.getElementById('slGridTransp').innerHTML = '';
+  document.getElementById('slTabela').innerHTML     = '';
+
+  var cb  = 'slCallback' + Date.now();
+  var url = API + '?action=getSleepOver' +
+            '&de='  + encodeURIComponent(datas.de)  +
+            '&ate=' + encodeURIComponent(datas.ate) +
+            '&callback=' + cb + '&t=' + Date.now();
+
+  window[cb] = function(data) {
+    delete window[cb];
+    if (data.erro || data.error) {
+      toast('SleepOver: ' + (data.erro || data.error), 1);
+      document.getElementById('slOfensores').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
+      return;
+    }
+    slDadosRaw = data.rows || [];
+    // popular select transportadora
+    var transpList = [];
+    slDadosRaw.forEach(function(r){ if (r.transp && transpList.indexOf(r.transp) === -1) transpList.push(r.transp); });
+    transpList.sort();
+    var sel = document.getElementById('slSelTransp');
+    var valAtual = sel.value;
+    sel.innerHTML = '<option value="">Todas</option>';
+    transpList.forEach(function(t){
+      var o = document.createElement('option');
+      o.value = t; o.textContent = t;
+      if (t === valAtual) o.selected = true;
+      sel.appendChild(o);
+    });
+    slRenderizar();
+  };
+
+  var s = document.createElement('script'); s.src = url;
+  s.onerror = function(){ toast('Erro de conexão (SleepOver)', 1); };
+  document.body.appendChild(s);
+}
+
+function slGetFiltrado() {
+  var t = document.getElementById('slSelTransp').value;
+  return t ? slDadosRaw.filter(function(r){ return r.transp === t; }) : slDadosRaw;
+}
+
+function slRenderizar() {
+  var rows = slGetFiltrado();
+  slRenderKpis(rows);
+  slRenderTransp(rows);
+  slRenderOfensores(rows);
+  slRenderTabela(rows);
+}
+
+function slRenderKpis(rows) {
+  var total   = rows.length;
+  var online  = rows.filter(function(r){ return r.sleepover === 'ONLINE'; }).length;
+  var offline = rows.filter(function(r){ return r.sleepover === 'OFFLINE'; }).length;
+  var nao     = rows.filter(function(r){ return r.sleepover === 'NÃO ACEITOU'; }).length;
+  var pct     = total > 0 ? Math.round(online / total * 100) : 0;
+  var corCls  = pct >= 80 ? 'g' : pct >= 50 ? 'w' : 'd';
+
+  document.getElementById('slKTotal').textContent   = total;
+  document.getElementById('slKOnline').textContent  = online;
+  document.getElementById('slKOffline').textContent = offline;
+  document.getElementById('slKNao').textContent     = nao;
+  var kAder = document.getElementById('slKAder');
+  kAder.textContent = pct + '%';
+  kAder.className   = 'kpi-val ' + corCls;
+}
+
+function slRenderTransp(rows) {
+  var grupos = {};
+  rows.forEach(function(r){
+    var t = r.transp || '(sem transp.)';
+    if (!grupos[t]) grupos[t] = { total:0, online:0, offline:0, nao:0 };
+    grupos[t].total++;
+    if      (r.sleepover === 'ONLINE')       grupos[t].online++;
+    else if (r.sleepover === 'OFFLINE')      grupos[t].offline++;
+    else                                     grupos[t].nao++;
+  });
+
+  var sel = document.getElementById('slSelTransp').value;
+  var html = '';
+  Object.keys(grupos).sort().forEach(function(t){
+    var g   = grupos[t];
+    var pct = g.total > 0 ? Math.round(g.online / g.total * 100) : 0;
+    var cor = pct >= 80 ? 'var(--ok)' : pct >= 50 ? 'var(--warn)' : 'var(--danger)';
+    var ativo = sel === t ? ' ativo' : '';
+    html +=
+      '<div class="sl-tc' + ativo + '" onclick="slClicarTransp(\'' + t.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">' +
+        '<div class="sl-tc-nome" title="' + e(t) + '">' + e(t) + '</div>' +
+        '<div class="sl-tc-pct" style="color:' + cor + '">' + pct + '%</div>' +
+        '<div class="sl-tc-sub">aderência</div>' +
+        '<div class="sl-bar-wrap"><div class="sl-bar-fill" style="width:' + pct + '%;background:' + cor + '"></div></div>' +
+        '<div class="sl-tc-pills">' +
+          '<span class="sl-tc-pill" style="background:rgba(0,166,80,.12);color:var(--ok)">✅ ' + g.online + '</span>' +
+          (g.offline ? '<span class="sl-tc-pill" style="background:rgba(240,168,0,.12);color:var(--warn)">📴 ' + g.offline + '</span>' : '') +
+          (g.nao     ? '<span class="sl-tc-pill" style="background:rgba(224,82,82,.12);color:var(--danger)">🚫 ' + g.nao + '</span>' : '') +
+        '</div>' +
+        '<div class="sl-tc-total">' + g.total + ' rota' + (g.total > 1 ? 's' : '') + '</div>' +
+      '</div>';
+  });
+
+  document.getElementById('slGridTransp').innerHTML =
+    html || '<div class="empty">Sem dados no período selecionado.</div>';
+}
+
+function slClicarTransp(t) {
+  var sel = document.getElementById('slSelTransp');
+  sel.value = (sel.value === t) ? '' : t;
+  slRenderizar();
+}
+
+function slRenderOfensores(rows) {
+  var naoAder = rows
+    .filter(function(r){ return r.sleepover !== 'ONLINE'; })
+    .sort(function(a,b){ return b.orh - a.orh; });
+
+  var el = document.getElementById('slOfensores');
+
+  if (!naoAder.length) {
+    el.innerHTML = '<div class="empty" style="color:var(--ok)">✅ Todos aderiram no período filtrado!</div>';
+    return;
+  }
+
+  var html =
+    '<div style="overflow-x:auto"><table class="sl-table"><thead><tr>' +
+    '<th>Transportadora</th><th>Placa</th><th>Rota</th>' +
+    '<th>Status</th><th>ORH</th><th>Últ. Pacote</th><th>Encerramento</th><th>Data</th>' +
+    '</tr></thead><tbody>';
+
+  naoAder.forEach(function(r){
+    var cls = r.sleepover === 'NÃO ACEITOU' ? 'sl-nao' : 'sl-offline';
+    var ico = r.sleepover === 'NÃO ACEITOU' ? '🚫' : '📴';
+    var orhStr = r.orh > 0 ? r.orh.toFixed(1) + 'h' : '--';
+    var orhCls = r.orh > 12 ? ' style="color:var(--danger);font-weight:700"' : r.orh > 8 ? ' style="color:var(--warn);font-weight:700"' : '';
+    html +=
+      '<tr>' +
+        '<td>' + e(r.transp) + '</td>' +
+        '<td class="sid">' + e(r.placa) + '</td>' +
+        '<td class="sid">' + e(r.id_rota) + '</td>' +
+        '<td class="' + cls + '">' + ico + ' ' + e(r.sleepover) + '</td>' +
+        '<td' + orhCls + '>' + orhStr + '</td>' +
+        '<td>' + e(r.hr_ultimo) + '</td>' +
+        '<td>' + e(r.hr_enc) + '</td>' +
+        '<td style="color:var(--text2);font-size:11px">' + e(r.data) + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+function slRenderTabela(rows) {
+  var el = document.getElementById('slTabela');
+  if (!rows.length) { el.innerHTML = ''; return; }
+
+  var exibir = rows.slice(0, 200);
+  var aviso  = rows.length > 200
+    ? '<p style="font-size:11px;color:var(--text2);padding:8px 11px">Exibindo 200 de ' + rows.length + ' registros.</p>'
+    : '';
+
+  var html =
+    '<div style="overflow-x:auto"><table class="sl-table"><thead><tr>' +
+    '<th>Data</th><th>Rota</th><th>Placa</th><th>Transportadora</th>' +
+    '<th>Status</th><th>ORH</th><th>Últ. Pacote</th><th>Encerramento</th>' +
+    '</tr></thead><tbody>';
+
+  exibir.forEach(function(r){
+    var cls = r.sleepover === 'ONLINE' ? 'sl-online' : r.sleepover === 'OFFLINE' ? 'sl-offline' : 'sl-nao';
+    var ico = r.sleepover === 'ONLINE' ? '✅' : r.sleepover === 'OFFLINE' ? '📴' : '🚫';
+    html +=
+      '<tr>' +
+        '<td style="color:var(--text2);font-size:11px">' + e(r.data) + '</td>' +
+        '<td class="sid">' + e(r.id_rota) + '</td>' +
+        '<td class="sid">' + e(r.placa) + '</td>' +
+        '<td>' + e(r.transp) + '</td>' +
+        '<td class="' + cls + '">' + ico + ' ' + e(r.sleepover) + '</td>' +
+        '<td>' + (r.orh > 0 ? r.orh.toFixed(1) + 'h' : '--') + '</td>' +
+        '<td>' + e(r.hr_ultimo) + '</td>' +
+        '<td>' + e(r.hr_enc) + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table></div>' + aviso;
+  el.innerHTML = html;
+}
 </script>
 
 <!-- MODAL: JUSTIFICATIVA TELEMETRIA -->
