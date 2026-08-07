@@ -695,6 +695,24 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 .sl-offline { color: var(--warn);  font-weight: 700; }
 .sl-nao    { color: var(--danger); font-weight: 700; }
 
+/* Question cards no modal SleepOver */
+.sl-quest-wrap { display: flex; flex-direction: column; gap: 8px; }
+.sl-quest { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 11px 13px; }
+.sl-quest-num { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--text2); font-weight: 700; margin-bottom: 4px; }
+.sl-quest-txt { font-size: 13px; font-weight: 600; line-height: 1.45; margin-bottom: 10px; color: var(--text); }
+.sl-quest-opts { display: flex; gap: 8px; }
+.sl-qbtn {
+  flex: 1; padding: 8px 12px; border-radius: 6px;
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--text2); font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--font); transition: all .15s;
+  text-align: center;
+}
+.sl-qbtn:hover { border-color: var(--blue); color: var(--blue); }
+.sl-qbtn.ativo-sim { background: rgba(0,166,80,.12); border-color: var(--ok); color: var(--ok); }
+.sl-qbtn.ativo-nao { background: rgba(224,82,82,.12); border-color: var(--danger); color: var(--danger); }
+.sl-quest.obrigatorio .sl-quest-num::after { content: ' *'; color: var(--danger); }
+
 /* ===== MODAL JUSTIFICATIVA TELEMETRIA ===== */
 .modal-tele-overlay {
   display: none; position: fixed; inset: 0;
@@ -1302,17 +1320,74 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 
 <!-- MODAL JUSTIFICATIVA SLEEPOVER -->
 <div class="moverlay" id="slModalJust">
-  <div class="mcard" style="max-width:480px">
-    <h3>📝 Não Adesão SleepOver — Justificativa</h3>
+  <div class="mcard" style="max-width:520px">
+    <h3>📝 Não Adesão SleepOver — Entrevista</h3>
+
+    <!-- Identificação -->
     <div class="minfo" id="slMInfo" style="grid-template-columns:1fr 1fr 1fr"></div>
-    <div id="slJustExistente" style="display:none;background:rgba(0,166,80,.08);border:1px solid var(--ok);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--ok);margin-bottom:4px"></div>
+
+    <!-- Justificativa existente -->
+    <div id="slJustExistente" style="display:none;background:rgba(0,166,80,.08);border:1px solid var(--ok);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--ok)"></div>
+
+    <!-- Perguntas -->
+    <div class="sl-quest-wrap">
+
+      <div class="sl-quest obrigatorio" id="slQ1">
+        <div class="sl-quest-num">Pergunta 1</div>
+        <div class="sl-quest-txt">Motorista confirma que recebeu o aviso?</div>
+        <div class="sl-quest-opts">
+          <button class="sl-qbtn" data-q="q1" data-v="Sim" onclick="slQSelect(this)">✅ Sim</button>
+          <button class="sl-qbtn" data-q="q1" data-v="Não" onclick="slQSelect(this)">❌ Não</button>
+        </div>
+      </div>
+
+      <div class="sl-quest obrigatorio" id="slQ2">
+        <div class="sl-quest-num">Pergunta 2</div>
+        <div class="sl-quest-txt">Motorista tem alguma dúvida em relação à ferramenta?</div>
+        <div class="sl-quest-opts">
+          <button class="sl-qbtn" data-q="q2" data-v="Sim" onclick="slQSelect(this)">✅ Sim</button>
+          <button class="sl-qbtn" data-q="q2" data-v="Não" onclick="slQSelect(this)">❌ Não</button>
+        </div>
+      </div>
+
+      <div class="sl-quest obrigatorio" id="slQ3">
+        <div class="sl-quest-num">Pergunta 3</div>
+        <div class="sl-quest-txt">Sabe que pode trazer os insucessos no mesmo dia sem afetar o ORH?</div>
+        <div class="sl-quest-opts">
+          <button class="sl-qbtn" data-q="q3" data-v="Sim" onclick="slQSelect(this)">✅ Sim</button>
+          <button class="sl-qbtn" data-q="q3" data-v="Não" onclick="slQSelect(this)">❌ Não</button>
+        </div>
+      </div>
+
+      <div class="sl-quest obrigatorio" id="slQ4">
+        <div class="sl-quest-num">Pergunta 4</div>
+        <div class="sl-quest-txt">Sabe que não precisa ficar com o insucesso até o dia seguinte e pode devolver no mesmo dia?</div>
+        <div class="sl-quest-opts">
+          <button class="sl-qbtn" data-q="q4" data-v="Sim" onclick="slQSelect(this)">✅ Sim</button>
+          <button class="sl-qbtn" data-q="q4" data-v="Não" onclick="slQSelect(this)">❌ Não</button>
+        </div>
+      </div>
+
+      <div class="sl-quest obrigatorio" id="slQ5">
+        <div class="sl-quest-num">Pergunta 5</div>
+        <div class="sl-quest-txt">Se consultado durante a expedição a respeito da ferramenta, saberá informar os pontos mencionados acima?</div>
+        <div class="sl-quest-opts">
+          <button class="sl-qbtn" data-q="q5" data-v="Sim" onclick="slQSelect(this)">✅ Sim</button>
+          <button class="sl-qbtn" data-q="q5" data-v="Não" onclick="slQSelect(this)">❌ Não</button>
+        </div>
+      </div>
+
+    </div><!-- /sl-quest-wrap -->
+
+    <!-- Observações livres -->
     <div>
-      <label class="flabel">Motivo da não adesão *</label>
+      <label class="flabel">Observações / Motivo da não adesão *</label>
       <textarea id="slMotivoTxt" placeholder="Descreva o motivo pelo qual o motorista não aceitou o retorno pausado..."></textarea>
     </div>
+
     <div class="mactions">
       <button class="bcancel" onclick="slFecharModal()">Cancelar</button>
-      <button class="btn-salvar-just" id="slBtnSalvar" onclick="slSalvarJust()">Salvar</button>
+      <button class="btn-salvar-just" id="slBtnSalvar" onclick="slSalvarJust()">Salvar entrevista</button>
     </div>
   </div>
 </div>
@@ -3529,7 +3604,10 @@ function slCarregarJust() {
     slJustMap = {};
     (data.registros || []).forEach(function(r){
       var key = (r.id_rota || '') + '|' + (r.data_ocorrencia || '');
-      slJustMap[key] = r.motivo || '';
+      slJustMap[key] = {
+        motivo: r.motivo || '',
+        q1: r.q1 || '', q2: r.q2 || '', q3: r.q3 || '', q4: r.q4 || '', q5: r.q5 || ''
+      };
     });
     slRenderizar();
   };
@@ -3642,12 +3720,26 @@ function slRenderNaoAceitou(rows) {
     var orhStr = r.orh > 0 ? r.orh.toFixed(1) + 'h' : '--';
     var orhCls = r.orh > 12 ? 'color:var(--danger);font-weight:700' : r.orh > 8 ? 'color:var(--warn);font-weight:700' : '';
     var key    = r.id_rota + '|' + r.data;
-    var just   = slJustMap[key] || '';
-    var justHtml = just
-      ? '<span style="color:var(--ok);font-size:11px" title="' + e(just) + '">✔ ' + e(just.substring(0,40)) + (just.length > 40 ? '…' : '') + '</span>'
-      : '<span style="color:var(--text2);font-size:11px;opacity:.5">—</span>';
-    var btnLabel = just ? '✏ Editar' : '+ Justificar';
-    var btnStyle = just ? 'background:var(--ok)' : '';
+    var just   = slJustMap[key] || null;
+    var temJust = just && just.motivo;
+    // Resumo das respostas como mini-pills
+    var pillsHtml = '';
+    if (temJust) {
+      var qLabels = ['P1','P2','P3','P4','P5'];
+      var qKeys   = ['q1','q2','q3','q4','q5'];
+      qKeys.forEach(function(q, i) {
+        var v = just[q];
+        if (v) {
+          var cor = v === 'Sim' ? 'rgba(0,166,80,.15);color:var(--ok)' : 'rgba(224,82,82,.15);color:var(--danger)';
+          pillsHtml += '<span style="font-size:10px;font-weight:700;border-radius:3px;padding:1px 5px;background:' + cor + ';margin-right:2px">' + qLabels[i] + ':' + v + '</span>';
+        }
+      });
+    }
+    var justHtml = temJust
+      ? '<div style="font-size:11px"><div style="color:var(--ok);margin-bottom:3px">✔ ' + e((just.motivo||'').substring(0,35)) + ((just.motivo||'').length > 35 ? '…' : '') + '</div><div>' + pillsHtml + '</div></div>'
+      : '<span style="color:var(--text2);font-size:11px;opacity:.5">Sem justificativa</span>';
+    var btnLabel = temJust ? '✏ Editar' : '+ Justificar';
+    var btnStyle = temJust ? 'background:var(--ok)' : '';
     html +=
       '<tr>' +
         '<td>' + e(r.transp) + '</td>' +
@@ -3706,6 +3798,39 @@ function slRenderTabela(rows) {
 
 // ── Modal de justificativa ────────────────────────────────────
 var slModalDados = {};
+var slQRespostas = {};  // { q1:'Sim', q2:'Não', ... }
+
+function slQSelect(btn) {
+  var q = btn.dataset.q;
+  var v = btn.dataset.v;
+  document.querySelectorAll('.sl-qbtn[data-q="' + q + '"]').forEach(function(b) {
+    b.classList.remove('ativo-sim', 'ativo-nao');
+  });
+  btn.classList.add(v === 'Sim' ? 'ativo-sim' : 'ativo-nao');
+  slQRespostas[q] = v;
+  // Remover destaque de obrigatório
+  var quest = btn.closest('.sl-quest');
+  if (quest) quest.style.borderColor = '';
+}
+
+function slResetarPerguntas(respostas) {
+  // Limpar seleções visuais e slQRespostas
+  slQRespostas = {};
+  document.querySelectorAll('.sl-qbtn').forEach(function(b) {
+    b.classList.remove('ativo-sim', 'ativo-nao');
+  });
+  // Se tiver respostas anteriores, pré-selecionar
+  if (respostas) {
+    var qs = ['q1','q2','q3','q4','q5'];
+    qs.forEach(function(q) {
+      if (respostas[q]) {
+        slQRespostas[q] = respostas[q];
+        var btn = document.querySelector('.sl-qbtn[data-q="' + q + '"][data-v="' + respostas[q] + '"]');
+        if (btn) btn.classList.add(respostas[q] === 'Sim' ? 'ativo-sim' : 'ativo-nao');
+      }
+    });
+  }
+}
 
 function slAbrirModal(id_rota, placa, transp, tipo_rota, data, justAtual) {
   slModalDados = { id_rota: id_rota, placa: placa, transp: transp, tipo_rota: tipo_rota, data: data };
@@ -3715,14 +3840,19 @@ function slAbrirModal(id_rota, placa, transp, tipo_rota, data, justAtual) {
     '<div class="mi"><label>Tipo</label><span>' + e(tipo_rota||'—') + '</span></div>' +
     '<div class="mi"><label>Transportadora</label><span>' + e(transp) + '</span></div>' +
     '<div class="mi"><label>Data</label><span>' + e(data) + '</span></div>';
+
   var existDiv = document.getElementById('slJustExistente');
-  if (justAtual) {
+  if (justAtual && justAtual.motivo) {
     existDiv.style.display = 'block';
-    existDiv.innerHTML = '✔ Justificativa registrada: <strong>' + e(justAtual) + '</strong>';
+    existDiv.innerHTML = '✔ Entrevista já registrada — editando: <strong>' + e(justAtual.motivo) + '</strong>';
+    slResetarPerguntas(justAtual);
+    document.getElementById('slMotivoTxt').value = justAtual.motivo || '';
   } else {
     existDiv.style.display = 'none';
+    slResetarPerguntas(null);
+    document.getElementById('slMotivoTxt').value = '';
   }
-  document.getElementById('slMotivoTxt').value = justAtual || '';
+
   document.getElementById('slModalJust').classList.add('open');
 }
 
@@ -3732,8 +3862,22 @@ function slFecharModal() {
 }
 
 function slSalvarJust() {
+  // Validar perguntas
+  var qs = ['q1','q2','q3','q4','q5'];
+  var faltou = false;
+  qs.forEach(function(q) {
+    var el = document.getElementById('slQ' + q.slice(1));
+    if (!slQRespostas[q]) {
+      if (el) el.style.borderColor = 'var(--danger)';
+      faltou = true;
+    } else {
+      if (el) el.style.borderColor = '';
+    }
+  });
+  if (faltou) { toast('Responda todas as perguntas antes de salvar.', 1); return; }
+
   var motivo = document.getElementById('slMotivoTxt').value.trim();
-  if (!motivo) { toast('Informe o motivo da não adesão.', 1); return; }
+  if (!motivo) { toast('Informe as observações / motivo da não adesão.', 1); return; }
 
   var btn = document.getElementById('slBtnSalvar');
   btn.classList.add('disabled');
@@ -3745,8 +3889,13 @@ function slSalvarJust() {
     '&transportadora=' + encodeURIComponent(slModalDados.transp    || '') +
     '&tipo_rota='      + encodeURIComponent(slModalDados.tipo_rota || '') +
     '&data_ocorrencia='+ encodeURIComponent(slModalDados.data      || '') +
+    '&q1='             + encodeURIComponent(slQRespostas.q1 || '') +
+    '&q2='             + encodeURIComponent(slQRespostas.q2 || '') +
+    '&q3='             + encodeURIComponent(slQRespostas.q3 || '') +
+    '&q4='             + encodeURIComponent(slQRespostas.q4 || '') +
+    '&q5='             + encodeURIComponent(slQRespostas.q5 || '') +
     '&motivo='         + encodeURIComponent(motivo) +
-    '&responsavel='    + encodeURIComponent(sessao ? sessao.nome   : '') +
+    '&responsavel='    + encodeURIComponent(sessao ? sessao.nome : '') +
     '&callback=' + cb + '&t=' + Date.now();
 
   window[cb] = function(data) {
@@ -3754,8 +3903,9 @@ function slSalvarJust() {
     btn.classList.remove('disabled');
     if (data.ok) {
       var key = slModalDados.id_rota + '|' + slModalDados.data;
-      slJustMap[key] = motivo;
-      toast('Justificativa salva!');
+      slJustMap[key] = { motivo: motivo, q1: slQRespostas.q1, q2: slQRespostas.q2,
+                         q3: slQRespostas.q3, q4: slQRespostas.q4, q5: slQRespostas.q5 };
+      toast('Entrevista salva com sucesso!');
       slFecharModal();
       slRenderNaoAceitou(slGetFiltrado());
     } else {
