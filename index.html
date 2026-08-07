@@ -1234,11 +1234,11 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
   <div class="view" id="viewSleepOver">
     <div class="page-header">
       <div class="page-title">💤 SleepOver — Retorno Pausado</div>
-      <div class="page-sub">Aderência de motoristas ao retorno pausado, por transportadora</div>
+      <div class="page-sub">Aderência de motoristas ao retorno pausado · ONLINE e OFFLINE = aderentes ✅</div>
     </div>
 
     <!-- Filtros -->
-    <div class="filtros" style="align-items:flex-end;gap:10px;margin-bottom:16px">
+    <div class="filtros" style="align-items:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap">
       <div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1255,29 +1255,38 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         </div>
       </div>
       <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Tipo de Rota</div>
+        <div style="display:flex;gap:6px">
+          <button class="sl-btn-per ativo" data-tipo="todos" onclick="slFiltrarTipo('todos')">Todos</button>
+          <button class="sl-btn-per"       data-tipo="SVC"   onclick="slFiltrarTipo('SVC')">SVC</button>
+          <button class="sl-btn-per"       data-tipo="XPT"   onclick="slFiltrarTipo('XPT')">XPT</button>
+        </div>
+      </div>
+      <div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
         <select id="slSelTransp" onchange="slRenderizar()" style="min-width:160px">
           <option value="">Todas</option>
         </select>
       </div>
-      <button class="btn-atualizar" onclick="slCarregar()" style="margin-left:auto" title="Recarregar">↺ Atualizar</button>
+      <button class="btn-atualizar" onclick="slCarregar()" style="margin-left:auto">↺ Atualizar</button>
     </div>
 
-    <!-- KPI bar -->
-    <div class="kpi-bar" id="slKpis" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px">
+    <!-- KPI bar: 6 cards -->
+    <div class="kpi-bar" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
       <div class="kpi"><div class="kpi-label">Total de Rotas</div><div class="kpi-val" id="slKTotal">—</div></div>
-      <div class="kpi" style="border-color:var(--ok)"><div class="kpi-label">✅ Online</div><div class="kpi-val g" id="slKOnline">—</div></div>
-      <div class="kpi" style="border-color:var(--warn)"><div class="kpi-label">📴 Offline</div><div class="kpi-val w" id="slKOffline">—</div></div>
+      <div class="kpi" style="border-color:var(--ok)"><div class="kpi-label">✅ Aderentes</div><div class="kpi-val g" id="slKAder">—</div></div>
       <div class="kpi" style="border-color:var(--danger)"><div class="kpi-label">🚫 Não Aceitou</div><div class="kpi-val d" id="slKNao">—</div></div>
-      <div class="kpi"><div class="kpi-label">📊 Aderência</div><div class="kpi-val b" id="slKAder">—</div></div>
+      <div class="kpi"><div class="kpi-label">📊 % Aderência</div><div class="kpi-val b" id="slKPct">—</div></div>
+      <div class="kpi" style="border-color:var(--ok)"><div class="kpi-label">📶 Online</div><div class="kpi-val g" id="slKOnline">—</div></div>
+      <div class="kpi" style="border-color:var(--blue)"><div class="kpi-label">📴 Offline</div><div class="kpi-val b" id="slKOffline">—</div></div>
     </div>
 
     <!-- Cards por transportadora -->
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:10px">Por Transportadora</div>
     <div id="slGridTransp" class="sl-grid-transp" style="margin-bottom:20px"></div>
 
-    <!-- Ranking não aderentes -->
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:10px">🚨 Não Aderentes</div>
+    <!-- Não aceitou -->
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:10px">🚫 Não Aceitou — Justificativas</div>
     <div class="hist-wrap" id="slOfensores" style="margin-bottom:16px">
       <div class="empty"><span class="spinner"></span> Carregando...</div>
     </div>
@@ -1289,6 +1298,23 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     </details>
   </div>
 
+</div>
+
+<!-- MODAL JUSTIFICATIVA SLEEPOVER -->
+<div class="moverlay" id="slModalJust">
+  <div class="mcard" style="max-width:480px">
+    <h3>📝 Não Adesão SleepOver — Justificativa</h3>
+    <div class="minfo" id="slMInfo" style="grid-template-columns:1fr 1fr 1fr"></div>
+    <div id="slJustExistente" style="display:none;background:rgba(0,166,80,.08);border:1px solid var(--ok);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--ok);margin-bottom:4px"></div>
+    <div>
+      <label class="flabel">Motivo da não adesão *</label>
+      <textarea id="slMotivoTxt" placeholder="Descreva o motivo pelo qual o motorista não aceitou o retorno pausado..."></textarea>
+    </div>
+    <div class="mactions">
+      <button class="bcancel" onclick="slFecharModal()">Cancelar</button>
+      <button class="btn-salvar-just" id="slBtnSalvar" onclick="slSalvarJust()">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL -->
@@ -3414,6 +3440,8 @@ document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModa
 // ════════════════════════════════════════════════════════
 var slDadosRaw     = [];
 var slPeriodoAtivo = 'ontem';
+var slTipoAtivo    = 'todos';  // 'todos' | 'SVC' | 'XPT'
+var slJustMap      = {};       // chave: id_rota+'|'+data → motivo
 
 function slFmtDatas(tipo) {
   var hoje = new Date();
@@ -3426,11 +3454,19 @@ function slFmtDatas(tipo) {
 
 function slSetPeriodo(p) {
   slPeriodoAtivo = p;
-  document.querySelectorAll('.sl-btn-per').forEach(function(b){
-    b.classList.toggle('ativo', b.dataset.p === p);
+  document.querySelectorAll('[data-p]').forEach(function(b){
+    if (b.closest('#viewSleepOver')) b.classList.toggle('ativo', b.dataset.p === p);
   });
   document.getElementById('slDatasLivres').style.display = p === 'livre' ? 'flex' : 'none';
   if (p !== 'livre') slCarregar();
+}
+
+function slFiltrarTipo(t) {
+  slTipoAtivo = t;
+  document.querySelectorAll('[data-tipo]').forEach(function(b){
+    b.classList.toggle('ativo', b.dataset.tipo === t);
+  });
+  slRenderizar();
 }
 
 function slCarregar() {
@@ -3439,15 +3475,15 @@ function slCarregar() {
     : slFmtDatas(slPeriodoAtivo);
   if (!datas || !datas.de) return;
 
-  // feedback visual
   document.getElementById('slKTotal').textContent  = '—';
-  document.getElementById('slKOnline').textContent  = '—';
-  document.getElementById('slKOffline').textContent = '—';
-  document.getElementById('slKNao').textContent     = '—';
-  document.getElementById('slKAder').textContent    = '—';
-  document.getElementById('slOfensores').innerHTML  = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+  document.getElementById('slKAder').textContent   = '—';
+  document.getElementById('slKNao').textContent    = '—';
+  document.getElementById('slKPct').textContent    = '—';
+  document.getElementById('slKOnline').textContent = '—';
+  document.getElementById('slKOffline').textContent= '—';
+  document.getElementById('slOfensores').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
   document.getElementById('slGridTransp').innerHTML = '';
-  document.getElementById('slTabela').innerHTML     = '';
+  document.getElementById('slTabela').innerHTML    = '';
 
   var cb  = 'slCallback' + Date.now();
   var url = API + '?action=getSleepOver' +
@@ -3476,7 +3512,7 @@ function slCarregar() {
       if (t === valAtual) o.selected = true;
       sel.appendChild(o);
     });
-    slRenderizar();
+    slCarregarJust();
   };
 
   var s = document.createElement('script'); s.src = url;
@@ -3484,16 +3520,40 @@ function slCarregar() {
   document.body.appendChild(s);
 }
 
+// Carrega justificativas existentes em paralelo
+function slCarregarJust() {
+  var cb = 'slJustCallback' + Date.now();
+  var url = API + '?action=getJustSleepOver&callback=' + cb + '&t=' + Date.now();
+  window[cb] = function(data) {
+    delete window[cb];
+    slJustMap = {};
+    (data.registros || []).forEach(function(r){
+      var key = (r.id_rota || '') + '|' + (r.data_ocorrencia || '');
+      slJustMap[key] = r.motivo || '';
+    });
+    slRenderizar();
+  };
+  var s = document.createElement('script'); s.src = url;
+  document.body.appendChild(s);
+}
+
 function slGetFiltrado() {
-  var t = document.getElementById('slSelTransp').value;
-  return t ? slDadosRaw.filter(function(r){ return r.transp === t; }) : slDadosRaw;
+  var transp = document.getElementById('slSelTransp').value;
+  return slDadosRaw.filter(function(r){
+    if (transp && r.transp !== transp) return false;
+    if (slTipoAtivo !== 'todos') {
+      var tipo = String(r.tipo_rota || '').toUpperCase();
+      if (tipo !== slTipoAtivo) return false;
+    }
+    return true;
+  });
 }
 
 function slRenderizar() {
   var rows = slGetFiltrado();
   slRenderKpis(rows);
   slRenderTransp(rows);
-  slRenderOfensores(rows);
+  slRenderNaoAceitou(rows);
   slRenderTabela(rows);
 }
 
@@ -3502,16 +3562,18 @@ function slRenderKpis(rows) {
   var online  = rows.filter(function(r){ return r.sleepover === 'ONLINE'; }).length;
   var offline = rows.filter(function(r){ return r.sleepover === 'OFFLINE'; }).length;
   var nao     = rows.filter(function(r){ return r.sleepover === 'NÃO ACEITOU'; }).length;
-  var pct     = total > 0 ? Math.round(online / total * 100) : 0;
+  var ader    = online + offline;
+  var pct     = total > 0 ? Math.round(ader / total * 100) : 0;
   var corCls  = pct >= 80 ? 'g' : pct >= 50 ? 'w' : 'd';
 
   document.getElementById('slKTotal').textContent   = total;
+  document.getElementById('slKAder').textContent    = ader;
+  document.getElementById('slKNao').textContent     = nao;
   document.getElementById('slKOnline').textContent  = online;
   document.getElementById('slKOffline').textContent = offline;
-  document.getElementById('slKNao').textContent     = nao;
-  var kAder = document.getElementById('slKAder');
-  kAder.textContent = pct + '%';
-  kAder.className   = 'kpi-val ' + corCls;
+  var kPct = document.getElementById('slKPct');
+  kPct.textContent = pct + '%';
+  kPct.className   = 'kpi-val ' + corCls;
 }
 
 function slRenderTransp(rows) {
@@ -3528,9 +3590,10 @@ function slRenderTransp(rows) {
   var sel = document.getElementById('slSelTransp').value;
   var html = '';
   Object.keys(grupos).sort().forEach(function(t){
-    var g   = grupos[t];
-    var pct = g.total > 0 ? Math.round(g.online / g.total * 100) : 0;
-    var cor = pct >= 80 ? 'var(--ok)' : pct >= 50 ? 'var(--warn)' : 'var(--danger)';
+    var g    = grupos[t];
+    var ader = g.online + g.offline;
+    var pct  = g.total > 0 ? Math.round(ader / g.total * 100) : 0;
+    var cor  = pct >= 80 ? 'var(--ok)' : pct >= 50 ? 'var(--warn)' : 'var(--danger)';
     var ativo = sel === t ? ' ativo' : '';
     html +=
       '<div class="sl-tc' + ativo + '" onclick="slClicarTransp(\'' + t.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">' +
@@ -3539,9 +3602,9 @@ function slRenderTransp(rows) {
         '<div class="sl-tc-sub">aderência</div>' +
         '<div class="sl-bar-wrap"><div class="sl-bar-fill" style="width:' + pct + '%;background:' + cor + '"></div></div>' +
         '<div class="sl-tc-pills">' +
-          '<span class="sl-tc-pill" style="background:rgba(0,166,80,.12);color:var(--ok)">✅ ' + g.online + '</span>' +
-          (g.offline ? '<span class="sl-tc-pill" style="background:rgba(240,168,0,.12);color:var(--warn)">📴 ' + g.offline + '</span>' : '') +
-          (g.nao     ? '<span class="sl-tc-pill" style="background:rgba(224,82,82,.12);color:var(--danger)">🚫 ' + g.nao + '</span>' : '') +
+          '<span class="sl-tc-pill" style="background:rgba(0,166,80,.12);color:var(--ok)">📶 ' + g.online + '</span>' +
+          '<span class="sl-tc-pill" style="background:rgba(52,131,250,.12);color:var(--blue)">📴 ' + g.offline + '</span>' +
+          (g.nao ? '<span class="sl-tc-pill" style="background:rgba(224,82,82,.12);color:var(--danger)">🚫 ' + g.nao + '</span>' : '') +
         '</div>' +
         '<div class="sl-tc-total">' + g.total + ' rota' + (g.total > 1 ? 's' : '') + '</div>' +
       '</div>';
@@ -3557,39 +3620,51 @@ function slClicarTransp(t) {
   slRenderizar();
 }
 
-function slRenderOfensores(rows) {
-  var naoAder = rows
-    .filter(function(r){ return r.sleepover !== 'ONLINE'; })
+function slRenderNaoAceitou(rows) {
+  var naoAceitou = rows
+    .filter(function(r){ return r.sleepover === 'NÃO ACEITOU'; })
     .sort(function(a,b){ return b.orh - a.orh; });
 
   var el = document.getElementById('slOfensores');
 
-  if (!naoAder.length) {
-    el.innerHTML = '<div class="empty" style="color:var(--ok)">✅ Todos aderiram no período filtrado!</div>';
+  if (!naoAceitou.length) {
+    el.innerHTML = '<div class="empty" style="color:var(--ok)">✅ Nenhum motorista deixou de aceitar no período filtrado!</div>';
     return;
   }
 
   var html =
     '<div style="overflow-x:auto"><table class="sl-table"><thead><tr>' +
-    '<th>Transportadora</th><th>Placa</th><th>Rota</th>' +
-    '<th>Status</th><th>ORH</th><th>Últ. Pacote</th><th>Encerramento</th><th>Data</th>' +
+    '<th>Transp.</th><th>Tipo</th><th>Placa</th><th>Rota</th>' +
+    '<th>ORH</th><th>Data</th><th>Justificativa</th><th></th>' +
     '</tr></thead><tbody>';
 
-  naoAder.forEach(function(r){
-    var cls = r.sleepover === 'NÃO ACEITOU' ? 'sl-nao' : 'sl-offline';
-    var ico = r.sleepover === 'NÃO ACEITOU' ? '🚫' : '📴';
+  naoAceitou.forEach(function(r){
     var orhStr = r.orh > 0 ? r.orh.toFixed(1) + 'h' : '--';
-    var orhCls = r.orh > 12 ? ' style="color:var(--danger);font-weight:700"' : r.orh > 8 ? ' style="color:var(--warn);font-weight:700"' : '';
+    var orhCls = r.orh > 12 ? 'color:var(--danger);font-weight:700' : r.orh > 8 ? 'color:var(--warn);font-weight:700' : '';
+    var key    = r.id_rota + '|' + r.data;
+    var just   = slJustMap[key] || '';
+    var justHtml = just
+      ? '<span style="color:var(--ok);font-size:11px" title="' + e(just) + '">✔ ' + e(just.substring(0,40)) + (just.length > 40 ? '…' : '') + '</span>'
+      : '<span style="color:var(--text2);font-size:11px;opacity:.5">—</span>';
+    var btnLabel = just ? '✏ Editar' : '+ Justificar';
+    var btnStyle = just ? 'background:var(--ok)' : '';
     html +=
       '<tr>' +
         '<td>' + e(r.transp) + '</td>' +
+        '<td><span class="sb" style="background:rgba(52,131,250,.12);color:var(--blue)">' + e(r.tipo_rota || '—') + '</span></td>' +
         '<td class="sid">' + e(r.placa) + '</td>' +
         '<td class="sid">' + e(r.id_rota) + '</td>' +
-        '<td class="' + cls + '">' + ico + ' ' + e(r.sleepover) + '</td>' +
-        '<td' + orhCls + '>' + orhStr + '</td>' +
-        '<td>' + e(r.hr_ultimo) + '</td>' +
-        '<td>' + e(r.hr_enc) + '</td>' +
+        '<td style="' + orhCls + '">' + orhStr + '</td>' +
         '<td style="color:var(--text2);font-size:11px">' + e(r.data) + '</td>' +
+        '<td>' + justHtml + '</td>' +
+        '<td><button class="btn-just" style="' + btnStyle + '" onclick="slAbrirModal(' +
+          JSON.stringify(r.id_rota) + ',' +
+          JSON.stringify(r.placa)   + ',' +
+          JSON.stringify(r.transp)  + ',' +
+          JSON.stringify(r.tipo_rota||'') + ',' +
+          JSON.stringify(r.data)    + ',' +
+          JSON.stringify(just)      +
+        ')">' + btnLabel + '</button></td>' +
       '</tr>';
   });
 
@@ -3600,18 +3675,15 @@ function slRenderOfensores(rows) {
 function slRenderTabela(rows) {
   var el = document.getElementById('slTabela');
   if (!rows.length) { el.innerHTML = ''; return; }
-
   var exibir = rows.slice(0, 200);
   var aviso  = rows.length > 200
     ? '<p style="font-size:11px;color:var(--text2);padding:8px 11px">Exibindo 200 de ' + rows.length + ' registros.</p>'
     : '';
-
   var html =
     '<div style="overflow-x:auto"><table class="sl-table"><thead><tr>' +
-    '<th>Data</th><th>Rota</th><th>Placa</th><th>Transportadora</th>' +
+    '<th>Data</th><th>Rota</th><th>Placa</th><th>Transportadora</th><th>Tipo</th>' +
     '<th>Status</th><th>ORH</th><th>Últ. Pacote</th><th>Encerramento</th>' +
     '</tr></thead><tbody>';
-
   exibir.forEach(function(r){
     var cls = r.sleepover === 'ONLINE' ? 'sl-online' : r.sleepover === 'OFFLINE' ? 'sl-offline' : 'sl-nao';
     var ico = r.sleepover === 'ONLINE' ? '✅' : r.sleepover === 'OFFLINE' ? '📴' : '🚫';
@@ -3621,16 +3693,84 @@ function slRenderTabela(rows) {
         '<td class="sid">' + e(r.id_rota) + '</td>' +
         '<td class="sid">' + e(r.placa) + '</td>' +
         '<td>' + e(r.transp) + '</td>' +
+        '<td><span class="sb" style="background:rgba(52,131,250,.12);color:var(--blue)">' + e(r.tipo_rota||'—') + '</span></td>' +
         '<td class="' + cls + '">' + ico + ' ' + e(r.sleepover) + '</td>' +
         '<td>' + (r.orh > 0 ? r.orh.toFixed(1) + 'h' : '--') + '</td>' +
         '<td>' + e(r.hr_ultimo) + '</td>' +
         '<td>' + e(r.hr_enc) + '</td>' +
       '</tr>';
   });
-
   html += '</tbody></table></div>' + aviso;
   el.innerHTML = html;
 }
+
+// ── Modal de justificativa ────────────────────────────────────
+var slModalDados = {};
+
+function slAbrirModal(id_rota, placa, transp, tipo_rota, data, justAtual) {
+  slModalDados = { id_rota: id_rota, placa: placa, transp: transp, tipo_rota: tipo_rota, data: data };
+  document.getElementById('slMInfo').innerHTML =
+    '<div class="mi"><label>Rota</label><span>' + e(id_rota) + '</span></div>' +
+    '<div class="mi"><label>Placa</label><span>' + e(placa) + '</span></div>' +
+    '<div class="mi"><label>Tipo</label><span>' + e(tipo_rota||'—') + '</span></div>' +
+    '<div class="mi"><label>Transportadora</label><span>' + e(transp) + '</span></div>' +
+    '<div class="mi"><label>Data</label><span>' + e(data) + '</span></div>';
+  var existDiv = document.getElementById('slJustExistente');
+  if (justAtual) {
+    existDiv.style.display = 'block';
+    existDiv.innerHTML = '✔ Justificativa registrada: <strong>' + e(justAtual) + '</strong>';
+  } else {
+    existDiv.style.display = 'none';
+  }
+  document.getElementById('slMotivoTxt').value = justAtual || '';
+  document.getElementById('slModalJust').classList.add('open');
+}
+
+function slFecharModal() {
+  document.getElementById('slModalJust').classList.remove('open');
+  slModalDados = {};
+}
+
+function slSalvarJust() {
+  var motivo = document.getElementById('slMotivoTxt').value.trim();
+  if (!motivo) { toast('Informe o motivo da não adesão.', 1); return; }
+
+  var btn = document.getElementById('slBtnSalvar');
+  btn.classList.add('disabled');
+
+  var cb = 'slSalvarCallback' + Date.now();
+  var params = 'action=salvarJustSleepOver' +
+    '&id_rota='        + encodeURIComponent(slModalDados.id_rota   || '') +
+    '&placa='          + encodeURIComponent(slModalDados.placa     || '') +
+    '&transportadora=' + encodeURIComponent(slModalDados.transp    || '') +
+    '&tipo_rota='      + encodeURIComponent(slModalDados.tipo_rota || '') +
+    '&data_ocorrencia='+ encodeURIComponent(slModalDados.data      || '') +
+    '&motivo='         + encodeURIComponent(motivo) +
+    '&responsavel='    + encodeURIComponent(sessao ? sessao.nome   : '') +
+    '&callback=' + cb + '&t=' + Date.now();
+
+  window[cb] = function(data) {
+    delete window[cb];
+    btn.classList.remove('disabled');
+    if (data.ok) {
+      var key = slModalDados.id_rota + '|' + slModalDados.data;
+      slJustMap[key] = motivo;
+      toast('Justificativa salva!');
+      slFecharModal();
+      slRenderNaoAceitou(slGetFiltrado());
+    } else {
+      toast('Erro ao salvar: ' + (data.erro || ''), 1);
+    }
+  };
+
+  var s = document.createElement('script');
+  s.src = API + '?' + params;
+  document.body.appendChild(s);
+}
+
+document.getElementById('slModalJust').addEventListener('click', function(ev){
+  if (ev.target === this) slFecharModal();
+});
 </script>
 
 <!-- MODAL: JUSTIFICATIVA TELEMETRIA -->
