@@ -3710,18 +3710,28 @@ function slRenderNaoAceitou(rows) {
     return;
   }
 
+  // Store global para evitar quebra de aspas no onclick
+  window._slStore = {};
+
   var html =
     '<div style="overflow-x:auto"><table class="sl-table"><thead><tr>' +
     '<th>Transp.</th><th>Tipo</th><th>Placa</th><th>Rota</th>' +
-    '<th>ORH</th><th>Data</th><th>Justificativa</th><th></th>' +
+    '<th>ORH</th><th>Data</th><th>Entrevista</th><th></th>' +
     '</tr></thead><tbody>';
 
-  naoAceitou.forEach(function(r){
+  naoAceitou.forEach(function(r, idx){
     var orhStr = r.orh > 0 ? r.orh.toFixed(1) + 'h' : '--';
     var orhCls = r.orh > 12 ? 'color:var(--danger);font-weight:700' : r.orh > 8 ? 'color:var(--warn);font-weight:700' : '';
     var key    = r.id_rota + '|' + r.data;
     var just   = slJustMap[key] || null;
     var temJust = just && just.motivo;
+
+    // Guardar no store — sem problemas de escape
+    window._slStore[idx] = {
+      id_rota: r.id_rota, placa: r.placa, transp: r.transp,
+      tipo_rota: r.tipo_rota || '', data: r.data, just: just
+    };
+
     // Resumo das respostas como mini-pills
     var pillsHtml = '';
     if (temJust) {
@@ -3730,16 +3740,21 @@ function slRenderNaoAceitou(rows) {
       qKeys.forEach(function(q, i) {
         var v = just[q];
         if (v) {
-          var cor = v === 'Sim' ? 'rgba(0,166,80,.15);color:var(--ok)' : 'rgba(224,82,82,.15);color:var(--danger)';
-          pillsHtml += '<span style="font-size:10px;font-weight:700;border-radius:3px;padding:1px 5px;background:' + cor + ';margin-right:2px">' + qLabels[i] + ':' + v + '</span>';
+          var cor = v === 'Sim'
+            ? 'background:rgba(0,166,80,.15);color:var(--ok)'
+            : 'background:rgba(224,82,82,.15);color:var(--danger)';
+          pillsHtml += '<span style="font-size:10px;font-weight:700;border-radius:3px;padding:1px 5px;margin-right:2px;' + cor + '">' + qLabels[i] + ':' + v + '</span>';
         }
       });
     }
+
     var justHtml = temJust
       ? '<div style="font-size:11px"><div style="color:var(--ok);margin-bottom:3px">✔ ' + e((just.motivo||'').substring(0,35)) + ((just.motivo||'').length > 35 ? '…' : '') + '</div><div>' + pillsHtml + '</div></div>'
-      : '<span style="color:var(--text2);font-size:11px;opacity:.5">Sem justificativa</span>';
+      : '<span style="color:var(--text2);font-size:11px;opacity:.5">Sem entrevista</span>';
+
     var btnLabel = temJust ? '✏ Editar' : '+ Justificar';
     var btnStyle = temJust ? 'background:var(--ok)' : '';
+
     html +=
       '<tr>' +
         '<td>' + e(r.transp) + '</td>' +
@@ -3749,19 +3764,18 @@ function slRenderNaoAceitou(rows) {
         '<td style="' + orhCls + '">' + orhStr + '</td>' +
         '<td style="color:var(--text2);font-size:11px">' + e(r.data) + '</td>' +
         '<td>' + justHtml + '</td>' +
-        '<td><button class="btn-just" style="' + btnStyle + '" onclick="slAbrirModal(' +
-          JSON.stringify(r.id_rota) + ',' +
-          JSON.stringify(r.placa)   + ',' +
-          JSON.stringify(r.transp)  + ',' +
-          JSON.stringify(r.tipo_rota||'') + ',' +
-          JSON.stringify(r.data)    + ',' +
-          JSON.stringify(just)      +
-        ')">' + btnLabel + '</button></td>' +
+        '<td><button class="btn-just" style="' + btnStyle + '" onclick="slAbrirModalById(' + idx + ')">' + btnLabel + '</button></td>' +
       '</tr>';
   });
 
   html += '</tbody></table></div>';
   el.innerHTML = html;
+}
+
+function slAbrirModalById(idx) {
+  var d = window._slStore && window._slStore[idx];
+  if (!d) return;
+  slAbrirModal(d.id_rota, d.placa, d.transp, d.tipo_rota, d.data, d.just);
 }
 
 function slRenderTabela(rows) {
