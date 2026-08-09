@@ -2965,7 +2965,7 @@ function toggleCalibracao() {
 }
 
 function abrirModalTele(driverId, placa, mlp, dataOcorrencia, totalEventos) {
-  teleModalCtx = { driverId: driverId, placa: placa, mlp: mlp };
+  teleModalCtx = { driverId: driverId, placa: placa, mlp: mlp, dataOcorrencia: dataOcorrencia };
   // Pré-preenche campos automáticos
   document.getElementById('mt_driver_id').value        = driverId || '';
   document.getElementById('mt_placa').value            = placa || '';
@@ -3069,7 +3069,7 @@ function salvarJustTele() {
     btn.disabled = false; btn.textContent = 'Salvar justificativa';
     if (d && d.ok) {
       // Marca localmente como justificado
-      teleJustCache.push({ driver_id: String(ctx.driverId), transportadora: payload.transportadora, data_registro: d.ts });
+      teleJustCache.push({ driver_id: String(ctx.driverId), data_ocorrencia: String(ctx.dataOcorrencia || ''), transportadora: payload.transportadora, data_registro: d.ts });
       fecharModalTele();
       toast('Justificativa salva com sucesso! ✓', 0);
       renderTelemetria(); // atualiza o ranking
