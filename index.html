@@ -643,6 +643,36 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 /* SVG helper */
 .arrow-svg { display: inline-block; }
 
+/* ── ATRIBUIÇÕES ─────────────────────────────────── */
+.atr-nav { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+.atr-nav-btn { background:var(--card); border:1.5px solid var(--border); border-radius:6px; padding:6px 14px; font-size:16px; cursor:pointer; color:var(--text); font-family:var(--font); transition:all .15s; }
+.atr-nav-btn:hover { border-color:var(--blue); }
+.atr-data-label { font-size:14px; font-weight:700; min-width:120px; text-align:center; }
+.atr-ciclo-btns { display:flex; gap:6px; margin-bottom:18px; }
+.atr-cbtn { background:var(--card); border:1.5px solid var(--border); border-radius:6px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer; color:var(--text2); font-family:var(--font); transition:all .15s; }
+.atr-cbtn:hover { border-color:var(--blue); }
+.atr-cbtn.ativo { background:var(--blue); border-color:var(--blue); color:#fff; }
+.atr-ciclo-section { margin-bottom:24px; }
+.atr-ciclo-header { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px; margin-bottom:10px; font-weight:700; font-size:13px; }
+.atr-ciclo-am { background:rgba(52,131,250,.12); color:var(--blue); }
+.atr-ciclo-pm { background:rgba(240,168,0,.12); color:var(--warn); }
+.atr-ciclo-sd { background:rgba(150,90,250,.12); color:#a78bfa; }
+.atr-ciclo-badge { font-size:10px; background:rgba(255,255,255,.12); border-radius:4px; padding:2px 7px; font-weight:600; }
+.atr-transp-title { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); font-weight:700; margin:10px 0 6px 2px; }
+.atr-table { width:100%; border-collapse:collapse; font-size:12px; min-width:580px; }
+.atr-table th { background:var(--bg); padding:7px 11px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); border-bottom:1.5px solid var(--border); font-weight:700; white-space:nowrap; }
+.atr-table td { padding:8px 11px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.atr-table tr:last-child td { border-bottom:none; }
+.atr-table tr:hover td { background:rgba(52,131,250,.04); }
+.atr-pend { color:var(--warn); font-weight:600; }
+.atr-ok   { color:var(--ok);   font-weight:600; }
+.atr-pill-pend { background:rgba(240,168,0,.15); color:var(--warn); font-size:10px; font-weight:700; border-radius:4px; padding:2px 6px; }
+.atr-pill-ok   { background:rgba(0,166,80,.12);  color:var(--ok);   font-size:10px; font-weight:700; border-radius:4px; padding:2px 6px; }
+.atr-summary { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.atr-sum-item { background:var(--card); border:1.5px solid var(--border); border-radius:8px; padding:10px 18px; text-align:center; min-width:90px; }
+.atr-sum-val { font-size:1.5rem; font-weight:800; line-height:1; }
+.atr-sum-lbl { font-size:10px; color:var(--text2); margin-top:3px; }
+
 /* ── EVOLUÇÃO TELEMETRIA ──────────────────────────── */
 .evo-periodo-wrap { display:flex; gap:6px; margin-bottom:18px; }
 .evo-pbtn {
@@ -925,6 +955,10 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <button class="nav-item" data-view="sleepover" onclick="abrirView('sleepover')">
       <div class="dots_border"></div>
       <span class="nav-icon">💤</span> <span>SleepOver</span>
+    </button>
+    <button class="nav-item" data-view="atribuicoes" onclick="abrirView('atribuicoes')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">📋</span> <span>Atribuições</span>
     </button>
   </nav>
 </aside>
@@ -1414,6 +1448,38 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <button class="btn-salvar-just" id="slBtnSalvar" onclick="slSalvarJust()">Salvar entrevista</button>
     </div>
   </div>
+  <!-- VIEW: ATRIBUIÇÕES -->
+  <div class="view" id="viewAtribuicoes">
+    <div class="page-header">
+      <div class="page-title">📋 Atribuições</div>
+      <div class="page-sub">Rotas atribuídas por ciclo e transportadora</div>
+    </div>
+
+    <!-- Navegação de data -->
+    <div class="atr-nav">
+      <button class="atr-nav-btn" onclick="atrNavData(-1)">←</button>
+      <div class="atr-data-label" id="atrDataLabel">—</div>
+      <button class="atr-nav-btn" onclick="atrNavData(+1)">→</button>
+      <button class="btn-atualizar" onclick="atrCarregar()" style="margin-left:8px">↺ Atualizar</button>
+    </div>
+
+    <!-- Filtro de ciclo -->
+    <div class="atr-ciclo-btns">
+      <button class="atr-cbtn ativo" data-ciclo="todos" onclick="atrFiltrarCiclo('todos')">Todos</button>
+      <button class="atr-cbtn" data-ciclo="AM" onclick="atrFiltrarCiclo('AM')">🌅 AM</button>
+      <button class="atr-cbtn" data-ciclo="PM" onclick="atrFiltrarCiclo('PM')">🌤 PM</button>
+      <button class="atr-cbtn" data-ciclo="SD" onclick="atrFiltrarCiclo('SD')">🌙 SD</button>
+    </div>
+
+    <!-- KPI resumo -->
+    <div class="atr-summary" id="atrSummary"></div>
+
+    <!-- Conteúdo agrupado -->
+    <div id="atrConteudo">
+      <div class="empty"><span class="spinner"></span> Carregando...</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- MODAL -->
@@ -1578,7 +1644,7 @@ function sair() {
   sessionStorage.removeItem('spr5sessao');
   sessao = null; cache = [];
   // reseta flags de carregamento das ferramentas
-  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false; sleepCarregado = false;
+  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false; sleepCarregado = false; atrCarregado = false;
   orhCache = []; pendCache = [];
   // restaura os itens do menu (exceto os marcados como ocultos, ex: Pacotes desativado)
   document.querySelectorAll('.nav-item').forEach(function(b){
@@ -1607,6 +1673,7 @@ var pendCarregado = false;
 var pendCache = [];
 var briefingCarregado = false;
 var sleepCarregado    = false;
+var atrCarregado      = false;
 
 function abrirMenu() {
   document.getElementById('sidebar').classList.add('aberto');
@@ -1630,6 +1697,13 @@ function abrirView(nome, semFechar) {
   document.getElementById('viewBriefing').classList.toggle('ativa', nome === 'briefing');
   document.getElementById('viewTelemetria').classList.toggle('ativa', nome === 'telemetria');
   document.getElementById('viewSleepOver').classList.toggle('ativa', nome === 'sleepover');
+  document.getElementById('viewAtribuicoes').classList.toggle('ativa', nome === 'atribuicoes');
+
+  // Atribuições: carrega na primeira abertura
+  if (nome === 'atribuicoes' && sessao && !atrCarregado) {
+    atrCarregado = true;
+    atrInicializar();
+  }
 
   if (nome === 'telemetria' && sessao && !teleCarregado) carregarTelemetria();
 
@@ -4187,6 +4261,202 @@ function slSalvarJust() {
 document.getElementById('slModalJust').addEventListener('click', function(ev){
   if (ev.target === this) slFecharModal();
 });
+
+// ════════════════════════════════════════════════════════
+//  ATRIBUIÇÕES
+// ════════════════════════════════════════════════════════
+var atrDataAtual   = null;  // Date objeto
+var atrDadosRaw    = [];
+var atrCicloAtivo  = 'todos';
+
+// ── Inicialização ──────────────────────────────────────
+function atrInicializar() {
+  // padrão D+1
+  var amanha = new Date();
+  amanha.setDate(amanha.getDate() + 1);
+  atrDataAtual = amanha;
+  atrAtualizarLabel();
+  atrCarregar();
+}
+
+// ── Formata data como dd/MM/yyyy ────────────────────────
+function atrFmtDate(d) {
+  return String(d.getDate()).padStart(2,'0') + '/' +
+         String(d.getMonth()+1).padStart(2,'0') + '/' +
+         d.getFullYear();
+}
+
+// ── Navegação de data ──────────────────────────────────
+function atrNavData(delta) {
+  if (!atrDataAtual) atrDataAtual = new Date();
+  atrDataAtual.setDate(atrDataAtual.getDate() + delta);
+  atrAtualizarLabel();
+  atrCarregar();
+}
+
+function atrAtualizarLabel() {
+  if (!atrDataAtual) return;
+  var hoje    = new Date(); hoje.setHours(0,0,0,0);
+  var amanha  = new Date(hoje); amanha.setDate(hoje.getDate()+1);
+  var alvo    = new Date(atrDataAtual); alvo.setHours(0,0,0,0);
+  var label   = atrFmtDate(atrDataAtual);
+  if (alvo.getTime() === hoje.getTime())   label += ' (hoje)';
+  if (alvo.getTime() === amanha.getTime()) label += ' (D+1)';
+  document.getElementById('atrDataLabel').textContent = label;
+}
+
+// ── Filtro de ciclo ────────────────────────────────────
+function atrFiltrarCiclo(c) {
+  atrCicloAtivo = c;
+  document.querySelectorAll('.atr-cbtn').forEach(function(b){
+    b.classList.toggle('ativo', b.dataset.ciclo === c);
+  });
+  atrRenderizar();
+}
+
+// ── Carregar dados do backend ──────────────────────────
+function atrCarregar() {
+  if (!atrDataAtual) return;
+  var dataStr = atrFmtDate(atrDataAtual);
+
+  document.getElementById('atrSummary').innerHTML  = '';
+  document.getElementById('atrConteudo').innerHTML =
+    '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+
+  // Filtro server-side de transportadora para não-MELI
+  var transpParam = '';
+  if (sessao && !sessao.isMeli) transpParam = '&transportadora=' + encodeURIComponent(sessao.transp);
+
+  var cb  = 'atrCallback' + Date.now();
+  var url = API + '?action=getAtribuicoes' +
+            '&data=' + encodeURIComponent(dataStr) +
+            transpParam +
+            '&callback=' + cb + '&t=' + Date.now();
+
+  window[cb] = function(data) {
+    delete window[cb];
+    if (data.erro || data.error) {
+      document.getElementById('atrConteudo').innerHTML =
+        '<div class="empty" style="color:var(--danger)">⚠ ' + (data.erro||data.error) + '</div>';
+      return;
+    }
+    atrDadosRaw = data.rotas || [];
+    atrRenderizar();
+  };
+
+  var s = document.createElement('script'); s.src = url;
+  s.onerror = function(){ toast('Erro de conexão (Atribuições)', 1); };
+  document.body.appendChild(s);
+}
+
+// ── Renderização ───────────────────────────────────────
+function atrRenderizar() {
+  var rows = atrCicloAtivo === 'todos'
+    ? atrDadosRaw
+    : atrDadosRaw.filter(function(r){ return r.ciclo === atrCicloAtivo; });
+
+  atrRenderSummary(rows);
+
+  if (!rows.length) {
+    document.getElementById('atrConteudo').innerHTML =
+      '<div class="empty">Sem atribuições para o filtro selecionado.</div>';
+    return;
+  }
+
+  // Agrupar por ciclo → transportadora
+  var ciclos = ['AM','PM','SD'];
+  var cicloInfo = {
+    AM: { label:'🌅 AM', cls:'atr-ciclo-am', horarios:'até 09:00' },
+    PM: { label:'🌤 PM', cls:'atr-ciclo-pm', horarios:'até 10:45' },
+    SD: { label:'🌙 SD', cls:'atr-ciclo-sd', horarios:'até 17:05' }
+  };
+
+  var html = '';
+  ciclos.forEach(function(c) {
+    var rotasCiclo = rows.filter(function(r){ return r.ciclo === c; });
+    if (!rotasCiclo.length) return;
+
+    var info      = cicloInfo[c];
+    var total     = rotasCiclo.length;
+    var pendentes = rotasCiclo.filter(function(r){ return !r.atribuido; }).length;
+
+    html += '<div class="atr-ciclo-section">' +
+      '<div class="atr-ciclo-header ' + info.cls + '">' +
+        info.label +
+        '<span class="atr-ciclo-badge">' + total + ' rota' + (total>1?'s':'') + '</span>' +
+        (pendentes > 0 ? '<span class="atr-ciclo-badge" style="background:rgba(240,168,0,.25);color:var(--warn)">⏳ ' + pendentes + ' pendente' + (pendentes>1?'s':'') + '</span>' : '') +
+        '<span style="margin-left:auto;font-size:10px;opacity:.6">' + info.horarios + '</span>' +
+      '</div>';
+
+    // Agrupar por transportadora dentro do ciclo
+    var transpMap = {};
+    rotasCiclo.forEach(function(r){
+      var t = r.transp || '(sem transportadora)';
+      if (!transpMap[t]) transpMap[t] = [];
+      transpMap[t].push(r);
+    });
+
+    Object.keys(transpMap).sort().forEach(function(t) {
+      var lista = transpMap[t];
+      var pend  = lista.filter(function(r){ return !r.atribuido; }).length;
+      html += '<div style="overflow-x:auto">' +
+        '<div class="atr-transp-title">' + e(t) +
+          (pend > 0
+            ? ' <span class="atr-pill-pend">⏳ ' + pend + ' pendente' + (pend>1?'s':'') + '</span>'
+            : ' <span class="atr-pill-ok">✅ completo</span>') +
+        '</div>' +
+        '<table class="atr-table"><thead><tr>' +
+          '<th>Travel ID</th><th>Serviço</th><th>Tipo</th>' +
+          '<th>ETA</th><th>Motorista</th><th>Veículo</th><th>Facility</th>' +
+        '</tr></thead><tbody>';
+
+      lista.sort(function(a,b){ return a.eta_min - b.eta_min; }).forEach(function(r){
+        var motorista = r.motorista
+          ? '<span class="atr-ok">' + e(r.motorista) + '</span>'
+          : '<span class="atr-pend">⏳ Pendente</span>';
+        var veiculo = r.veiculo || '<span style="opacity:.4">—</span>';
+        html +=
+          '<tr>' +
+            '<td class="sid">' + e(r.travel_id || r.id) + '</td>' +
+            '<td>' + e(r.servico) + '</td>' +
+            '<td><span class="sb" style="background:rgba(52,131,250,.1);color:var(--blue)">' + e(r.tipo||'—') + '</span></td>' +
+            '<td style="font-variant-numeric:tabular-nums">' + e(r.eta) + '</td>' +
+            '<td>' + motorista + '</td>' +
+            '<td>' + e(veiculo) + '</td>' +
+            '<td style="color:var(--text2);font-size:11px">' + e(r.facility) + '</td>' +
+          '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+    });
+
+    html += '</div>';
+  });
+
+  document.getElementById('atrConteudo').innerHTML = html;
+}
+
+// ── KPI summary bar ────────────────────────────────────
+function atrRenderSummary(rows) {
+  var total = rows.length;
+  var ok    = rows.filter(function(r){ return r.atribuido; }).length;
+  var pend  = total - ok;
+  var pct   = total > 0 ? Math.round(ok / total * 100) : 0;
+  var corPct = pct >= 80 ? 'var(--ok)' : pct >= 50 ? 'var(--warn)' : 'var(--danger)';
+
+  function card(val, lbl, cor) {
+    return '<div class="atr-sum-item">' +
+      '<div class="atr-sum-val" style="color:' + (cor||'var(--text)') + '">' + val + '</div>' +
+      '<div class="atr-sum-lbl">' + lbl + '</div>' +
+      '</div>';
+  }
+
+  document.getElementById('atrSummary').innerHTML =
+    card(total, 'Total de rotas', '')  +
+    card(ok,    'Atribuídas ✅',  'var(--ok)') +
+    card(pend,  'Pendentes ⏳',   pend > 0 ? 'var(--warn)' : 'var(--text2)') +
+    card(pct + '%', 'Cobertura', corPct);
+}
 </script>
 
 <!-- MODAL: JUSTIFICATIVA TELEMETRIA -->
