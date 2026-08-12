@@ -1374,6 +1374,38 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     </details>
   </div>
 
+  <!-- VIEW: ATRIBUIÇÕES -->
+  <div class="view" id="viewAtribuicoes">
+    <div class="page-header">
+      <div class="page-title">📋 Atribuições</div>
+      <div class="page-sub">Rotas atribuídas por ciclo e transportadora</div>
+    </div>
+
+    <!-- Navegação de data -->
+    <div class="atr-nav">
+      <button class="atr-nav-btn" onclick="atrNavData(-1)">←</button>
+      <div class="atr-data-label" id="atrDataLabel">—</div>
+      <button class="atr-nav-btn" onclick="atrNavData(+1)">→</button>
+      <button class="btn-atualizar" onclick="atrCarregar()" style="margin-left:8px">↺ Atualizar</button>
+    </div>
+
+    <!-- Filtro de ciclo -->
+    <div class="atr-ciclo-btns">
+      <button class="atr-cbtn ativo" data-ciclo="todos" onclick="atrFiltrarCiclo('todos')">Todos</button>
+      <button class="atr-cbtn" data-ciclo="AM" onclick="atrFiltrarCiclo('AM')">🌅 AM</button>
+      <button class="atr-cbtn" data-ciclo="PM" onclick="atrFiltrarCiclo('PM')">🌤 PM</button>
+      <button class="atr-cbtn" data-ciclo="SD" onclick="atrFiltrarCiclo('SD')">🌙 SD</button>
+    </div>
+
+    <!-- KPI resumo -->
+    <div class="atr-summary" id="atrSummary"></div>
+
+    <!-- Conteúdo agrupado -->
+    <div id="atrConteudo">
+      <div class="empty"><span class="spinner"></span> Carregando...</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- MODAL JUSTIFICATIVA SLEEPOVER -->
@@ -1448,38 +1480,6 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <button class="btn-salvar-just" id="slBtnSalvar" onclick="slSalvarJust()">Salvar entrevista</button>
     </div>
   </div>
-  <!-- VIEW: ATRIBUIÇÕES -->
-  <div class="view" id="viewAtribuicoes">
-    <div class="page-header">
-      <div class="page-title">📋 Atribuições</div>
-      <div class="page-sub">Rotas atribuídas por ciclo e transportadora</div>
-    </div>
-
-    <!-- Navegação de data -->
-    <div class="atr-nav">
-      <button class="atr-nav-btn" onclick="atrNavData(-1)">←</button>
-      <div class="atr-data-label" id="atrDataLabel">—</div>
-      <button class="atr-nav-btn" onclick="atrNavData(+1)">→</button>
-      <button class="btn-atualizar" onclick="atrCarregar()" style="margin-left:8px">↺ Atualizar</button>
-    </div>
-
-    <!-- Filtro de ciclo -->
-    <div class="atr-ciclo-btns">
-      <button class="atr-cbtn ativo" data-ciclo="todos" onclick="atrFiltrarCiclo('todos')">Todos</button>
-      <button class="atr-cbtn" data-ciclo="AM" onclick="atrFiltrarCiclo('AM')">🌅 AM</button>
-      <button class="atr-cbtn" data-ciclo="PM" onclick="atrFiltrarCiclo('PM')">🌤 PM</button>
-      <button class="atr-cbtn" data-ciclo="SD" onclick="atrFiltrarCiclo('SD')">🌙 SD</button>
-    </div>
-
-    <!-- KPI resumo -->
-    <div class="atr-summary" id="atrSummary"></div>
-
-    <!-- Conteúdo agrupado -->
-    <div id="atrConteudo">
-      <div class="empty"><span class="spinner"></span> Carregando...</div>
-    </div>
-  </div>
-
 </div>
 
 <!-- MODAL -->
