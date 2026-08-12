@@ -643,7 +643,20 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 /* SVG helper */
 .arrow-svg { display: inline-block; }
 
-/* ── SLEEPOVER ──────────────────────────────────── */
+/* ── EVOLUÇÃO TELEMETRIA ──────────────────────────── */
+.evo-periodo-wrap { display:flex; gap:6px; margin-bottom:18px; }
+.evo-pbtn {
+  background: var(--card); border: 1.5px solid var(--border); border-radius:6px;
+  padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer;
+  color:var(--text2); font-family:var(--font); transition:all .15s;
+}
+.evo-pbtn:hover  { border-color:var(--blue); color:var(--blue); }
+.evo-pbtn.ativo  { background:var(--blue); border-color:var(--blue); color:#fff; }
+.evo-section-lbl { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); font-weight:700; margin:0 0 10px; }
+.evo-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); gap:14px; }
+.evo-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); }
+.evo-card-title { font-size:12px; font-weight:700; margin-bottom:12px; color:var(--text); }
+.evo-canvas-wrap { position:relative; height:220px; }
 .sl-btn-per {
   background: var(--card);
   border: 1.5px solid var(--border);
@@ -1067,13 +1080,24 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 
     <!-- Abas -->
     <div class="tabs">
-      <div class="tab ativo" data-teletab="transp">Por transportadora</div>
+      <div class="tab ativo" data-teletab="evolucao">📈 Evolução</div>
+      <div class="tab" data-teletab="transp">Por transportadora</div>
       <div class="tab" data-teletab="drivers">Top ofensores</div>
       <div class="tab" data-teletab="detalhe">Detalhe completo</div>
     </div>
 
+    <!-- Evolução -->
+    <div id="telePaneEvolucao">
+      <div class="evo-periodo-wrap">
+        <button class="evo-pbtn ativo" data-ep="dia"    onclick="evoSetPeriodo('dia')">Por Dia</button>
+        <button class="evo-pbtn"       data-ep="semana" onclick="evoSetPeriodo('semana')">Por Semana</button>
+        <button class="evo-pbtn"       data-ep="mes"    onclick="evoSetPeriodo('mes')">Por Mês</button>
+      </div>
+      <div id="evoConteudo"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
     <!-- Por transportadora -->
-    <div id="telePaneTransp">
+    <div id="telePaneTransp" style="display:none">
       <div id="teleTranspLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
 
@@ -2898,7 +2922,7 @@ document.querySelectorAll('[data-btab]').forEach(function(t){
 // JUSTIFICATIVAS TELEMETRIA
 // ════════════════════════════════════════════════════════════
 var teleJustCache = [];
-var abaAtivaTele = 'transp'; // controla qual painel renderizar // histórico de justificativas já salvas
+var abaAtivaTele = 'evolucao'; // controla qual painel renderizar // histórico de justificativas já salvas
 var teleJustCarregado = false;
 var teleModalCtx = null; // contexto do driver que está sendo justificado
 
@@ -3212,9 +3236,10 @@ function renderTelemetria() {
     (dados.length < teleCache.length ? ' (filtrado de ' + teleCache.length + ')' : '');
 
   // Renderiza só o painel ativo — performance
-  if (abaAtivaTele === 'transp')   renderTeleTransp(dados);
-  else if (abaAtivaTele === 'drivers') renderTeleDrivers(dados);
-  else if (abaAtivaTele === 'detalhe') renderTeleDetalhe(dados);
+  if      (abaAtivaTele === 'evolucao') renderTeleEvolucao(dados);
+  else if (abaAtivaTele === 'transp')   renderTeleTransp(dados);
+  else if (abaAtivaTele === 'drivers')  renderTeleDrivers(dados);
+  else if (abaAtivaTele === 'detalhe')  renderTeleDetalhe(dados);
 }
 
 // ── Ranking por transportadora ──
@@ -3478,6 +3503,7 @@ document.querySelectorAll('[data-teletab]').forEach(function(t){
     t.classList.add('ativo');
     var n = t.getAttribute('data-teletab');
     abaAtivaTele = n; // atualiza aba ativa
+    document.getElementById('telePaneEvolucao').style.display = n==='evolucao'?'block':'none';
     document.getElementById('telePaneTransp').style.display  = n==='transp'?'block':'none';
     document.getElementById('telePaneDrivers').style.display = n==='drivers'?'block':'none';
     document.getElementById('telePaneDetalhe').style.display = n==='detalhe'?'block':'none';
@@ -3509,6 +3535,232 @@ function toast(msg,err){ var t=document.getElementById('toast'); t.textContent=m
 
 document.getElementById('modalJust').addEventListener('click',function(ev){if(ev.target===this)fecharModal();});
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape')fecharModal();});
+
+// ════════════════════════════════════════════════════════
+//  EVOLUÇÃO TELEMETRIA
+// ════════════════════════════════════════════════════════
+var evoPeriodoAtivo = 'dia';
+var evoCharts       = {};  // id → Chart instance
+
+// ── Toggle de período ──────────────────────────────────
+function evoSetPeriodo(p) {
+  evoPeriodoAtivo = p;
+  document.querySelectorAll('.evo-pbtn').forEach(function(b){
+    b.classList.toggle('ativo', b.dataset.ep === p);
+  });
+  if (teleCarregado) renderTeleEvolucao(teleFiltrar());
+}
+
+// ── Destrói todos os gráficos ativos ──────────────────
+function evoDestroyAll() {
+  Object.keys(evoCharts).forEach(function(id){
+    try { if (evoCharts[id]) evoCharts[id].destroy(); } catch(e){}
+    delete evoCharts[id];
+  });
+}
+
+// ── Formata chave do período ───────────────────────────
+function evoorGetKey(dataStr, tipo) {
+  var p = dataStr.split('/');
+  if (p.length !== 3) return null;
+  var d = parseInt(p[0],10), m = parseInt(p[1],10), y = parseInt(p[2],10);
+  if (tipo === 'dia')    return dataStr;
+  if (tipo === 'mes')    return String(m).padStart(2,'0') + '/' + y;
+  if (tipo === 'semana') {
+    var dt  = new Date(y, m - 1, d);
+    var dow = dt.getDay() || 7;
+    dt.setDate(dt.getDate() + 4 - dow);
+    var jan1 = new Date(dt.getFullYear(), 0, 1);
+    var wk   = Math.ceil((((dt - jan1) / 86400000) + 1) / 7);
+    return 'S' + String(wk).padStart(2,'0') + '/' + dt.getFullYear();
+  }
+  return dataStr;
+}
+
+// Chave para ordenação cronológica
+function evoSortKey(dataStr, tipo) {
+  var p = dataStr.split('/');
+  if (p.length !== 3) return dataStr;
+  var d = p[0], m = p[1], y = p[2];
+  if (tipo === 'dia')    return y + '-' + m + '-' + d;
+  if (tipo === 'mes')    return y + '-' + m;
+  if (tipo === 'semana') {
+    var k = evoorGetKey(dataStr, 'semana'); // "S32/2026"
+    var pts = k.split('/');
+    return pts[1] + '-' + pts[0]; // "2026-S32"
+  }
+  return dataStr;
+}
+
+// ── Agrupa rows por período ────────────────────────────
+function evoBuildPeriodos(rows, tipo) {
+  var buckets = {};
+  rows.forEach(function(r) {
+    var key = evoorGetKey(r.data, tipo);
+    if (!key) return;
+    if (!buckets[key]) {
+      buckets[key] = { key:key, total:0, fora:0,
+                       sortKey: evoSortKey(r.data, tipo) };
+    }
+    buckets[key].total++;
+    if (r.score !== null && r.score < 90) buckets[key].fora++;
+  });
+  return Object.values(buckets).sort(function(a,b){
+    return a.sortKey.localeCompare(b.sortKey);
+  });
+}
+
+// ── Deduplica teleCache por driver+data (1 rota = 1 driver/dia) ──
+function evoAgrupar(rows) {
+  var mapa = {};
+  rows.forEach(function(r) {
+    var key = (r.driver||'?') + '|' + r.data;
+    if (!mapa[key]) mapa[key] = { driver:r.driver, data:r.data, mlp:r.mlp||'—', score:null };
+    if (r.score !== null && mapa[key].score === null) mapa[key].score = r.score;
+  });
+  return Object.values(mapa);
+}
+
+// ── Desenha um gráfico misto barra+linha ─────────────
+function evoDrawChart(canvasId, periodos) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (evoCharts[canvasId]) { try { evoCharts[canvasId].destroy(); } catch(e){} }
+
+  var isDark   = true; // MonitorLM sempre dark
+  var gridCol  = 'rgba(255,255,255,0.06)';
+  var tickCol  = '#888';
+  var legendCol= '#aaa';
+
+  evoCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+    data: {
+      labels: periodos.map(function(p){ return p.key; }),
+      datasets: [
+        {
+          type            : 'bar',
+          label           : 'Total de rotas',
+          data            : periodos.map(function(p){ return p.total; }),
+          backgroundColor : 'rgba(52,131,250,0.45)',
+          borderColor     : 'rgba(52,131,250,0.8)',
+          borderWidth     : 1,
+          borderRadius    : 4,
+          order           : 2
+        },
+        {
+          type            : 'line',
+          label           : 'Score < 90',
+          data            : periodos.map(function(p){ return p.fora; }),
+          borderColor     : '#e74c3c',
+          backgroundColor : 'rgba(231,76,60,0.08)',
+          borderWidth     : 2.5,
+          pointRadius     : 4,
+          pointBackgroundColor: '#e74c3c',
+          tension         : 0.3,
+          fill            : true,
+          order           : 1
+        }
+      ]
+    },
+    options: {
+      responsive         : true,
+      maintainAspectRatio: false,
+      interaction        : { mode:'index', intersect:false },
+      plugins: {
+        legend: { labels:{ color:legendCol, font:{ size:11 }, boxWidth:14 } },
+        tooltip: {
+          callbacks: {
+            afterLabel: function(ctx) {
+              if (ctx.datasetIndex === 0) {
+                var total = ctx.parsed.y;
+                var fora  = periodos[ctx.dataIndex].fora;
+                var pct   = total > 0 ? Math.round(fora / total * 100) : 0;
+                return '% fora do target: ' + pct + '%';
+              }
+              return '';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color:tickCol, font:{ size:10 }, maxRotation:45 },
+          grid : { color:gridCol }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color:tickCol, font:{ size:10 }, precision:0 },
+          grid : { color:gridCol }
+        }
+      }
+    }
+  });
+}
+
+// ── Renderização principal ─────────────────────────────
+function renderTeleEvolucao(dados) {
+  var agrupado = evoAgrupar(dados);
+  var el       = document.getElementById('evoConteudo');
+  var sel      = document.getElementById('teleFiltroTransp').value;
+
+  evoDestroyAll();
+
+  if (agrupado.length === 0) {
+    el.innerHTML = '<div class="empty">Sem dados no período selecionado.</div>';
+    return;
+  }
+
+  var html = '';
+
+  if (!sel) {
+    // ── Geral ─────────────────────────────────────────
+    html += '<div class="evo-section-lbl">Geral — todas as transportadoras</div>';
+    html += '<div class="evo-card" style="margin-bottom:20px">' +
+              '<div class="evo-canvas-wrap" style="height:250px"><canvas id="evoGeral"></canvas></div>' +
+            '</div>';
+
+    // ── Por transportadora ─────────────────────────────
+    var transpMap = {};
+    agrupado.forEach(function(r) {
+      var t = r.mlp || '—';
+      if (!transpMap[t]) transpMap[t] = [];
+      transpMap[t].push(r);
+    });
+    var transList = Object.keys(transpMap).sort();
+
+    if (transList.length > 0) {
+      html += '<div class="evo-section-lbl" style="margin-top:8px">Por transportadora</div>';
+      html += '<div class="evo-grid">';
+      transList.forEach(function(t) {
+        var cid = 'evoCvs_' + t.replace(/[^a-zA-Z0-9]/g,'_');
+        html += '<div class="evo-card">' +
+                  '<div class="evo-card-title">' + e(t) + '</div>' +
+                  '<div class="evo-canvas-wrap"><canvas id="' + cid + '"></canvas></div>' +
+                '</div>';
+      });
+      html += '</div>';
+    }
+
+    el.innerHTML = html;
+
+    // Desenha geral
+    evoDrawChart('evoGeral', evoBuildPeriodos(agrupado, evoPeriodoAtivo));
+
+    // Desenha por transportadora
+    transList.forEach(function(t) {
+      var cid = 'evoCvs_' + t.replace(/[^a-zA-Z0-9]/g,'_');
+      evoDrawChart(cid, evoBuildPeriodos(transpMap[t], evoPeriodoAtivo));
+    });
+
+  } else {
+    // ── Transportadora filtrada ────────────────────────
+    html += '<div class="evo-card">' +
+              '<div class="evo-card-title">' + e(sel) + '</div>' +
+              '<div class="evo-canvas-wrap" style="height:280px"><canvas id="evoSingle"></canvas></div>' +
+            '</div>';
+    el.innerHTML = html;
+    evoDrawChart('evoSingle', evoBuildPeriodos(agrupado, evoPeriodoAtivo));
+  }
+}
 
 // ════════════════════════════════════════════════════════
 //  SLEEPOVER
@@ -4206,5 +4458,7 @@ document.getElementById('slModalJust').addEventListener('click', function(ev){
 
 </script>
 
+<!-- Chart.js para gráficos de evolução -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </body>
 </html>
