@@ -4414,7 +4414,7 @@ function atrRenderizar() {
         var motorista = r.motorista
           ? '<span class="atr-ok">' + e(r.motorista) + '</span>'
           : '<span class="atr-pend">⏳ Pendente</span>';
-        var veiculo = r.veiculo || '<span style="opacity:.4">—</span>';
+        var veiculoHtml = r.veiculo ? e(r.veiculo) : '<span style="opacity:.4">—</span>';
         html +=
           '<tr>' +
             '<td class="sid">' + e(r.travel_id || r.id) + '</td>' +
@@ -4422,7 +4422,7 @@ function atrRenderizar() {
             '<td><span class="sb" style="background:rgba(52,131,250,.1);color:var(--blue)">' + e(r.tipo||'—') + '</span></td>' +
             '<td style="font-variant-numeric:tabular-nums">' + e(r.eta) + '</td>' +
             '<td>' + motorista + '</td>' +
-            '<td>' + e(veiculo) + '</td>' +
+            '<td>' + veiculoHtml + '</td>' +
             '<td style="color:var(--text2);font-size:11px">' + e(r.facility) + '</td>' +
           '</tr>';
       });
