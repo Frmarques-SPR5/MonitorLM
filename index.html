@@ -1397,6 +1397,14 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <button class="atr-cbtn" data-ciclo="SD" onclick="atrFiltrarCiclo('SD')">🌙 SD</button>
     </div>
 
+    <!-- Filtro transportadora (só MELI vê) -->
+    <div id="atrFiltroTranspWrap" style="display:none;margin-bottom:18px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
+      <select id="atrSelTransp" onchange="atrRenderizar()" style="min-width:200px">
+        <option value="">Todas</option>
+      </select>
+    </div>
+
     <!-- KPI resumo -->
     <div class="atr-summary" id="atrSummary"></div>
 
@@ -4341,6 +4349,26 @@ function atrCarregar() {
       return;
     }
     atrDadosRaw = data.rotas || [];
+
+    // Mostra filtro de transportadora só para MELI
+    if (sessao && sessao.isMeli) {
+      document.getElementById('atrFiltroTranspWrap').style.display = 'block';
+      var transpList = [];
+      atrDadosRaw.forEach(function(r) {
+        if (r.transp && transpList.indexOf(r.transp) === -1) transpList.push(r.transp);
+      });
+      transpList.sort();
+      var sel = document.getElementById('atrSelTransp');
+      var valAtual = sel.value;
+      sel.innerHTML = '<option value="">Todas</option>';
+      transpList.forEach(function(t) {
+        var o = document.createElement('option');
+        o.value = t; o.textContent = t;
+        if (t === valAtual) o.selected = true;
+        sel.appendChild(o);
+      });
+    }
+
     atrRenderizar();
   };
 
@@ -4351,9 +4379,14 @@ function atrCarregar() {
 
 // ── Renderização ───────────────────────────────────────
 function atrRenderizar() {
-  var rows = atrCicloAtivo === 'todos'
-    ? atrDadosRaw
-    : atrDadosRaw.filter(function(r){ return r.ciclo === atrCicloAtivo; });
+  var selTransp = document.getElementById('atrSelTransp');
+  var transpFiltro = selTransp ? selTransp.value : '';
+
+  var rows = atrDadosRaw.filter(function(r) {
+    if (atrCicloAtivo !== 'todos' && r.ciclo !== atrCicloAtivo) return false;
+    if (transpFiltro && r.transp !== transpFiltro) return false;
+    return true;
+  });
 
   atrRenderSummary(rows);
 
