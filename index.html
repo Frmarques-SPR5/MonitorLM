@@ -4783,11 +4783,14 @@ function dsCorPct(pct) {
 // ── KPIs gerais ──────────────────────────────────────────
 function dsRenderKpis(rows) {
   var despachados = 0, entregues = 0, rotas = 0, insucesso = 0;
+  var numDS = 0, denDS = 0;
   rows.forEach(function(r){
     despachados += r.despachados; entregues += r.entregues;
     rotas += r.rotas; insucesso += r.insucesso;
+    numDS += r.numerador_ds; denDS += r.denominador_ds;
   });
-  var dsPctGeral = despachados > 0 ? (entregues / despachados * 100) : 0;
+  // DS% oficial: usa NUMERADOR_DS/DENOMINADOR_DS (métrica real da fonte)
+  var dsPctGeral = denDS > 0 ? (numDS / denDS * 100) : 0;
   var corInfo = dsCorPct(dsPctGeral);
 
   function card(val, lbl, cor) {
@@ -4810,18 +4813,20 @@ function dsRenderRanking(rows) {
   var porTransp = {};
   rows.forEach(function(r){
     var t = r.transp || '(sem transp.)';
-    if (!porTransp[t]) porTransp[t] = { despachados:0, entregues:0, insucesso:0, rotas:0, orhSum:0, orhCount:0 };
+    if (!porTransp[t]) porTransp[t] = { despachados:0, entregues:0, insucesso:0, rotas:0, numDS:0, denDS:0, orhSum:0, orhCount:0 };
     var g = porTransp[t];
     g.despachados += r.despachados;
     g.entregues   += r.entregues;
     g.insucesso   += r.insucesso;
     g.rotas       += r.rotas;
-    if (r.orh_medio > 0) { g.orhSum += r.orh_medio; g.orhCount++; }
+    g.numDS       += r.numerador_ds;
+    g.denDS       += r.denominador_ds;
+    if (r.orh_real > 0) { g.orhSum += r.orh_real; g.orhCount++; }
   });
 
   var lista = Object.keys(porTransp).map(function(t){
     var g = porTransp[t];
-    var pct = g.despachados > 0 ? (g.entregues / g.despachados * 100) : 0;
+    var pct = g.denDS > 0 ? (g.numDS / g.denDS * 100) : 0;
     return {
       transp: t, despachados: g.despachados, entregues: g.entregues,
       insucesso: g.insucesso, rotas: g.rotas, pct: pct,
@@ -4861,9 +4866,10 @@ function dsRenderEvolucao(rows) {
   rows.forEach(function(r){
     var k = r[chave];
     if (!k) return;
-    if (!buckets[k]) buckets[k] = { despachados:0, entregues:0 };
+    if (!buckets[k]) buckets[k] = { despachados:0, numDS:0, denDS:0 };
     buckets[k].despachados += r.despachados;
-    buckets[k].entregues   += r.entregues;
+    buckets[k].numDS += r.numerador_ds;
+    buckets[k].denDS += r.denominador_ds;
   });
 
   var keys = Object.keys(buckets);
@@ -4874,13 +4880,13 @@ function dsRenderEvolucao(rows) {
       return (da && db) ? da - db : a.localeCompare(b);
     });
   } else {
-    keys.sort();
+    keys.sort(); // "AAAA-Sxx" já ordena cronologicamente como string
   }
 
   var labels = keys;
   var dsPctData = keys.map(function(k){
     var b = buckets[k];
-    return b.despachados > 0 ? +(b.entregues / b.despachados * 100).toFixed(1) : 0;
+    return b.denDS > 0 ? +(b.numDS / b.denDS * 100).toFixed(1) : 0;
   });
   var volumeData = keys.map(function(k){ return buckets[k].despachados; });
 
@@ -4923,20 +4929,27 @@ function dsRenderEvolucao(rows) {
   });
 }
 
-// ── Gráfico de motivos de insucesso ──────────────────────
+// ── Gráfico de motivos de insucesso (8 categorias reais da fonte) ────────
 function dsRenderInsucesso(rows) {
   var motivos = {
-    'Ausente': 0, 'Negócio Fechado': 0, 'Endereço Inacessível': 0,
-    'Endereço Incorreto': 0, 'Recusado': 0, 'Mudou Endereço': 0, 'Bloqueado': 0
+    'Comprador Ausente'    : 0,
+    'Endereço Incorreto'   : 0,
+    'Endereço Inacessível' : 0,
+    'Recusado'             : 0,
+    'Negócio Fechado'      : 0,
+    'Mudou Endereço'       : 0,
+    'Bloqueado'            : 0,
+    'Não Mapeado'          : 0
   };
   rows.forEach(function(r){
-    motivos['Ausente']               += r.ausente;
-    motivos['Negócio Fechado']       += r.negocio_fechado;
-    motivos['Endereço Inacessível']  += r.endereco_inacessivel;
-    motivos['Endereço Incorreto']    += r.endereco_incorreto;
-    motivos['Recusado']              += r.recusado;
-    motivos['Mudou Endereço']        += r.mudou_endereco;
-    motivos['Bloqueado']             += r.bloqueado;
+    motivos['Comprador Ausente']    += r.insuc_ausente;
+    motivos['Endereço Incorreto']   += r.insuc_endereco_incorreto;
+    motivos['Endereço Inacessível'] += r.insuc_inacessivel;
+    motivos['Recusado']             += r.insuc_recusado;
+    motivos['Negócio Fechado']      += r.insuc_negocio_fechado;
+    motivos['Mudou Endereço']       += r.insuc_mudou_endereco;
+    motivos['Bloqueado']            += r.insuc_bloqueado;
+    motivos['Não Mapeado']          += r.insuc_nao_mapeado;
   });
 
   var entradas = Object.keys(motivos).map(function(k){ return { label:k, val:motivos[k] }; })
@@ -4947,7 +4960,7 @@ function dsRenderInsucesso(rows) {
   if (dsChartInsuc) { try { dsChartInsuc.destroy(); } catch(e){} }
   if (!entradas.length) return;
 
-  var cores = ['#e74c3c','#e67e22','#f1c40f','#9b59b6','#e91e63','#795548','#607d8b'];
+  var cores = ['#e74c3c','#e67e22','#f1c40f','#9b59b6','#e91e63','#795548','#607d8b','#455a64'];
 
   dsChartInsuc = new Chart(canvas.getContext('2d'), {
     type: 'bar',
