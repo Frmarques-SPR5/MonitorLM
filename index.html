@@ -643,6 +643,29 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 /* SVG helper */
 .arrow-svg { display: inline-block; }
 
+/* ── DS (DELIVERY SUCCESS) ───────────────────────── */
+.ds-modo-btns { display:flex; gap:6px; margin-bottom:16px; }
+.ds-mbtn {
+  background: var(--card); border:1.5px solid var(--border); border-radius:6px;
+  padding:8px 20px; font-size:13px; font-weight:700; cursor:pointer;
+  color:var(--text2); font-family:var(--font); transition:all .15s;
+}
+.ds-mbtn:hover { border-color:var(--blue); color:var(--blue); }
+.ds-mbtn.ativo { background:var(--blue); border-color:var(--blue); color:#fff; }
+.ds-grid-2 { display:grid; grid-template-columns: 1.3fr 1fr; gap:20px; align-items:start; }
+@media (max-width: 900px) { .ds-grid-2 { grid-template-columns: 1fr; } }
+.ds-table { width:100%; border-collapse:collapse; font-size:12px; }
+.ds-table th { background:var(--bg); padding:8px 11px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--text2); border-bottom:1.5px solid var(--border); font-weight:700; white-space:nowrap; }
+.ds-table td { padding:9px 11px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.ds-table tr:last-child td { border-bottom:none; }
+.ds-table tr:hover td { background:rgba(52,131,250,.04); }
+.ds-pct-badge { font-weight:800; font-size:13px; padding:2px 9px; border-radius:6px; display:inline-block; }
+.ds-pct-ok   { background:rgba(0,166,80,.14);  color:var(--ok); }
+.ds-pct-warn { background:rgba(240,168,0,.16); color:var(--warn); }
+.ds-pct-bad  { background:rgba(224,82,82,.16); color:var(--danger); }
+.ds-bar-mini { background:var(--border); border-radius:4px; height:5px; margin-top:4px; overflow:hidden; width:70px; }
+.ds-bar-mini-fill { height:100%; border-radius:4px; }
+
 /* ── ATRIBUIÇÕES ─────────────────────────────────── */
 .atr-nav { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
 .atr-nav-btn { background:var(--card); border:1.5px solid var(--border); border-radius:6px; padding:6px 14px; font-size:16px; cursor:pointer; color:var(--text); font-family:var(--font); transition:all .15s; }
@@ -959,6 +982,10 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <button class="nav-item" data-view="atribuicoes" onclick="abrirView('atribuicoes')">
       <div class="dots_border"></div>
       <span class="nav-icon">📋</span> <span>Atribuições</span>
+    </button>
+    <button class="nav-item" data-view="ds" onclick="abrirView('ds')">
+      <div class="dots_border"></div>
+      <span class="nav-icon">📦</span> <span>DS</span>
     </button>
   </nav>
 </aside>
@@ -1414,6 +1441,92 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     </div>
   </div>
 
+  <!-- VIEW: DS -->
+  <div class="view" id="viewDS">
+    <div class="page-header">
+      <div class="page-title">📦 DS — Delivery Success</div>
+      <div class="page-sub">Eficiência de entrega por transportadora</div>
+    </div>
+
+    <!-- Modo de período: Dia ou Semana -->
+    <div class="ds-modo-btns">
+      <button class="ds-mbtn ativo" data-modo="dia" onclick="dsSetModo('dia')">Por Dia</button>
+      <button class="ds-mbtn" data-modo="semana" onclick="dsSetModo('semana')">Por Semana</button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros" style="align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
+      <!-- Sub-filtro modo Dia -->
+      <div id="dsFiltroDia">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="sl-btn-per ativo" data-p="ontem"  onclick="dsSetPeriodoDia('ontem')">Ontem</button>
+          <button class="sl-btn-per"       data-p="semana" onclick="dsSetPeriodoDia('semana')">Esta semana</button>
+          <button class="sl-btn-per"       data-p="7d"     onclick="dsSetPeriodoDia('7d')">Últimos 7d</button>
+          <button class="sl-btn-per"       data-p="livre"  onclick="dsSetPeriodoDia('livre')">Livre</button>
+        </div>
+        <div id="dsDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <input type="text" id="dsDe"  placeholder="dd/mm/aaaa" style="width:120px">
+          <span style="color:var(--text2);font-size:12px">até</span>
+          <input type="text" id="dsAte" placeholder="dd/mm/aaaa" style="width:120px">
+          <button class="btn-atualizar" onclick="dsRenderizar()" style="margin:0">Aplicar</button>
+        </div>
+      </div>
+
+      <!-- Sub-filtro modo Semana -->
+      <div id="dsFiltroSemana" style="display:none">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Semana</div>
+        <select id="dsSelSemana" onchange="dsRenderizar()" style="min-width:160px">
+          <option value="">Todas</option>
+        </select>
+      </div>
+
+      <!-- Ciclo -->
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Ciclo</div>
+        <div style="display:flex;gap:6px">
+          <button class="sl-btn-per ativo" data-ciclods="todos" onclick="dsFiltrarCiclo('todos')">Todos</button>
+          <button class="sl-btn-per"       data-ciclods="AM"    onclick="dsFiltrarCiclo('AM')">AM</button>
+          <button class="sl-btn-per"       data-ciclods="PM"    onclick="dsFiltrarCiclo('PM')">PM</button>
+          <button class="sl-btn-per"       data-ciclods="SD"    onclick="dsFiltrarCiclo('SD')">SD</button>
+        </div>
+      </div>
+
+      <!-- Transportadora (só MELI) -->
+      <div id="dsFiltroTranspWrap" style="display:none">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
+        <select id="dsSelTransp" onchange="dsRenderizar()" style="min-width:180px">
+          <option value="">Todas</option>
+        </select>
+      </div>
+
+      <button class="btn-atualizar" onclick="dsCarregar()" style="margin-left:auto">↺ Atualizar</button>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="atr-summary" id="dsKpis"></div>
+
+    <!-- Gráfico de evolução -->
+    <div class="evo-card" style="margin-bottom:20px">
+      <div class="evo-card-title" id="dsEvoTitulo">📈 Evolução do DS%</div>
+      <div class="evo-canvas-wrap" style="height:260px"><canvas id="dsEvoChart"></canvas></div>
+    </div>
+
+    <!-- Ranking + Breakdown lado a lado -->
+    <div class="ds-grid-2">
+      <div>
+        <div class="ondas-painel-titulo" style="margin-bottom:10px">🏆 Ranking por transportadora</div>
+        <div id="dsRanking"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+      </div>
+      <div>
+        <div class="ondas-painel-titulo" style="margin-bottom:10px">🚫 Motivos de insucesso</div>
+        <div class="evo-card">
+          <div class="evo-canvas-wrap" style="height:280px"><canvas id="dsInsucessoChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- MODAL JUSTIFICATIVA SLEEPOVER -->
@@ -1652,7 +1765,7 @@ function sair() {
   sessionStorage.removeItem('spr5sessao');
   sessao = null; cache = [];
   // reseta flags de carregamento das ferramentas
-  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false; sleepCarregado = false; atrCarregado = false;
+  ymsCarregado = false; orhCarregado = false; pendCarregado = false; briefingCarregado = false; sleepCarregado = false; atrCarregado = false; dsCarregado = false;
   orhCache = []; pendCache = [];
   // restaura os itens do menu (exceto os marcados como ocultos, ex: Pacotes desativado)
   document.querySelectorAll('.nav-item').forEach(function(b){
@@ -1682,6 +1795,7 @@ var pendCache = [];
 var briefingCarregado = false;
 var sleepCarregado    = false;
 var atrCarregado      = false;
+var dsCarregado       = false;
 
 function abrirMenu() {
   document.getElementById('sidebar').classList.add('aberto');
@@ -1706,11 +1820,18 @@ function abrirView(nome, semFechar) {
   document.getElementById('viewTelemetria').classList.toggle('ativa', nome === 'telemetria');
   document.getElementById('viewSleepOver').classList.toggle('ativa', nome === 'sleepover');
   document.getElementById('viewAtribuicoes').classList.toggle('ativa', nome === 'atribuicoes');
+  document.getElementById('viewDS').classList.toggle('ativa', nome === 'ds');
 
   // Atribuições: carrega na primeira abertura
   if (nome === 'atribuicoes' && sessao && !atrCarregado) {
     atrCarregado = true;
     atrInicializar();
+  }
+
+  // DS: carrega na primeira abertura
+  if (nome === 'ds' && sessao && !dsCarregado) {
+    dsCarregado = true;
+    dsCarregar();
   }
 
   if (nome === 'telemetria' && sessao && !teleCarregado) carregarTelemetria();
@@ -4489,6 +4610,366 @@ function atrRenderSummary(rows) {
     card(ok,    'Atribuídas ✅',  'var(--ok)') +
     card(pend,  'Pendentes ⏳',   pend > 0 ? 'var(--warn)' : 'var(--text2)') +
     card(pct + '%', 'Cobertura', corPct);
+}
+
+// ════════════════════════════════════════════════════════
+//  DS (DELIVERY SUCCESS)
+// ════════════════════════════════════════════════════════
+var dsDadosRaw    = [];
+var dsModoAtivo   = 'dia';    // 'dia' | 'semana'
+var dsPeriodoDia  = 'ontem';  // ontem | semana | 7d | livre
+var dsCicloAtivo  = 'todos';
+var dsChartEvo    = null;
+var dsChartInsuc  = null;
+var META_DS       = 95; // meta de DS% — ajuste aqui se precisar
+
+function dsCarregar() {
+  document.getElementById('dsKpis').innerHTML = '<span style="opacity:.5;font-size:.85rem">Carregando...</span>';
+  document.getElementById('dsRanking').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+
+  var cb  = 'dsCallback' + Date.now();
+  var url = API + '?action=getDS&callback=' + cb + '&t=' + Date.now();
+
+  window[cb] = function(data) {
+    delete window[cb];
+    if (data.erro) {
+      toast('DS: ' + data.erro, 1);
+      document.getElementById('dsRanking').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
+      return;
+    }
+    dsDadosRaw = data.rows || [];
+
+    // Popular select de semanas (ordenado)
+    var semanas = [];
+    dsDadosRaw.forEach(function(r){ if (r.semana && semanas.indexOf(r.semana) === -1) semanas.push(r.semana); });
+    semanas.sort();
+    var selSem = document.getElementById('dsSelSemana');
+    var valSemAtual = selSem.value;
+    selSem.innerHTML = '<option value="">Todas</option>';
+    semanas.forEach(function(s){
+      var o = document.createElement('option'); o.value = s; o.textContent = s;
+      if (s === valSemAtual) o.selected = true;
+      selSem.appendChild(o);
+    });
+
+    // Popular select de transportadora (só MELI)
+    if (sessao && sessao.isMeli) {
+      document.getElementById('dsFiltroTranspWrap').style.display = 'block';
+      var transpList = [];
+      dsDadosRaw.forEach(function(r){ if (r.transp && transpList.indexOf(r.transp) === -1) transpList.push(r.transp); });
+      transpList.sort();
+      var sel = document.getElementById('dsSelTransp');
+      var valAtual = sel.value;
+      sel.innerHTML = '<option value="">Todas</option>';
+      transpList.forEach(function(t){
+        var o = document.createElement('option'); o.value = t; o.textContent = t;
+        if (t === valAtual) o.selected = true;
+        sel.appendChild(o);
+      });
+    }
+
+    dsRenderizar();
+  };
+
+  var s = document.createElement('script'); s.src = url;
+  s.onerror = function(){ toast('Erro de conexão (DS)', 1); };
+  document.body.appendChild(s);
+}
+
+// ── Toggle modo Dia/Semana ──────────────────────────────
+function dsSetModo(modo) {
+  dsModoAtivo = modo;
+  document.querySelectorAll('.ds-mbtn').forEach(function(b){
+    b.classList.toggle('ativo', b.dataset.modo === modo);
+  });
+  document.getElementById('dsFiltroDia').style.display    = modo === 'dia' ? 'block' : 'none';
+  document.getElementById('dsFiltroSemana').style.display = modo === 'semana' ? 'block' : 'none';
+  dsRenderizar();
+}
+
+function dsSetPeriodoDia(p) {
+  dsPeriodoDia = p;
+  document.querySelectorAll('#dsFiltroDia .sl-btn-per').forEach(function(b){
+    b.classList.toggle('ativo', b.dataset.p === p);
+  });
+  document.getElementById('dsDatasLivres').style.display = p === 'livre' ? 'flex' : 'none';
+  if (p !== 'livre') dsRenderizar();
+}
+
+function dsFiltrarCiclo(c) {
+  dsCicloAtivo = c;
+  document.querySelectorAll('[data-ciclods]').forEach(function(b){
+    b.classList.toggle('ativo', b.dataset.ciclods === c);
+  });
+  dsRenderizar();
+}
+
+// ── Parse dd/mm/yyyy → Date ──────────────────────────────
+function dsParseData(str) {
+  var p = String(str||'').split('/');
+  if (p.length !== 3) return null;
+  return new Date(parseInt(p[2],10), parseInt(p[1],10)-1, parseInt(p[0],10));
+}
+
+function dsFmtDatas(tipo) {
+  var hoje = new Date();
+  function fmt(d) { return d.toLocaleDateString('pt-BR'); }
+  if (tipo === 'ontem')  { var v = new Date(hoje); v.setDate(hoje.getDate()-1); return { de: fmt(v), ate: fmt(v) }; }
+  if (tipo === 'semana') { var ini = new Date(hoje); ini.setDate(hoje.getDate()-hoje.getDay()); return { de: fmt(ini), ate: fmt(hoje) }; }
+  if (tipo === '7d')     { var s = new Date(hoje); s.setDate(hoje.getDate()-6); return { de: fmt(s), ate: fmt(hoje) }; }
+  return null;
+}
+
+// ── Filtro completo (dia/semana + ciclo + transportadora) ──
+function dsGetFiltrado() {
+  var rows = dsDadosRaw;
+
+  // Filtro transportadora: MELI usa select, não-MELI é travado na própria
+  var transpFiltro = '';
+  if (sessao && sessao.isMeli) {
+    var sel = document.getElementById('dsSelTransp');
+    transpFiltro = sel ? sel.value : '';
+  } else if (sessao) {
+    transpFiltro = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
+  }
+  if (transpFiltro) {
+    rows = rows.filter(function(r){ return r.transp === transpFiltro; });
+  }
+
+  // Filtro de ciclo
+  if (dsCicloAtivo !== 'todos') {
+    rows = rows.filter(function(r){ return (r.ciclo||'').toUpperCase() === dsCicloAtivo; });
+  }
+
+  // Filtro de período
+  if (dsModoAtivo === 'semana') {
+    var semSel = document.getElementById('dsSelSemana').value;
+    if (semSel) rows = rows.filter(function(r){ return r.semana === semSel; });
+  } else {
+    var datas = dsPeriodoDia === 'livre'
+      ? { de: document.getElementById('dsDe').value.trim(), ate: document.getElementById('dsAte').value.trim() }
+      : dsFmtDatas(dsPeriodoDia);
+    if (datas && datas.de) {
+      var de  = dsParseData(datas.de);
+      var ate = dsParseData(datas.ate); if (ate) ate.setHours(23,59,59);
+      rows = rows.filter(function(r){
+        var d = dsParseData(r.dia);
+        if (!d) return false;
+        if (de && d < de) return false;
+        if (ate && d > ate) return false;
+        return true;
+      });
+    }
+  }
+
+  return rows;
+}
+
+// ── Renderização principal ──────────────────────────────
+function dsRenderizar() {
+  var rows = dsGetFiltrado();
+  dsRenderKpis(rows);
+  dsRenderRanking(rows);
+  dsRenderEvolucao(rows);
+  dsRenderInsucesso(rows);
+}
+
+function dsCorPct(pct) {
+  if (pct >= META_DS) return { cls: 'ds-pct-ok',   cor: 'var(--ok)' };
+  if (pct >= META_DS - 5) return { cls: 'ds-pct-warn', cor: 'var(--warn)' };
+  return { cls: 'ds-pct-bad', cor: 'var(--danger)' };
+}
+
+// ── KPIs gerais ──────────────────────────────────────────
+function dsRenderKpis(rows) {
+  var despachados = 0, entregues = 0, rotas = 0, insucesso = 0;
+  rows.forEach(function(r){
+    despachados += r.despachados; entregues += r.entregues;
+    rotas += r.rotas; insucesso += r.insucesso;
+  });
+  var dsPctGeral = despachados > 0 ? (entregues / despachados * 100) : 0;
+  var corInfo = dsCorPct(dsPctGeral);
+
+  function card(val, lbl, cor) {
+    return '<div class="atr-sum-item">' +
+      '<div class="atr-sum-val" style="color:' + (cor||'var(--text)') + '">' + val + '</div>' +
+      '<div class="atr-sum-lbl">' + lbl + '</div>' +
+      '</div>';
+  }
+
+  document.getElementById('dsKpis').innerHTML =
+    card(dsPctGeral.toFixed(1) + '%', 'DS% Geral', corInfo.cor) +
+    card(despachados.toLocaleString('pt-BR'), 'Despachados', '') +
+    card(entregues.toLocaleString('pt-BR'),   'Entregues', 'var(--ok)') +
+    card(rotas.toLocaleString('pt-BR'),       'Rotas', '') +
+    card(insucesso.toLocaleString('pt-BR'),   'Insucessos', insucesso > 0 ? 'var(--danger)' : 'var(--text2)');
+}
+
+// ── Ranking por transportadora ───────────────────────────
+function dsRenderRanking(rows) {
+  var porTransp = {};
+  rows.forEach(function(r){
+    var t = r.transp || '(sem transp.)';
+    if (!porTransp[t]) porTransp[t] = { despachados:0, entregues:0, insucesso:0, rotas:0, orhSum:0, orhCount:0 };
+    var g = porTransp[t];
+    g.despachados += r.despachados;
+    g.entregues   += r.entregues;
+    g.insucesso   += r.insucesso;
+    g.rotas       += r.rotas;
+    if (r.orh_medio > 0) { g.orhSum += r.orh_medio; g.orhCount++; }
+  });
+
+  var lista = Object.keys(porTransp).map(function(t){
+    var g = porTransp[t];
+    var pct = g.despachados > 0 ? (g.entregues / g.despachados * 100) : 0;
+    return {
+      transp: t, despachados: g.despachados, entregues: g.entregues,
+      insucesso: g.insucesso, rotas: g.rotas, pct: pct,
+      orhMedio: g.orhCount > 0 ? (g.orhSum / g.orhCount) : 0
+    };
+  }).sort(function(a,b){ return a.pct - b.pct; }); // pior primeiro
+
+  var el = document.getElementById('dsRanking');
+  if (!lista.length) { el.innerHTML = '<div class="empty">Sem dados no período selecionado.</div>'; return; }
+
+  var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
+    '<th>Transportadora</th><th>Despachados</th><th>Entregues</th><th>DS%</th><th>Insucessos</th><th>ORH Médio</th>' +
+    '</tr></thead><tbody>';
+
+  lista.forEach(function(r){
+    var info = dsCorPct(r.pct);
+    var barWidth = Math.min(100, r.pct);
+    html += '<tr>' +
+      '<td><strong>' + e(r.transp) + '</strong></td>' +
+      '<td>' + r.despachados.toLocaleString('pt-BR') + '</td>' +
+      '<td>' + r.entregues.toLocaleString('pt-BR') + '</td>' +
+      '<td><span class="ds-pct-badge ' + info.cls + '">' + r.pct.toFixed(1) + '%</span>' +
+        '<div class="ds-bar-mini"><div class="ds-bar-mini-fill" style="width:' + barWidth + '%;background:' + info.cor + '"></div></div></td>' +
+      '<td style="color:' + (r.insucesso>0?'var(--danger)':'var(--text2)') + '">' + r.insucesso.toLocaleString('pt-BR') + '</td>' +
+      '<td>' + (r.orhMedio > 0 ? r.orhMedio.toFixed(1) + 'h' : '—') + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+// ── Gráfico de evolução DS% ──────────────────────────────
+function dsRenderEvolucao(rows) {
+  var chave = dsModoAtivo === 'semana' ? 'semana' : 'dia';
+  var buckets = {};
+  rows.forEach(function(r){
+    var k = r[chave];
+    if (!k) return;
+    if (!buckets[k]) buckets[k] = { despachados:0, entregues:0 };
+    buckets[k].despachados += r.despachados;
+    buckets[k].entregues   += r.entregues;
+  });
+
+  var keys = Object.keys(buckets);
+  // Ordena cronologicamente quando é por dia (dd/mm/yyyy)
+  if (chave === 'dia') {
+    keys.sort(function(a,b){
+      var da = dsParseData(a), db = dsParseData(b);
+      return (da && db) ? da - db : a.localeCompare(b);
+    });
+  } else {
+    keys.sort();
+  }
+
+  var labels = keys;
+  var dsPctData = keys.map(function(k){
+    var b = buckets[k];
+    return b.despachados > 0 ? +(b.entregues / b.despachados * 100).toFixed(1) : 0;
+  });
+  var volumeData = keys.map(function(k){ return buckets[k].despachados; });
+
+  document.getElementById('dsEvoTitulo').textContent =
+    '📈 Evolução do DS% — ' + (dsModoAtivo === 'semana' ? 'por semana' : 'por dia');
+
+  var canvas = document.getElementById('dsEvoChart');
+  if (dsChartEvo) { try { dsChartEvo.destroy(); } catch(e){} }
+
+  if (!labels.length) return;
+
+  dsChartEvo = new Chart(canvas.getContext('2d'), {
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: 'bar', label: 'Despachados',
+          data: volumeData, backgroundColor: 'rgba(52,131,250,0.35)',
+          borderColor: 'rgba(52,131,250,0.7)', borderWidth: 1, borderRadius: 4,
+          yAxisID: 'yVolume', order: 2
+        },
+        {
+          type: 'line', label: 'DS%',
+          data: dsPctData, borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.08)',
+          borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#2ecc71',
+          tension: 0.3, fill: true, yAxisID: 'yPct', order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: { legend: { labels:{ color:'#aaa', font:{size:11}, boxWidth:14 } } },
+      scales: {
+        x: { ticks:{ color:'#888', font:{size:10}, maxRotation:45 }, grid:{ color:'rgba(255,255,255,0.06)' } },
+        yVolume: { position:'left', beginAtZero:true, ticks:{ color:'#888', font:{size:10} }, grid:{ color:'rgba(255,255,255,0.06)' } },
+        yPct: { position:'right', min:0, max:100, ticks:{ color:'#2ecc71', font:{size:10} }, grid:{ drawOnChartArea:false } }
+      }
+    }
+  });
+}
+
+// ── Gráfico de motivos de insucesso ──────────────────────
+function dsRenderInsucesso(rows) {
+  var motivos = {
+    'Ausente': 0, 'Negócio Fechado': 0, 'Endereço Inacessível': 0,
+    'Endereço Incorreto': 0, 'Recusado': 0, 'Mudou Endereço': 0, 'Bloqueado': 0
+  };
+  rows.forEach(function(r){
+    motivos['Ausente']               += r.ausente;
+    motivos['Negócio Fechado']       += r.negocio_fechado;
+    motivos['Endereço Inacessível']  += r.endereco_inacessivel;
+    motivos['Endereço Incorreto']    += r.endereco_incorreto;
+    motivos['Recusado']              += r.recusado;
+    motivos['Mudou Endereço']        += r.mudou_endereco;
+    motivos['Bloqueado']             += r.bloqueado;
+  });
+
+  var entradas = Object.keys(motivos).map(function(k){ return { label:k, val:motivos[k] }; })
+    .filter(function(m){ return m.val > 0; })
+    .sort(function(a,b){ return b.val - a.val; });
+
+  var canvas = document.getElementById('dsInsucessoChart');
+  if (dsChartInsuc) { try { dsChartInsuc.destroy(); } catch(e){} }
+  if (!entradas.length) return;
+
+  var cores = ['#e74c3c','#e67e22','#f1c40f','#9b59b6','#e91e63','#795548','#607d8b'];
+
+  dsChartInsuc = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: entradas.map(function(m){ return m.label; }),
+      datasets: [{
+        label: 'Ocorrências',
+        data: entradas.map(function(m){ return m.val; }),
+        backgroundColor: entradas.map(function(_, i){ return cores[i % cores.length]; }),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { beginAtZero:true, ticks:{ color:'#888', font:{size:10} }, grid:{ color:'rgba(255,255,255,0.06)' } },
+        y: { ticks:{ color:'#ccc', font:{size:11} }, grid:{ display:false } }
+      }
+    }
+  });
 }
 </script>
 
