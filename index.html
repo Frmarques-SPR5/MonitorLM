@@ -4816,7 +4816,7 @@ var dsChartEvo    = null;
 var dsChartInsuc  = null;
 var dsChartDetalhe = null;
 var dsDetalheTranspAtual = null; // transportadora selecionada no ranking (ou null)
-var META_DS       = 95; // meta de DS% — ajuste aqui se precisar
+var META_DS       = 99; // meta de DS% — abaixo disso é considerado fora da meta
 
 function dsCarregar() {
   document.getElementById('dsKpis').innerHTML = '<span style="opacity:.5;font-size:.85rem">Carregando...</span>';
@@ -4976,9 +4976,8 @@ function dsRenderizar() {
 }
 
 function dsCorPct(pct) {
-  if (pct >= META_DS) return { cls: 'ds-pct-ok',   cor: 'var(--ok)' };
-  if (pct >= META_DS - 5) return { cls: 'ds-pct-warn', cor: 'var(--warn)' };
-  return { cls: 'ds-pct-bad', cor: 'var(--danger)' };
+  if (pct >= META_DS) return { cls: 'ds-pct-ok', cor: 'var(--ok)' };
+  return { cls: 'ds-pct-bad', cor: 'var(--danger)' }; // abaixo da meta = vermelho
 }
 
 // ── KPIs gerais ──────────────────────────────────────────
