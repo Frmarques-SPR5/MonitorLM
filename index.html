@@ -1156,6 +1156,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="tab ativo" data-teletab="evolucao">📈 Evolução</div>
       <div class="tab" data-teletab="transp">Por transportadora</div>
       <div class="tab" data-teletab="drivers">Top ofensores</div>
+      <div class="tab" data-teletab="recorrencia">🔁 Recorrência Driver</div>
       <div class="tab" data-teletab="detalhe">Detalhe completo</div>
     </div>
 
@@ -1177,6 +1178,11 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <!-- Top ofensores -->
     <div id="telePaneDrivers" style="display:none">
       <div id="teleDriversLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- Recorrência Driver -->
+    <div id="telePaneRecorrencia" style="display:none">
+      <div id="teleRecorrenciaLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
 
     <!-- Detalhe completo -->
@@ -1532,7 +1538,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <!-- Ranking + Breakdown lado a lado -->
     <div class="ds-grid-2">
       <div>
-        <div class="ondas-painel-titulo" style="margin-bottom:4px">🏆 Ranking por transportadora</div>
+        <div class="ondas-painel-titulo" style="margin-bottom:4px">📊 Desempenho por transportadora</div>
         <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Clique numa linha para ver a análise detalhada</div>
         <div id="dsRanking"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
       </div>
@@ -1544,7 +1550,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       </div>
     </div>
 
-    <!-- Análise detalhada por transportadora (aparece ao clicar no ranking) -->
+    <!-- Análise detalhada por transportadora (aparece ao clicar na tabela de desempenho) -->
     <div id="dsDetalheWrap" style="display:none; margin-top:24px">
       <div class="ondas-painel-titulo" style="margin-bottom:10px" id="dsDetalheTitulo">📍 Análise detalhada</div>
 
@@ -3363,6 +3369,11 @@ document.addEventListener('keydown', function(ev){
 // Lê dados da aba "tele" via API do MonitorLM
 // ════════════════════════════════════════════════════════════
 var teleCache = [];
+// Cache paralelo, sempre fixo nos últimos 7 dias — independe do período
+// selecionado pelo usuário. Usado só para a coluna "Ofensas (7d)" no
+// Detalhe completo e para eventuais outras análises de recorrência fixa.
+var teleCache7d = [];
+var teleCache7dCarregado = false;
 var teleCarregado = false;
 
 function carregarTelemetria() {
@@ -3398,6 +3409,38 @@ function carregarTelemetria() {
   var s = document.createElement('script');
   s.src = API + '?' + params;
   document.head.appendChild(s);
+
+  // Busca em paralelo os últimos 7 dias fixos, para a coluna "Ofensas (7d)"
+  carregarTeleCache7d();
+}
+
+// Busca fixa dos últimos 7 dias — sempre roda junto do carregamento
+// principal, independente do período que o usuário selecionou acima.
+function carregarTeleCache7d() {
+  var hoje = new Date();
+  var seteDiasAtras = new Date(hoje); seteDiasAtras.setDate(hoje.getDate() - 6);
+  function fmtBR(d) {
+    return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+  }
+  var de7  = fmtBR(seteDiasAtras);
+  var ate7 = fmtBR(hoje);
+
+  teleCache7dCarregado = false;
+  var cb7 = 'cbtele7d_' + Date.now();
+  window[cb7] = function(d) {
+    delete window[cb7];
+    if (d && !d.erro) {
+      teleCache7d = d.registros || [];
+      teleCache7dCarregado = true;
+      // Se o Detalhe completo já estiver na tela, re-renderiza com a coluna preenchida
+      if (abaAtivaTele === 'detalhe' && teleCarregado) renderTelemetria();
+    }
+  };
+  var params7 = 'action=getTelemetria&de=' + encodeURIComponent(de7) +
+                '&ate=' + encodeURIComponent(ate7) + '&callback=' + cb7 + '&t=' + Date.now();
+  var s7 = document.createElement('script');
+  s7.src = API + '?' + params7;
+  document.head.appendChild(s7);
 }
 
 function teleFiltrar() {
@@ -3480,6 +3523,7 @@ function renderTelemetria() {
   if      (abaAtivaTele === 'evolucao') renderTeleEvolucao(dados);
   else if (abaAtivaTele === 'transp')   renderTeleTransp(dados);
   else if (abaAtivaTele === 'drivers')  renderTeleDrivers(dados);
+  else if (abaAtivaTele === 'recorrencia') renderTeleRecorrencia(dados);
   else if (abaAtivaTele === 'detalhe')  renderTeleDetalhe(dados);
 }
 
@@ -3635,11 +3679,114 @@ function renderTeleDrivers(dados) {
   document.getElementById('teleDriversLista').innerHTML = h;
 }
 
+// ── Recorrência Driver ──────────────────────────────────────
+// Mostra drivers que ofenderam (score < 90) em MAIS DE UM dia dentro do
+// período atualmente selecionado (respeita os mesmos filtros de ciclo/
+// transportadora/busca da telemetria).
+var TELE_RECORRENCIA_MIN = 2; // qtd mínima de dias ofendendo pra contar como recorrente
+
+function renderTeleRecorrencia(dados) {
+  var META_SCORE = 90;
+
+  // Mesmo agrupamento driver+dia usado no Top ofensores — 1 linha por dia
+  var por = {};
+  dados.forEach(function(r) {
+    if (!r.driver) return;
+    var k = r.driver + '||' + (r.data || '');
+    if (!por[k]) por[k] = { driver: r.driver, mlp: r.mlp||'—', data: r.data||'', score: null, eventos: 0 };
+    por[k].eventos += r.eventos || 0;
+    if (por[k].score === null && r.score !== null) por[k].score = r.score;
+  });
+
+  // Agrupa por driver: conta quantos DIAS DISTINTOS esse driver ficou abaixo da meta
+  var porDriver = {};
+  Object.values(por).forEach(function(d) {
+    if (d.score === null || d.score >= META_SCORE) return; // só conta dias ofensores
+    if (!porDriver[d.driver]) porDriver[d.driver] = { driver: d.driver, mlp: d.mlp, dias: [], somaScore: 0 };
+    porDriver[d.driver].dias.push({ data: d.data, score: d.score, eventos: d.eventos });
+    porDriver[d.driver].somaScore += d.score;
+    // Mantém a transportadora mais recente (última data adicionada)
+    porDriver[d.driver].mlp = d.mlp;
+  });
+
+  var lista = Object.values(porDriver)
+    .filter(function(d){ return d.dias.length >= TELE_RECORRENCIA_MIN; })
+    .map(function(d){
+      d.qtd = d.dias.length;
+      d.scoreMedio = d.somaScore / d.qtd;
+      d.piorScore = Math.min.apply(null, d.dias.map(function(x){ return x.score; }));
+      d.dias.sort(function(a,b){ return a.data > b.data ? 1 : -1; });
+      return d;
+    })
+    .sort(function(a,b){
+      if (b.qtd !== a.qtd) return b.qtd - a.qtd; // mais recorrente primeiro
+      return a.scoreMedio - b.scoreMedio; // empate → pior score médio primeiro
+    });
+
+  var el = document.getElementById('teleRecorrenciaLista');
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty" style="color:var(--ok)">✅ Nenhum driver com reincidência (2+ dias abaixo de ' + META_SCORE + ') no período selecionado.</div>';
+    return;
+  }
+
+  var h = '<div style="font-size:11px;color:var(--text2);margin-bottom:10px">' +
+    '🔁 Drivers com <strong style="color:var(--text)">' + TELE_RECORRENCIA_MIN + ' ou mais dias</strong> abaixo de ' + META_SCORE + ' no período selecionado · ' +
+    '<strong style="color:var(--text)">' + lista.length + ' driver(s) recorrente(s)</strong>' +
+    '</div>' +
+    '<div class="hist-wrap"><table class="htable"><thead><tr>' +
+    '<th>#</th><th>Driver ID</th><th>Transportadora</th><th>Dias ofensores</th>' +
+    '<th>Score médio</th><th>Pior score</th><th>Datas</th>' +
+    '</tr></thead><tbody>';
+
+  lista.forEach(function(d, i) {
+    var corMedio = scoreCorTele(d.scoreMedio);
+    var corPior  = scoreCorTele(d.piorScore);
+    var datasStr = d.dias.map(function(x){ return e(x.data) + ' <span style="color:var(--text2)">(' + fmt1(x.score) + ')</span>'; }).join(', ');
+
+    h += '<tr style="background:rgba(239,68,68,.04)">' +
+      '<td style="color:var(--text2)">' + (i+1) + '</td>' +
+      '<td class="sid">' + e(d.driver) + '</td>' +
+      '<td style="font-size:11px">' + e(d.mlp) + '</td>' +
+      '<td style="text-align:center"><span style="font-weight:800;color:var(--danger);font-size:14px">' + d.qtd + '</span> ' +
+        '<span style="font-size:10px;color:var(--text2)">dia' + (d.qtd>1?'s':'') + '</span></td>' +
+      '<td><span style="font-weight:700;color:' + corMedio + '">' + fmt1(d.scoreMedio) + '</span></td>' +
+      '<td><span style="font-weight:700;color:' + corPior + '">' + fmt1(d.piorScore) + '</span></td>' +
+      '<td style="font-size:11px;max-width:280px">' + datasStr + '</td>' +
+      '</tr>';
+  });
+
+  h += '</tbody></table></div>';
+  el.innerHTML = h;
+}
+
 // ── Detalhe completo ──
 var TELE_DETALHE_LIMITE = 100; // máximo de linhas no detalhe
 
+// Conta, por driver, em quantos dias distintos (dentro do cache fixo de
+// últimos 7 dias) o score ficou abaixo de 90 — independe do período que
+// o usuário selecionou nos filtros da tela.
+function teleContarOfensas7dPorDriver() {
+  var META_SCORE = 90;
+  var porDriverDia = {};
+  teleCache7d.forEach(function(r) {
+    if (!r.driver) return;
+    var k = r.driver + '||' + (r.data || '');
+    if (!porDriverDia[k]) porDriverDia[k] = { driver: r.driver, data: r.data||'', score: null };
+    if (porDriverDia[k].score === null && r.score !== null) porDriverDia[k].score = r.score;
+  });
+  var contagem = {};
+  Object.values(porDriverDia).forEach(function(d) {
+    if (d.score === null || d.score >= META_SCORE) return;
+    contagem[d.driver] = (contagem[d.driver] || 0) + 1;
+  });
+  return contagem;
+}
+
 function renderTeleDetalhe(dados) {
   if (!dados.length) { document.getElementById('teleDetalheLista').innerHTML = '<div class="empty">Sem dados.</div>'; return; }
+
+  var ofensas7d = teleContarOfensas7dPorDriver();
 
   var sorted = dados.slice().sort(function(a,b){
     if (b.eventos !== a.eventos) return b.eventos - a.eventos;
@@ -3653,11 +3800,17 @@ function renderTeleDetalhe(dados) {
   var h = '<div class="hist-wrap" style="max-height:500px;overflow-y:auto"><table class="htable"><thead><tr>' +
     '<th>Data</th><th>Tipo</th><th>Driver</th><th>Placa</th><th>Transp.</th>' +
     '<th>Score</th><th>Eventos</th><th>Vel.via</th><th>Curva</th><th>Acel.</th><th>Fren.</th>' +
-    '<th>SPR</th><th>ORH</th>' +
+    '<th>SPR</th><th>ORH</th><th title="Dias distintos com score < 90 nos últimos 7 dias, independente do filtro acima">Ofensas (7d)</th>' +
     '</tr></thead><tbody>';
 
   sorted.forEach(function(r) {
     var cor = scoreCorTele(r.score);
+    var qtd7d = ofensas7d[r.driver] || 0;
+    var celulaOfensas7d = !teleCache7dCarregado
+      ? '<span style="color:var(--text2);font-size:11px">…</span>'
+      : (qtd7d > 0
+          ? '<span style="font-weight:800;color:var(--danger)">' + qtd7d + '</span>'
+          : '<span style="color:var(--text2)">0</span>');
     h += '<tr>' +
       '<td style="white-space:nowrap;font-size:11px;color:var(--text2)">' + e(r.data) + '</td>' +
       '<td><span style="font-size:10px;font-weight:700;background:rgba(52,131,250,.15);color:#60a5fa;padding:1px 7px;border-radius:999px">' + e(r.tipo||'—') + '</span></td>' +
@@ -3672,6 +3825,7 @@ function renderTeleDetalhe(dados) {
       '<td style="text-align:center">' + (r.frenagem||'0') + '</td>' +
       '<td style="text-align:center">' + fmtInt2(r.spr) + '</td>' +
       '<td style="text-align:center">' + fmt1(r.orh) + '</td>' +
+      '<td style="text-align:center">' + celulaOfensas7d + '</td>' +
       '</tr>';
   });
   h += '</tbody></table></div>';
@@ -3747,6 +3901,7 @@ document.querySelectorAll('[data-teletab]').forEach(function(t){
     document.getElementById('telePaneEvolucao').style.display = n==='evolucao'?'block':'none';
     document.getElementById('telePaneTransp').style.display  = n==='transp'?'block':'none';
     document.getElementById('telePaneDrivers').style.display = n==='drivers'?'block':'none';
+    document.getElementById('telePaneRecorrencia').style.display = n==='recorrencia'?'block':'none';
     document.getElementById('telePaneDetalhe').style.display = n==='detalhe'?'block':'none';
     if (teleCarregado) renderTelemetria();
   });
