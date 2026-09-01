@@ -1151,6 +1151,9 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="kpi" style="border-color:var(--danger)"><div class="kpi-label" style="color:var(--danger)">Score &lt; 85</div><div class="kpi-val d" id="tK_criticos">—</div></div>
     </div>
 
+    <!-- Banner de Risco Moderado — justificativa obrigatória via Forms -->
+    <div id="teleBannerRiscoModerado" style="display:none;align-items:center;gap:12px;background:rgba(239,68,68,.10);border:1.5px solid var(--danger);border-radius:8px;padding:12px 16px;margin-bottom:16px"></div>
+
     <!-- Abas -->
     <div class="tabs">
       <div class="tab ativo" data-teletab="evolucao">📈 Evolução</div>
@@ -3235,7 +3238,7 @@ function toggleCalibracao() {
   }
 }
 
-function abrirModalTele(driverId, placa, mlp, dataOcorrencia, totalEventos) {
+function abrirModalTele(driverId, placa, mlp, dataOcorrencia, totalEventos, classificacao) {
   teleModalCtx = { driverId: driverId, placa: placa, mlp: mlp, dataOcorrencia: dataOcorrencia };
   // Pré-preenche campos automáticos
   document.getElementById('mt_driver_id').value        = driverId || '';
@@ -3258,6 +3261,24 @@ function abrirModalTele(driverId, placa, mlp, dataOcorrencia, totalEventos) {
   document.getElementById('mt_card_calibracao').style.display = 'none';
   document.getElementById('mt_chamado_calib').value = '';
   document.getElementById('mt_chamado_data').value  = '';
+
+  // Aviso de Risco Moderado — justificativa obrigatória via Forms externo
+  var avisoEl = document.getElementById('mt_aviso_risco_moderado');
+  if (avisoEl) {
+    if (ehRiscoModerado(classificacao)) {
+      avisoEl.style.display = 'flex';
+      avisoEl.innerHTML =
+        '<span style="font-size:18px">⚠️</span>' +
+        '<span style="flex:1">Este caso está classificado como <strong>Risco Moderado (atenção)</strong>. ' +
+        'Além de preencher aqui, é <strong>obrigatório</strong> preencher também o formulário abaixo.</span>' +
+        '<a href="' + FORMS_RISCO_MODERADO + '" target="_blank" rel="noopener" ' +
+          'style="background:var(--danger);color:#fff;padding:6px 14px;border-radius:6px;font-weight:700;font-size:12px;text-decoration:none;white-space:nowrap">' +
+          'Abrir formulário ↗</a>';
+    } else {
+      avisoEl.style.display = 'none';
+    }
+  }
+
   var btn = document.getElementById('btnSaveTele');
   btn.disabled = false; btn.textContent = 'Salvar justificativa';
   document.getElementById('modalTele').classList.add('open');
@@ -3369,6 +3390,17 @@ document.addEventListener('keydown', function(ev){
 // Lê dados da aba "tele" via API do MonitorLM
 // ════════════════════════════════════════════════════════════
 var teleCache = [];
+
+// ── Risco Moderado — justificativa obrigatória via Google Forms ──────────
+var FORMS_RISCO_MODERADO = 'https://docs.google.com/forms/d/e/1FAIpQLScdX035-3ab6_u2TbyV1XTxRj0wqtvebcKjAxjZVAUTZwHSDg/viewform';
+
+// Comparação tolerante a acento/caixa (evita depender de bater exatamente
+// com "Risco moderado (atenção)" — a planilha pode variar formatação)
+function ehRiscoModerado(classif) {
+  var norm = String(classif || '').trim().toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return norm.indexOf('RISCO MODERADO') !== -1;
+}
 // Cache paralelo, sempre fixo nos últimos 7 dias — independe do período
 // selecionado pelo usuário. Usado só para a coluna "Ofensas (7d)" no
 // Detalhe completo e para eventuais outras análises de recorrência fixa.
@@ -3519,12 +3551,46 @@ function renderTelemetria() {
     totalRotas + ' registros' + (sessao ? ' — ' + sessao.transp : '') +
     (dados.length < teleCache.length ? ' (filtrado de ' + teleCache.length + ')' : '');
 
+  // Banner de Risco Moderado — casos que exigem justificativa via Forms externo
+  renderBannerRiscoModerado(dados);
+
   // Renderiza só o painel ativo — performance
   if      (abaAtivaTele === 'evolucao') renderTeleEvolucao(dados);
   else if (abaAtivaTele === 'transp')   renderTeleTransp(dados);
   else if (abaAtivaTele === 'drivers')  renderTeleDrivers(dados);
   else if (abaAtivaTele === 'recorrencia') renderTeleRecorrencia(dados);
   else if (abaAtivaTele === 'detalhe')  renderTeleDetalhe(dados);
+}
+
+// Conta casos de Risco Moderado (por driver+dia, mesmo padrão de agrupamento
+// usado no Top Ofensores) no conjunto de dados já filtrado pela tela, e
+// mostra um banner fixo no topo da Telemetria com o link do Forms obrigatório.
+function renderBannerRiscoModerado(dados) {
+  var el = document.getElementById('teleBannerRiscoModerado');
+  if (!el) return;
+
+  var vistos = {};
+  var qtd = 0;
+  dados.forEach(function(r) {
+    if (!ehRiscoModerado(r.classificacao)) return;
+    var k = r.driver + '||' + (r.data || '');
+    if (vistos[k]) return;
+    vistos[k] = true;
+    qtd++;
+  });
+
+  if (qtd === 0) { el.style.display = 'none'; return; }
+
+  el.style.display = 'flex';
+  el.innerHTML =
+    '<span style="font-size:20px">⚠️</span>' +
+    '<span style="flex:1">' +
+      '<strong>' + qtd + ' caso' + (qtd > 1 ? 's' : '') + ' de Risco Moderado (atenção)</strong> no período selecionado — ' +
+      'justificativa obrigatória via formulário.' +
+    '</span>' +
+    '<a href="' + FORMS_RISCO_MODERADO + '" target="_blank" rel="noopener" ' +
+      'style="background:var(--danger);color:#fff;padding:7px 16px;border-radius:6px;font-weight:700;font-size:12px;text-decoration:none;white-space:nowrap">' +
+      'Abrir formulário ↗</a>';
 }
 
 // ── Ranking por transportadora ──
@@ -3590,6 +3656,7 @@ function renderTeleDrivers(dados) {
       driver: r.driver, mlp: r.mlp||'—',
       data: r.data || '', n: 0,
       score: null, // score único do dia
+      classificacao: '',
       eventos: 0,
       placas: new Set(),
       vel_via: 0, curva: 0, aceler: 0, frenagem: 0, cinto: 0
@@ -3599,6 +3666,7 @@ function renderTeleDrivers(dados) {
     por[k].placas.add(r.placa);
     // Score é o mesmo para todas as linhas do driver no dia — pega o primeiro não nulo
     if (por[k].score === null && r.score !== null) por[k].score = r.score;
+    if (!por[k].classificacao && r.classificacao) por[k].classificacao = r.classificacao;
     por[k].vel_via  += r.vel_via  || 0;
     por[k].curva    += r.curva    || 0;
     por[k].aceler   += r.aceler   || 0;
@@ -3649,7 +3717,7 @@ function renderTeleDrivers(dados) {
         ? '<span class="tag-just-ok">\u2713 Justificado</span>'
         : '<button class="btn-justificar-tele" onclick="abrirModalTele(\''+
             e(d.driver)+'\',\''+e(placa1)+'\',\''+e(d.mlp)+'\',\''+
-            e(d.data)+'\',' + d.eventos + ')">Justificar</button>';
+            e(d.data)+'\',' + d.eventos + ',\'' + e(d.classificacao||'') + '\')">Justificar</button>';
     } else if (semScore) {
       btnJust = '<span style="font-size:11px;color:var(--text2)">Sem score</span>';
     } else {
@@ -5328,6 +5396,9 @@ function dsAbrirDetalheTransp(transpNome) {
       <button class="close-btn" onclick="fecharModalTele()">✕</button>
     </div>
     <div class="modal-tele-body">
+
+      <!-- Aviso: Risco Moderado — justificativa obrigatória via Forms externo -->
+      <div id="mt_aviso_risco_moderado" style="display:none;align-items:center;gap:10px;background:rgba(239,68,68,.10);border:1.5px solid var(--danger);border-radius:8px;padding:10px 14px;margin-bottom:16px"></div>
 
       <!-- 1. Identificação -->
       <div class="modal-tele-secao">
