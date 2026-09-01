@@ -3508,6 +3508,33 @@ function scoreLabelTele(s) {
 function fmt1(n) { return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('pt-BR', {maximumFractionDigits:1}); }
 function fmtInt2(n) { return (n === null || n === undefined || n === 0) ? '—' : Math.round(n).toLocaleString('pt-BR'); }
 
+// ── Classificação de risco (5 níveis, ordem crescente de gravidade) ────────
+// Tolerante a acento/caixa — compara pela palavra-chave, não pela string toda.
+var CLASSIF_TELE_CORES = [
+  { chave: 'MUITO BAIXO', cor: '#22c55e' }, // ótimo
+  { chave: 'BAIXO',       cor: '#84cc16' }, // bom (checado depois de "muito baixo")
+  { chave: 'MODERADO',    cor: '#f59e0b' }, // atenção
+  { chave: 'MUITO ALTO',  cor: '#dc2626' }, // crítico (checado antes de "alto")
+  { chave: 'ALTO',        cor: '#f97316' }  // ruim
+];
+function _normClassif(s) {
+  return String(s || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function corClassificacaoTele(classif) {
+  var norm = _normClassif(classif);
+  for (var i = 0; i < CLASSIF_TELE_CORES.length; i++) {
+    if (norm.indexOf(CLASSIF_TELE_CORES[i].chave) !== -1) return CLASSIF_TELE_CORES[i].cor;
+  }
+  return 'var(--text2)'; // sem classificação / valor desconhecido
+}
+function badgeClassificacaoTele(classif) {
+  if (!classif) return '<span style="color:var(--text2);font-size:11px">—</span>';
+  var cor = corClassificacaoTele(classif);
+  return '<span style="display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;' +
+    'background:' + cor + '22;color:' + cor + ';border:1px solid ' + cor + '55;white-space:nowrap">' +
+    e(classif) + '</span>';
+}
+
 // Popula dropdowns quando os dados chegam — preserva seleção atual
 function populaFiltrosTele() {
   var transpSet = {}, tipoSet = {};
@@ -3699,7 +3726,7 @@ function renderTeleDrivers(dados) {
     '</div>' +
     '<div class="hist-wrap"><table class="htable"><thead><tr>' +
     '<th>#</th><th>Driver ID</th><th>Data</th><th>Transportadora</th><th>Placas</th>' +
-    '<th>Score</th><th>Eventos</th><th>Vel. via</th><th>Curva</th><th>Aceleração</th><th>Frenagem</th><th>Cinto</th>' +
+    '<th>Score</th><th>Classificação</th><th>Eventos</th><th>Vel. via</th><th>Curva</th><th>Aceleração</th><th>Frenagem</th><th>Cinto</th>' +
     '<th>Justificativa</th></tr></thead><tbody>';
 
   lista.forEach(function(d, i) {
@@ -3731,6 +3758,7 @@ function renderTeleDrivers(dados) {
       '<td style="font-size:11px">' + e(d.mlp) + '</td>' +
       '<td style="font-size:11px;color:var(--text2)">' + placasArr.join(', ') + '</td>' +
       '<td><span style="font-weight:700;color:' + cor + '">' + (scoreM !== null ? fmt1(scoreM) : '—') + '</span></td>' +
+      '<td>' + badgeClassificacaoTele(d.classificacao) + '</td>' +
       '<td style="text-align:center;font-weight:800;color:var(--danger)">' + d.eventos + '</td>' +
       '<td style="text-align:center">' + (d.vel_via||'0') + '</td>' +
       '<td style="text-align:center">' + (d.curva||'0') + '</td>' +
@@ -3867,7 +3895,7 @@ function renderTeleDetalhe(dados) {
 
   var h = '<div class="hist-wrap" style="max-height:500px;overflow-y:auto"><table class="htable"><thead><tr>' +
     '<th>Data</th><th>Tipo</th><th>Driver</th><th>Placa</th><th>Transp.</th>' +
-    '<th>Score</th><th>Eventos</th><th>Vel.via</th><th>Curva</th><th>Acel.</th><th>Fren.</th>' +
+    '<th>Score</th><th>Classificação</th><th>Eventos</th><th>Vel.via</th><th>Curva</th><th>Acel.</th><th>Fren.</th>' +
     '<th>SPR</th><th>ORH</th><th title="Dias distintos com score < 90 nos últimos 7 dias, independente do filtro acima">Ofensas (7d)</th>' +
     '</tr></thead><tbody>';
 
@@ -3886,6 +3914,7 @@ function renderTeleDetalhe(dados) {
       '<td style="font-size:11px">' + e(r.placa) + '</td>' +
       '<td style="font-size:11px;color:var(--text2)">' + e(r.mlp||'—') + '</td>' +
       '<td><span style="font-weight:700;font-size:12px;color:' + cor + '">' + (r.score !== null ? fmt1(r.score) : '—') + '</span></td>' +
+      '<td>' + badgeClassificacaoTele(r.classificacao) + '</td>' +
       '<td style="text-align:center;font-weight:700;color:' + (r.eventos > 0 ? 'var(--danger)' : 'var(--ok)') + '">' + (r.eventos||0) + '</td>' +
       '<td style="text-align:center">' + (r.vel_via||'0') + '</td>' +
       '<td style="text-align:center">' + (r.curva||'0') + '</td>' +
