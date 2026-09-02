@@ -2417,21 +2417,21 @@ function aplicarPeriodo() {
 // Rotas ORH usam a coluna TRANSPORTADORA direto; BLD vira BLD LOGÍSTICA.
 function perteceAoUsuarioRota(r) {
   var t = normTransp(r.transportadora);
-  // BLD LOGÍSTICA é dividida por SERVICO: "ROTAS XPT" = XPT, o resto = SVC
+  // BLD LOGÍSTICA é dividida por CODIGO: "EPR13" = XPT, o resto (SPR5) = SVC
   if (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') {
     if (t !== normTransp('BLD LOGÍSTICA')) return false;
-    var ehXpt = normTransp(r.servico).indexOf('XPT') !== -1;
+    var ehXpt = String(r.codigo||'').toUpperCase() === 'EPR13';
     return sessao.transp === 'BLD XPT' ? ehXpt : !ehXpt;
   }
   return t === normTransp(sessao.transp);
 }
 
 // Nome do grupo de exibição de uma rota ORH.
-// A BLD LOGÍSTICA é dividida em BLD XPT / BLD SVC conforme o SERVICO.
+// A BLD LOGÍSTICA é dividida em BLD XPT / BLD SVC conforme o CODIGO.
 function grupoDaRota(r) {
   var t = normTransp(r.transportadora);
   if (t === normTransp('BLD LOGÍSTICA')) {
-    return normTransp(r.servico).indexOf('XPT') !== -1 ? 'BLD XPT' : 'BLD SVC';
+    return String(r.codigo||'').toUpperCase() === 'EPR13' ? 'BLD XPT' : 'BLD SVC';
   }
   return (r.transportadora || '— Sem transp —').trim() || '— Sem transp —';
 }
