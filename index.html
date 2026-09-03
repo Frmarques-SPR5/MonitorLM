@@ -5848,8 +5848,15 @@ function dsdRenderizar() {
 
   var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
     '<th>Link Rota</th><th>Data</th><th>Ciclo</th><th>Driver ID</th><th>Transportadora</th><th>Placa</th>' +
-    '<th>DS%</th><th>Insucessos</th>' +
+    '<th>DS%</th><th>DS Comercial</th><th>DS Residencial</th><th>Insucessos</th>' +
     '</tr></thead><tbody>';
+
+  function badgeOuVazio(delivered, dispatched) {
+    if (!dispatched) return '<span style="color:var(--text2);font-size:11px">—</span>';
+    var pct = delivered / dispatched * 100;
+    var info = dsCorPct(pct);
+    return '<span class="ds-pct-badge ' + info.cls + '">' + pct.toFixed(1) + '%</span>';
+  }
 
   lista.forEach(function(r){
     var info = dsCorPct(r.pct);
@@ -5861,6 +5868,8 @@ function dsdRenderizar() {
       '<td style="font-size:11px">' + e(r.transp) + '</td>' +
       '<td style="font-size:11px">' + e(r.placa) + '</td>' +
       '<td><span class="ds-pct-badge ' + info.cls + '">' + r.pct.toFixed(1) + '%</span></td>' +
+      '<td>' + badgeOuVazio(r.delivered_comercial, r.dispatched_comercial) + '</td>' +
+      '<td>' + badgeOuVazio(r.delivered_residencial, r.dispatched_residencial) + '</td>' +
       '<td style="text-align:center;font-weight:700;color:' + ((r.insucessos||0)>0?'var(--danger)':'var(--text2)') + '">' + (r.insucessos||0).toLocaleString('pt-BR') + '</td>' +
       '</tr>';
   });
