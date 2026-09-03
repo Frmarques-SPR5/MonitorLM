@@ -1474,6 +1474,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="tab ativo" data-dstab="transp" onclick="dsSetAba('transp')">📊 Por Transportadora</div>
       <div class="tab" data-dstab="driver" onclick="dsSetAba('driver')">🚗 Detalhe Driver</div>
       <div class="tab" data-dstab="orh" onclick="dsSetAba('orh')">⏱️ ORH</div>
+      <div class="tab" data-dstab="posghost" onclick="dsSetAba('posghost')">🌙 Pós-Horário &amp; Ghost</div>
     </div>
 
     <!-- ═══════════ ABA: POR TRANSPORTADORA (conteúdo existente) ═══════════ -->
@@ -1685,6 +1686,13 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
           <input type="text" id="dsoFiltroPlaca" placeholder="Filtrar por placa..." style="min-width:140px" oninput="dsoRenderizar()">
         </div>
 
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Modal (veículo)</div>
+          <select id="dsoSelModal" onchange="dsoRenderizar()" style="min-width:160px">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
         <button class="btn-atualizar" onclick="dsdCarregar()" style="margin-left:auto">↺ Atualizar</button>
       </div>
 
@@ -1692,6 +1700,63 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         ⏱️ Mostrando rotas com <strong style="color:var(--text)">ORH real acima de 8h 47min</strong> · ordenado da maior pra menor
       </div>
       <div id="dsoLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- ═══════════ ABA: PÓS-HORÁRIO & GHOST ═══════════ -->
+    <div id="dsPainelPosGhost" style="display:none">
+      <div class="filtros" style="align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
+        <div id="dspFiltroDia">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="sl-btn-per ativo" data-p="ontem"     onclick="dspSetPeriodoDia('ontem')">Ontem</button>
+            <button class="sl-btn-per"       data-p="semana"    onclick="dspSetPeriodoDia('semana')">Esta semana</button>
+            <button class="sl-btn-per"       data-p="7d"        onclick="dspSetPeriodoDia('7d')">Últimos 7d</button>
+            <button class="sl-btn-per"       data-p="especifico" onclick="dspSetPeriodoDia('especifico')">Dia específico</button>
+            <button class="sl-btn-per"       data-p="livre"     onclick="dspSetPeriodoDia('livre')">Livre</button>
+          </div>
+          <div id="dspDiaEspecificoWrap" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <input type="text" id="dspDiaUnico" placeholder="dd/mm/aaaa" style="width:120px">
+            <button class="btn-atualizar" onclick="dspRenderizar()" style="margin:0">Aplicar</button>
+          </div>
+          <div id="dspDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <input type="text" id="dspDe"  placeholder="dd/mm/aaaa" style="width:120px">
+            <span style="color:var(--text2);font-size:12px">até</span>
+            <input type="text" id="dspAte" placeholder="dd/mm/aaaa" style="width:120px">
+            <button class="btn-atualizar" onclick="dspRenderizar()" style="margin:0">Aplicar</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Ciclo</div>
+          <div style="display:flex;gap:6px">
+            <button class="sl-btn-per ativo" data-ciclodsp="todos" onclick="dspFiltrarCiclo('todos')">Todos</button>
+            <button class="sl-btn-per"       data-ciclodsp="AM"    onclick="dspFiltrarCiclo('AM')">AM</button>
+            <button class="sl-btn-per"       data-ciclodsp="PM"    onclick="dspFiltrarCiclo('PM')">PM</button>
+            <button class="sl-btn-per"       data-ciclodsp="SD"    onclick="dspFiltrarCiclo('SD')">SD</button>
+          </div>
+        </div>
+
+        <div id="dspFiltroTranspWrap" style="display:none">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
+          <select id="dspSelTransp" onchange="dspRenderizar()" style="min-width:180px">
+            <option value="">Todas</option>
+          </select>
+        </div>
+
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Driver ID</div>
+          <input type="text" id="dspFiltroDriver" placeholder="Filtrar por driver... (checar reincidência)" style="min-width:220px" oninput="dspRenderizar()">
+        </div>
+
+        <button class="btn-atualizar" onclick="dsdCarregar()" style="margin-left:auto">↺ Atualizar</button>
+      </div>
+
+      <div class="atr-summary" id="dspKpis" style="margin-bottom:16px"></div>
+
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px">
+        🔻 Ordenado pelo maior impacto total (pós-horário + não tentado + ghost) · filtre por Driver ID pra ver o histórico dele e checar reincidência
+      </div>
+      <div id="dspLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
   </div>
 
@@ -5550,16 +5615,19 @@ function dsSetAba(aba) {
   document.querySelectorAll('[data-dstab]').forEach(function(t){
     t.classList.toggle('ativo', t.getAttribute('data-dstab') === aba);
   });
-  document.getElementById('dsPainelTransp').style.display = aba === 'transp' ? 'block' : 'none';
-  document.getElementById('dsPainelDriver').style.display = aba === 'driver' ? 'block' : 'none';
-  document.getElementById('dsPainelOrh').style.display    = aba === 'orh'    ? 'block' : 'none';
+  document.getElementById('dsPainelTransp').style.display   = aba === 'transp'   ? 'block' : 'none';
+  document.getElementById('dsPainelDriver').style.display   = aba === 'driver'   ? 'block' : 'none';
+  document.getElementById('dsPainelOrh').style.display      = aba === 'orh'      ? 'block' : 'none';
+  document.getElementById('dsPainelPosGhost').style.display = aba === 'posghost' ? 'block' : 'none';
 
-  if ((aba === 'driver' || aba === 'orh') && !dsDriverCarregado) {
+  if ((aba === 'driver' || aba === 'orh' || aba === 'posghost') && !dsDriverCarregado) {
     dsdCarregar();
   } else if (aba === 'driver') {
     dsdRenderizar();
   } else if (aba === 'orh') {
     dsoRenderizar();
+  } else if (aba === 'posghost') {
+    dspRenderizar();
   }
 }
 
@@ -5575,6 +5643,7 @@ function dsLinkRota(routeId) {
 function dsdCarregar() {
   document.getElementById('dsdLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
   document.getElementById('dsoLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+  document.getElementById('dspLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
 
   var cb = 'dsdCallback' + Date.now();
   var url = API + '?action=getDSDriver&callback=' + cb + '&t=' + Date.now();
@@ -5585,6 +5654,7 @@ function dsdCarregar() {
       toast('DS Driver: ' + data.erro, 1);
       document.getElementById('dsdLista').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
       document.getElementById('dsoLista').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
+      document.getElementById('dspLista').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
       return;
     }
     dsDriverCache = data.rows || [];
@@ -5597,7 +5667,8 @@ function dsdCarregar() {
       transpList.sort();
       document.getElementById('dsdFiltroTranspWrap').style.display = 'block';
       document.getElementById('dsoFiltroTranspWrap').style.display = 'block';
-      [document.getElementById('dsdSelTransp'), document.getElementById('dsoSelTransp')].forEach(function(sel) {
+      document.getElementById('dspFiltroTranspWrap').style.display = 'block';
+      [document.getElementById('dsdSelTransp'), document.getElementById('dsoSelTransp'), document.getElementById('dspSelTransp')].forEach(function(sel) {
         var valAtual = sel.value;
         sel.innerHTML = '<option value="">Todas</option>';
         transpList.forEach(function(t){
@@ -5608,8 +5679,24 @@ function dsdCarregar() {
       });
     }
 
-    if (dsAbaAtiva === 'driver') dsdRenderizar();
-    if (dsAbaAtiva === 'orh')    dsoRenderizar();
+    // Popula select de Modal (tipo de veículo) — visível pra qualquer login
+    var modalList = [];
+    dsDriverCache.forEach(function(r){ if (r.tipo_veiculo && modalList.indexOf(r.tipo_veiculo) === -1) modalList.push(r.tipo_veiculo); });
+    modalList.sort();
+    var selModal = document.getElementById('dsoSelModal');
+    if (selModal) {
+      var valModalAtual = selModal.value;
+      selModal.innerHTML = '<option value="">Todos</option>';
+      modalList.forEach(function(t){
+        var o = document.createElement('option'); o.value = t; o.textContent = t;
+        if (t === valModalAtual) o.selected = true;
+        selModal.appendChild(o);
+      });
+    }
+
+    if (dsAbaAtiva === 'driver')   dsdRenderizar();
+    if (dsAbaAtiva === 'orh')      dsoRenderizar();
+    if (dsAbaAtiva === 'posghost') dspRenderizar();
   };
 
   var s = document.createElement('script'); s.src = url;
@@ -5754,6 +5841,9 @@ function dsoGetFiltrado() {
   var placaFiltro = document.getElementById('dsoFiltroPlaca').value.trim().toUpperCase();
   if (placaFiltro) rows = rows.filter(function(r){ return (r.placa||'').toUpperCase().indexOf(placaFiltro) !== -1; });
 
+  var modalFiltro = document.getElementById('dsoSelModal').value;
+  if (modalFiltro) rows = rows.filter(function(r){ return r.tipo_veiculo === modalFiltro; });
+
   if (dsoCicloAtivo !== 'todos') rows = rows.filter(function(r){ return r.ciclo === dsoCicloAtivo; });
 
   rows = _dsFiltroData(rows, 'dia', dsoPeriodoDia, 'dso');
@@ -5796,6 +5886,117 @@ function dsoRenderizar() {
   html += '</tbody></table></div>';
   if (rows.length > 200) {
     html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando 200 piores de ' + rows.length + ' registros</div>';
+  }
+  el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// PÓS-HORÁRIO & GHOST — ENTREGAS_POST_21/22/23, NAO_TENTADO, GHOST_VISITS
+// ══════════════════════════════════════════════════════════════════════
+var dspPeriodoDia = 'ontem';
+var dspCicloAtivo = 'todos';
+
+function dspSetPeriodoDia(p) {
+  dspPeriodoDia = p;
+  document.querySelectorAll('#dspFiltroDia .sl-btn-per').forEach(function(b){ b.classList.toggle('ativo', b.dataset.p === p); });
+  document.getElementById('dspDatasLivres').style.display      = p === 'livre'      ? 'flex' : 'none';
+  document.getElementById('dspDiaEspecificoWrap').style.display = p === 'especifico' ? 'flex' : 'none';
+  if (p !== 'livre' && p !== 'especifico') dspRenderizar();
+}
+function dspFiltrarCiclo(c) {
+  dspCicloAtivo = c;
+  document.querySelectorAll('[data-ciclodsp]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.ciclodsp === c); });
+  dspRenderizar();
+}
+
+function dspGetFiltrado() {
+  var rows = dsDriverCache;
+
+  var transpFiltro = '';
+  if (sessao && sessao.isMeli) {
+    var sel = document.getElementById('dspSelTransp');
+    transpFiltro = sel ? sel.value : '';
+  } else if (sessao) {
+    transpFiltro = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
+  }
+  if (transpFiltro) rows = rows.filter(function(r){ return r.transp === transpFiltro; });
+
+  var driverFiltro = document.getElementById('dspFiltroDriver').value.trim().toUpperCase();
+  if (driverFiltro) rows = rows.filter(function(r){ return (r.driver_id||'').toUpperCase().indexOf(driverFiltro) !== -1; });
+
+  if (dspCicloAtivo !== 'todos') rows = rows.filter(function(r){ return r.ciclo === dspCicloAtivo; });
+
+  rows = _dsFiltroData(rows, 'dia', dspPeriodoDia, 'dsp');
+  return rows;
+}
+
+function dspRenderizar() {
+  var rows = dspGetFiltrado();
+
+  // ── KPIs somados no período/filtro ────────────────────────────────────
+  var totPost21 = 0, totPost22 = 0, totPost23 = 0, totNaoTentado = 0, totGhost = 0;
+  rows.forEach(function(r){
+    totPost21     += r.entregas_post21 || 0;
+    totPost22     += r.entregas_post22 || 0;
+    totPost23     += r.entregas_post23 || 0;
+    totNaoTentado += r.nao_tentado     || 0;
+    totGhost      += r.ghost_visits    || 0;
+  });
+
+  function kpiCard(val, lbl, cor) {
+    return '<div class="atr-sum-item">' +
+      '<div class="atr-sum-val" style="color:' + (cor||'var(--text)') + '">' + val + '</div>' +
+      '<div class="atr-sum-lbl">' + lbl + '</div></div>';
+  }
+  document.getElementById('dspKpis').innerHTML =
+    kpiCard(totPost21.toLocaleString('pt-BR'), 'Entregas após 21h', totPost21>0?'var(--warn)':'var(--text2)') +
+    kpiCard(totPost22.toLocaleString('pt-BR'), 'Entregas após 22h', totPost22>0?'var(--danger)':'var(--text2)') +
+    kpiCard(totPost23.toLocaleString('pt-BR'), 'Entregas após 23h', totPost23>0?'var(--danger)':'var(--text2)') +
+    kpiCard(totNaoTentado.toLocaleString('pt-BR'), 'Não Tentados', totNaoTentado>0?'var(--danger)':'var(--text2)') +
+    kpiCard(totGhost.toLocaleString('pt-BR'), 'Ghost Visits', totGhost>0?'var(--danger)':'var(--text2)');
+
+  // ── Tabela detalhada, ordenada pelo maior impacto total ────────────────
+  var el = document.getElementById('dspLista');
+  var comImpacto = rows.map(function(r){
+    var impacto = (r.entregas_post21||0) + (r.entregas_post22||0) + (r.entregas_post23||0) +
+                  (r.nao_tentado||0) + (r.ghost_visits||0);
+    return Object.assign({}, r, { impacto: impacto });
+  }).filter(function(r){ return r.impacto > 0; })
+    .sort(function(a,b){ return b.impacto - a.impacto; })
+    .slice(0, 200);
+
+  if (!comImpacto.length) {
+    el.innerHTML = '<div class="empty" style="color:var(--ok)">✅ Nenhuma ocorrência de pós-horário, não tentado ou ghost visit no período/filtro selecionado.</div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
+    '<th>Link Rota</th><th>Data</th><th>Ciclo</th><th>Driver ID</th><th>Transportadora</th>' +
+    '<th>Pós-21h</th><th>Pós-22h</th><th>Pós-23h</th><th>Não Tentado</th><th>Ghost Visits</th>' +
+    '</tr></thead><tbody>';
+
+  comImpacto.forEach(function(r){
+    function celNum(v, corSeMaior0) {
+      if (!v) return '<span style="color:var(--text2)">0</span>';
+      return '<span style="font-weight:800;color:' + corSeMaior0 + '">' + v.toLocaleString('pt-BR') + '</span>';
+    }
+    html += '<tr>' +
+      '<td>' + dsLinkRota(r.route_id) + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(r.dia) + '</td>' +
+      '<td style="font-size:11px">' + e(r.ciclo||'—') + '</td>' +
+      '<td class="sid">' + e(r.driver_id) + '</td>' +
+      '<td style="font-size:11px">' + e(r.transp) + '</td>' +
+      '<td>' + celNum(r.entregas_post21, 'var(--warn)') + '</td>' +
+      '<td>' + celNum(r.entregas_post22, 'var(--danger)') + '</td>' +
+      '<td>' + celNum(r.entregas_post23, 'var(--danger)') + '</td>' +
+      '<td>' + celNum(r.nao_tentado, 'var(--danger)') + '</td>' +
+      '<td>' + celNum(r.ghost_visits, 'var(--danger)') + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  if (rows.length > comImpacto.length) {
+    html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando as ' + comImpacto.length + ' rotas com maior impacto (de ' + rows.length + ' no total do filtro)</div>';
   }
   el.innerHTML = html;
 }
