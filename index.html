@@ -1586,226 +1586,99 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     </div>
     </div> <!-- fim #dsPainelTransp -->
 
-    <!-- ═══════════ ABA: DETALHE DRIVER ═══════════ -->
-    <div id="dsPainelDriver" style="display:none">
+    <!-- ═══════════ FILTRO COMPARTILHADO — vale para Detalhe Driver, ORH, Pós-Horário e Evolução Crítico ═══════════ -->
+    <div id="dsFiltroCompartilhado" style="display:none">
       <div class="filtros" style="align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
-        <div id="dsdFiltroDia">
+        <div id="dsuFiltroDia">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="sl-btn-per ativo" data-p="ontem"     onclick="dsdSetPeriodoDia('ontem')">Ontem</button>
-            <button class="sl-btn-per"       data-p="semana"    onclick="dsdSetPeriodoDia('semana')">Esta semana</button>
-            <button class="sl-btn-per"       data-p="7d"        onclick="dsdSetPeriodoDia('7d')">Últimos 7d</button>
-            <button class="sl-btn-per"       data-p="especifico" onclick="dsdSetPeriodoDia('especifico')">Dia específico</button>
-            <button class="sl-btn-per"       data-p="livre"     onclick="dsdSetPeriodoDia('livre')">Livre</button>
+            <button class="sl-btn-per ativo" data-p="ontem"     onclick="dsuSetPeriodoDia('ontem')">Ontem</button>
+            <button class="sl-btn-per"       data-p="semana"    onclick="dsuSetPeriodoDia('semana')">Esta semana</button>
+            <button class="sl-btn-per"       data-p="7d"        onclick="dsuSetPeriodoDia('7d')">Últimos 7d</button>
+            <button class="sl-btn-per"       data-p="especifico" onclick="dsuSetPeriodoDia('especifico')">Dia específico</button>
+            <button class="sl-btn-per"       data-p="livre"     onclick="dsuSetPeriodoDia('livre')">Livre</button>
           </div>
-          <div id="dsdDiaEspecificoWrap" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <input type="text" id="dsdDiaUnico" placeholder="dd/mm/aaaa" style="width:120px">
-            <button class="btn-atualizar" onclick="dsdRenderizar()" style="margin:0">Aplicar</button>
+          <div id="dsuDiaEspecificoWrap" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <input type="text" id="dsuDiaUnico" placeholder="dd/mm/aaaa" style="width:120px">
+            <button class="btn-atualizar" onclick="dsuRenderizarAtual()" style="margin:0">Aplicar</button>
           </div>
-          <div id="dsdDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <input type="text" id="dsdDe"  placeholder="dd/mm/aaaa" style="width:120px">
+          <div id="dsuDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <input type="text" id="dsuDe"  placeholder="dd/mm/aaaa" style="width:120px">
             <span style="color:var(--text2);font-size:12px">até</span>
-            <input type="text" id="dsdAte" placeholder="dd/mm/aaaa" style="width:120px">
-            <button class="btn-atualizar" onclick="dsdRenderizar()" style="margin:0">Aplicar</button>
+            <input type="text" id="dsuAte" placeholder="dd/mm/aaaa" style="width:120px">
+            <button class="btn-atualizar" onclick="dsuRenderizarAtual()" style="margin:0">Aplicar</button>
           </div>
         </div>
 
         <div>
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Ciclo</div>
           <div style="display:flex;gap:6px">
-            <button class="sl-btn-per ativo" data-ciclodsd="todos" onclick="dsdFiltrarCiclo('todos')">Todos</button>
-            <button class="sl-btn-per"       data-ciclodsd="AM"    onclick="dsdFiltrarCiclo('AM')">AM</button>
-            <button class="sl-btn-per"       data-ciclodsd="PM"    onclick="dsdFiltrarCiclo('PM')">PM</button>
-            <button class="sl-btn-per"       data-ciclodsd="SD"    onclick="dsdFiltrarCiclo('SD')">SD</button>
+            <button class="sl-btn-per ativo" data-ciclodsu="todos" onclick="dsuFiltrarCiclo('todos')">Todos</button>
+            <button class="sl-btn-per"       data-ciclodsu="AM"    onclick="dsuFiltrarCiclo('AM')">AM</button>
+            <button class="sl-btn-per"       data-ciclodsu="PM"    onclick="dsuFiltrarCiclo('PM')">PM</button>
+            <button class="sl-btn-per"       data-ciclodsu="SD"    onclick="dsuFiltrarCiclo('SD')">SD</button>
           </div>
         </div>
 
-        <div id="dsdFiltroTranspWrap" style="display:none">
+        <div id="dsuFiltroTranspWrap" style="display:none">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
-          <select id="dsdSelTransp" onchange="dsdRenderizar()" style="min-width:180px">
+          <select id="dsuSelTransp" onchange="dsuRenderizarAtual()" style="min-width:180px">
             <option value="">Todas</option>
           </select>
         </div>
 
-        <div>
+        <!-- Filtros específicos por aba — só um fica visível por vez -->
+        <div id="dsuFiltroPlacaWrap" style="display:none">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Placa</div>
-          <input type="text" id="dsdFiltroPlaca" placeholder="Filtrar por placa..." style="min-width:140px" oninput="dsdRenderizar()">
+          <input type="text" id="dsuFiltroPlaca" placeholder="Filtrar por placa..." style="min-width:140px" oninput="dsuRenderizarAtual()">
+        </div>
+
+        <div id="dsuFiltroModalWrap" style="display:none">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Modal (veículo)</div>
+          <select id="dsuSelModal" onchange="dsuRenderizarAtual()" style="min-width:160px">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <div id="dsuFiltroDriverWrap" style="display:none">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Driver ID</div>
+          <input type="text" id="dsuFiltroDriver" placeholder="Filtrar por driver... (checar reincidência)" style="min-width:220px" oninput="dsuRenderizarAtual()">
         </div>
 
         <button class="btn-atualizar" onclick="dsdCarregar()" style="margin-left:auto">↺ Atualizar</button>
       </div>
+    </div>
 
+    <!-- ═══════════ ABA: DETALHE DRIVER ═══════════ -->
+    <div id="dsPainelDriver" style="display:none">
       <div style="font-size:11px;color:var(--text2);margin-bottom:10px">
-        🔻 Ordenado do pior DS% para o melhor · clique em "Link rota" pra abrir o monitoramento da rota
+        🔻 Clique no título de uma coluna pra ordenar por ela · clique em "Link rota" pra abrir o monitoramento da rota
       </div>
       <div id="dsdLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
 
     <!-- ═══════════ ABA: ORH ═══════════ -->
     <div id="dsPainelOrh" style="display:none">
-      <div class="filtros" style="align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
-        <div id="dsoFiltroDia">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="sl-btn-per ativo" data-p="ontem"     onclick="dsoSetPeriodoDia('ontem')">Ontem</button>
-            <button class="sl-btn-per"       data-p="semana"    onclick="dsoSetPeriodoDia('semana')">Esta semana</button>
-            <button class="sl-btn-per"       data-p="7d"        onclick="dsoSetPeriodoDia('7d')">Últimos 7d</button>
-            <button class="sl-btn-per"       data-p="especifico" onclick="dsoSetPeriodoDia('especifico')">Dia específico</button>
-            <button class="sl-btn-per"       data-p="livre"     onclick="dsoSetPeriodoDia('livre')">Livre</button>
-          </div>
-          <div id="dsoDiaEspecificoWrap" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <input type="text" id="dsoDiaUnico" placeholder="dd/mm/aaaa" style="width:120px">
-            <button class="btn-atualizar" onclick="dsoRenderizar()" style="margin:0">Aplicar</button>
-          </div>
-          <div id="dsoDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <input type="text" id="dsoDe"  placeholder="dd/mm/aaaa" style="width:120px">
-            <span style="color:var(--text2);font-size:12px">até</span>
-            <input type="text" id="dsoAte" placeholder="dd/mm/aaaa" style="width:120px">
-            <button class="btn-atualizar" onclick="dsoRenderizar()" style="margin:0">Aplicar</button>
-          </div>
-        </div>
-
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Ciclo</div>
-          <div style="display:flex;gap:6px">
-            <button class="sl-btn-per ativo" data-ciclodso="todos" onclick="dsoFiltrarCiclo('todos')">Todos</button>
-            <button class="sl-btn-per"       data-ciclodso="AM"    onclick="dsoFiltrarCiclo('AM')">AM</button>
-            <button class="sl-btn-per"       data-ciclodso="PM"    onclick="dsoFiltrarCiclo('PM')">PM</button>
-            <button class="sl-btn-per"       data-ciclodso="SD"    onclick="dsoFiltrarCiclo('SD')">SD</button>
-          </div>
-        </div>
-
-        <div id="dsoFiltroTranspWrap" style="display:none">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
-          <select id="dsoSelTransp" onchange="dsoRenderizar()" style="min-width:180px">
-            <option value="">Todas</option>
-          </select>
-        </div>
-
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Placa</div>
-          <input type="text" id="dsoFiltroPlaca" placeholder="Filtrar por placa..." style="min-width:140px" oninput="dsoRenderizar()">
-        </div>
-
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Modal (veículo)</div>
-          <select id="dsoSelModal" onchange="dsoRenderizar()" style="min-width:160px">
-            <option value="">Todos</option>
-          </select>
-        </div>
-
-        <button class="btn-atualizar" onclick="dsdCarregar()" style="margin-left:auto">↺ Atualizar</button>
-      </div>
-
       <div style="font-size:11px;color:var(--text2);margin-bottom:10px">
-        ⏱️ Mostrando rotas com <strong style="color:var(--text)">ORH real acima de 8h 47min</strong> · ordenado da maior pra menor
+        ⏱️ Mostrando rotas com <strong style="color:var(--text)">ORH real acima de 8h 47min</strong> · clique no título de uma coluna pra ordenar
       </div>
       <div id="dsoLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
 
     <!-- ═══════════ ABA: PÓS-HORÁRIO & GHOST ═══════════ -->
     <div id="dsPainelPosGhost" style="display:none">
-      <div class="filtros" style="align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
-        <div id="dspFiltroDia">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="sl-btn-per ativo" data-p="ontem"     onclick="dspSetPeriodoDia('ontem')">Ontem</button>
-            <button class="sl-btn-per"       data-p="semana"    onclick="dspSetPeriodoDia('semana')">Esta semana</button>
-            <button class="sl-btn-per"       data-p="7d"        onclick="dspSetPeriodoDia('7d')">Últimos 7d</button>
-            <button class="sl-btn-per"       data-p="especifico" onclick="dspSetPeriodoDia('especifico')">Dia específico</button>
-            <button class="sl-btn-per"       data-p="livre"     onclick="dspSetPeriodoDia('livre')">Livre</button>
-          </div>
-          <div id="dspDiaEspecificoWrap" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <input type="text" id="dspDiaUnico" placeholder="dd/mm/aaaa" style="width:120px">
-            <button class="btn-atualizar" onclick="dspRenderizar()" style="margin:0">Aplicar</button>
-          </div>
-          <div id="dspDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <input type="text" id="dspDe"  placeholder="dd/mm/aaaa" style="width:120px">
-            <span style="color:var(--text2);font-size:12px">até</span>
-            <input type="text" id="dspAte" placeholder="dd/mm/aaaa" style="width:120px">
-            <button class="btn-atualizar" onclick="dspRenderizar()" style="margin:0">Aplicar</button>
-          </div>
-        </div>
-
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Ciclo</div>
-          <div style="display:flex;gap:6px">
-            <button class="sl-btn-per ativo" data-ciclodsp="todos" onclick="dspFiltrarCiclo('todos')">Todos</button>
-            <button class="sl-btn-per"       data-ciclodsp="AM"    onclick="dspFiltrarCiclo('AM')">AM</button>
-            <button class="sl-btn-per"       data-ciclodsp="PM"    onclick="dspFiltrarCiclo('PM')">PM</button>
-            <button class="sl-btn-per"       data-ciclodsp="SD"    onclick="dspFiltrarCiclo('SD')">SD</button>
-          </div>
-        </div>
-
-        <div id="dspFiltroTranspWrap" style="display:none">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
-          <select id="dspSelTransp" onchange="dspRenderizar()" style="min-width:180px">
-            <option value="">Todas</option>
-          </select>
-        </div>
-
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Driver ID</div>
-          <input type="text" id="dspFiltroDriver" placeholder="Filtrar por driver... (checar reincidência)" style="min-width:220px" oninput="dspRenderizar()">
-        </div>
-
-        <button class="btn-atualizar" onclick="dsdCarregar()" style="margin-left:auto">↺ Atualizar</button>
-      </div>
-
       <div class="atr-summary" id="dspKpis" style="margin-bottom:16px"></div>
 
       <div style="font-size:11px;color:var(--text2);margin-bottom:10px">
-        🔻 Ordenado pelo maior impacto total (pós-horário + não tentado + ghost) · filtre por Driver ID pra ver o histórico dele e checar reincidência
+        🔻 Ordenado pelo maior impacto total (pós-horário + não tentado + ghost) · use o filtro de Driver ID (no filtro compartilhado acima) pra ver o histórico e checar reincidência · clique no título de uma coluna pra ordenar
       </div>
       <div id="dspLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
 
     <!-- ═══════════ ABA: EVOLUÇÃO DRIVER CRÍTICO ═══════════ -->
     <div id="dsPainelCritico" style="display:none">
-      <div class="filtros" style="align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
-        <div id="dscFiltroDia">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="sl-btn-per" data-p="ontem"     onclick="dscSetPeriodoDia('ontem')">Ontem</button>
-            <button class="sl-btn-per ativo" data-p="semana" onclick="dscSetPeriodoDia('semana')">Esta semana</button>
-            <button class="sl-btn-per"       data-p="7d"        onclick="dscSetPeriodoDia('7d')">Últimos 7d</button>
-            <button class="sl-btn-per"       data-p="especifico" onclick="dscSetPeriodoDia('especifico')">Dia específico</button>
-            <button class="sl-btn-per"       data-p="livre"     onclick="dscSetPeriodoDia('livre')">Livre</button>
-          </div>
-          <div id="dscDiaEspecificoWrap" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <input type="text" id="dscDiaUnico" placeholder="dd/mm/aaaa" style="width:120px">
-            <button class="btn-atualizar" onclick="dscRenderizar()" style="margin:0">Aplicar</button>
-          </div>
-          <div id="dscDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <input type="text" id="dscDe"  placeholder="dd/mm/aaaa" style="width:120px">
-            <span style="color:var(--text2);font-size:12px">até</span>
-            <input type="text" id="dscAte" placeholder="dd/mm/aaaa" style="width:120px">
-            <button class="btn-atualizar" onclick="dscRenderizar()" style="margin:0">Aplicar</button>
-          </div>
-        </div>
-
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Ciclo</div>
-          <div style="display:flex;gap:6px">
-            <button class="sl-btn-per ativo" data-ciclodsc="todos" onclick="dscFiltrarCiclo('todos')">Todos</button>
-            <button class="sl-btn-per"       data-ciclodsc="AM"    onclick="dscFiltrarCiclo('AM')">AM</button>
-            <button class="sl-btn-per"       data-ciclodsc="PM"    onclick="dscFiltrarCiclo('PM')">PM</button>
-            <button class="sl-btn-per"       data-ciclodsc="SD"    onclick="dscFiltrarCiclo('SD')">SD</button>
-          </div>
-        </div>
-
-        <div id="dscFiltroTranspWrap" style="display:none">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
-          <select id="dscSelTransp" onchange="dscRenderizar()" style="min-width:180px">
-            <option value="">Todas</option>
-          </select>
-        </div>
-
-        <button class="btn-atualizar" onclick="dsdCarregar()" style="margin-left:auto">↺ Atualizar</button>
-      </div>
-
       <div style="font-size:11px;color:var(--text2);margin-bottom:10px">
-        📉 Top 20 drivers com pior DS% médio no período · mínimo de 2 rotas no período · clique numa linha pra ver a evolução dia a dia
+        📉 Top 20 drivers (mínimo de 2 rotas no período) · clique no título de uma coluna pra ordenar · clique numa linha pra ver a evolução dia a dia
       </div>
       <div id="dscLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
 
@@ -5680,17 +5553,27 @@ function dsSetAba(aba) {
   document.getElementById('dsPainelPosGhost').style.display = aba === 'posghost' ? 'block' : 'none';
   document.getElementById('dsPainelCritico').style.display  = aba === 'critico'  ? 'block' : 'none';
 
+  // Filtro compartilhado só aparece fora da aba "Por Transportadora" (que tem lógica própria)
+  document.getElementById('dsFiltroCompartilhado').style.display = aba === 'transp' ? 'none' : 'block';
+
+  // Filtros específicos: só um fica visível por vez, conforme a aba
+  document.getElementById('dsuFiltroPlacaWrap').style.display  = (aba === 'driver' || aba === 'orh') ? 'block' : 'none';
+  document.getElementById('dsuFiltroModalWrap').style.display  = (aba === 'orh') ? 'block' : 'none';
+  document.getElementById('dsuFiltroDriverWrap').style.display = (aba === 'posghost') ? 'block' : 'none';
+
   if ((aba === 'driver' || aba === 'orh' || aba === 'posghost' || aba === 'critico') && !dsDriverCarregado) {
     dsdCarregar();
-  } else if (aba === 'driver') {
-    dsdRenderizar();
-  } else if (aba === 'orh') {
-    dsoRenderizar();
-  } else if (aba === 'posghost') {
-    dspRenderizar();
-  } else if (aba === 'critico') {
-    dscRenderizar();
+  } else {
+    dsuRenderizarAtual();
   }
+}
+
+// Renderiza a aba atualmente ativa dentre as que usam o filtro compartilhado
+function dsuRenderizarAtual() {
+  if      (dsAbaAtiva === 'driver')   dsdRenderizar();
+  else if (dsAbaAtiva === 'orh')      dsoRenderizar();
+  else if (dsAbaAtiva === 'posghost') dspRenderizar();
+  else if (dsAbaAtiva === 'critico')  dscRenderizar();
 }
 
 // Monta o link de monitoramento da rota a partir do ROUTE_ID
@@ -5699,6 +5582,44 @@ function dsLinkRota(routeId) {
   var url = 'https://envios.adminml.com/logistics/monitoring-distribution/detail/' + encodeURIComponent(routeId) + '?site=MLB';
   return '<a href="' + url + '" target="_blank" rel="noopener" ' +
     'style="color:var(--blue);font-weight:700;font-size:11px;text-decoration:none;white-space:nowrap">🔗 Link rota</a>';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FILTRO COMPARTILHADO — Período/Ciclo/Transportadora valem para as 4
+// abas (Detalhe Driver, ORH, Pós-Horário, Evolução Crítico). Cada aba só
+// muda o que é mostrado nos cards/tabela, sem precisar refiltrar.
+// ══════════════════════════════════════════════════════════════════════
+var dsuPeriodoDia = 'ontem';
+var dsuCicloAtivo = 'todos';
+
+function dsuSetPeriodoDia(p) {
+  dsuPeriodoDia = p;
+  document.querySelectorAll('#dsuFiltroDia .sl-btn-per').forEach(function(b){ b.classList.toggle('ativo', b.dataset.p === p); });
+  document.getElementById('dsuDatasLivres').style.display      = p === 'livre'      ? 'flex' : 'none';
+  document.getElementById('dsuDiaEspecificoWrap').style.display = p === 'especifico' ? 'flex' : 'none';
+  if (p !== 'livre' && p !== 'especifico') dsuRenderizarAtual();
+}
+function dsuFiltrarCiclo(c) {
+  dsuCicloAtivo = c;
+  document.querySelectorAll('[data-ciclodsu]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.ciclodsu === c); });
+  dsuRenderizarAtual();
+}
+
+// Aplica período/ciclo/transportadora compartilhados a um array de linhas
+function dsuAplicarFiltroBase(rows) {
+  var transpFiltro = '';
+  if (sessao && sessao.isMeli) {
+    var sel = document.getElementById('dsuSelTransp');
+    transpFiltro = sel ? sel.value : '';
+  } else if (sessao) {
+    transpFiltro = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
+  }
+  if (transpFiltro) rows = rows.filter(function(r){ return r.transp === transpFiltro; });
+
+  if (dsuCicloAtivo !== 'todos') rows = rows.filter(function(r){ return r.ciclo === dsuCicloAtivo; });
+
+  rows = _dsFiltroData(rows, 'dia', dsuPeriodoDia, 'dsu');
+  return rows;
 }
 
 // ── Carregamento (compartilhado entre Detalhe Driver e ORH) ────────────
@@ -5724,31 +5645,27 @@ function dsdCarregar() {
     dsDriverCache = data.rows || [];
     dsDriverCarregado = true;
 
-    // Popula selects de transportadora (só MELI)
+    // Popula select de transportadora compartilhado (só MELI)
     if (sessao && sessao.isMeli) {
       var transpList = [];
       dsDriverCache.forEach(function(r){ if (r.transp && transpList.indexOf(r.transp) === -1) transpList.push(r.transp); });
       transpList.sort();
-      document.getElementById('dsdFiltroTranspWrap').style.display = 'block';
-      document.getElementById('dsoFiltroTranspWrap').style.display = 'block';
-      document.getElementById('dspFiltroTranspWrap').style.display = 'block';
-      document.getElementById('dscFiltroTranspWrap').style.display = 'block';
-      [document.getElementById('dsdSelTransp'), document.getElementById('dsoSelTransp'), document.getElementById('dspSelTransp'), document.getElementById('dscSelTransp')].forEach(function(sel) {
-        var valAtual = sel.value;
-        sel.innerHTML = '<option value="">Todas</option>';
-        transpList.forEach(function(t){
-          var o = document.createElement('option'); o.value = t; o.textContent = t;
-          if (t === valAtual) o.selected = true;
-          sel.appendChild(o);
-        });
+      document.getElementById('dsuFiltroTranspWrap').style.display = 'block';
+      var selT = document.getElementById('dsuSelTransp');
+      var valAtualT = selT.value;
+      selT.innerHTML = '<option value="">Todas</option>';
+      transpList.forEach(function(t){
+        var o = document.createElement('option'); o.value = t; o.textContent = t;
+        if (t === valAtualT) o.selected = true;
+        selT.appendChild(o);
       });
     }
 
-    // Popula select de Modal (tipo de veículo) — visível pra qualquer login
+    // Popula select de Modal (tipo de veículo) compartilhado — visível pra qualquer login
     var modalList = [];
     dsDriverCache.forEach(function(r){ if (r.tipo_veiculo && modalList.indexOf(r.tipo_veiculo) === -1) modalList.push(r.tipo_veiculo); });
     modalList.sort();
-    var selModal = document.getElementById('dsoSelModal');
+    var selModal = document.getElementById('dsuSelModal');
     if (selModal) {
       var valModalAtual = selModal.value;
       selModal.innerHTML = '<option value="">Todos</option>';
@@ -5759,10 +5676,7 @@ function dsdCarregar() {
       });
     }
 
-    if (dsAbaAtiva === 'driver')   dsdRenderizar();
-    if (dsAbaAtiva === 'orh')      dsoRenderizar();
-    if (dsAbaAtiva === 'posghost') dspRenderizar();
-    if (dsAbaAtiva === 'critico')  dscRenderizar();
+    dsuRenderizarAtual();
   };
 
   var s = document.createElement('script'); s.src = url;
@@ -5797,41 +5711,53 @@ function _dsFiltroData(rows, modo, periodoDia, prefixo) {
 // ══════════════════════════════════════════════════════════════════════
 // DETALHE DRIVER
 // ══════════════════════════════════════════════════════════════════════
-var dsdPeriodoDia = 'ontem';
-var dsdCicloAtivo = 'todos';
-
-function dsdSetPeriodoDia(p) {
-  dsdPeriodoDia = p;
-  document.querySelectorAll('#dsdFiltroDia .sl-btn-per').forEach(function(b){ b.classList.toggle('ativo', b.dataset.p === p); });
-  document.getElementById('dsdDatasLivres').style.display      = p === 'livre'      ? 'flex' : 'none';
-  document.getElementById('dsdDiaEspecificoWrap').style.display = p === 'especifico' ? 'flex' : 'none';
-  if (p !== 'livre' && p !== 'especifico') dsdRenderizar();
-}
-function dsdFiltrarCiclo(c) {
-  dsdCicloAtivo = c;
-  document.querySelectorAll('[data-ciclodsd]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.ciclodsd === c); });
-  dsdRenderizar();
-}
-
 function dsdGetFiltrado() {
-  var rows = dsDriverCache;
+  var rows = dsuAplicarFiltroBase(dsDriverCache);
 
-  var transpFiltro = '';
-  if (sessao && sessao.isMeli) {
-    var sel = document.getElementById('dsdSelTransp');
-    transpFiltro = sel ? sel.value : '';
-  } else if (sessao) {
-    transpFiltro = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
-  }
-  if (transpFiltro) rows = rows.filter(function(r){ return r.transp === transpFiltro; });
-
-  var placaFiltro = document.getElementById('dsdFiltroPlaca').value.trim().toUpperCase();
+  var placaFiltro = document.getElementById('dsuFiltroPlaca').value.trim().toUpperCase();
   if (placaFiltro) rows = rows.filter(function(r){ return (r.placa||'').toUpperCase().indexOf(placaFiltro) !== -1; });
 
-  if (dsdCicloAtivo !== 'todos') rows = rows.filter(function(r){ return r.ciclo === dsdCicloAtivo; });
-
-  rows = _dsFiltroData(rows, 'dia', dsdPeriodoDia, 'dsd');
   return rows;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ORDENAÇÃO CLICÁVEL — clique no título de qualquer coluna nas 4 tabelas
+// (Detalhe Driver, ORH, Pós-Horário, Evolução Crítico) pra ordenar por ela.
+// Clique de novo na mesma coluna inverte a direção.
+// ══════════════════════════════════════════════════════════════════════
+var dsuSortState = {
+  dsd: { campo: 'pct',         dir:  1 }, // pior DS% primeiro
+  dso: { campo: 'orh_real_h',  dir: -1 }, // maior ORH primeiro
+  dsp: { campo: 'impacto',     dir: -1 }, // maior impacto primeiro
+  dsc: { campo: 'pct',         dir:  1 }  // pior DS% médio primeiro
+};
+
+function dsuOrdenarPor(tabela, campo) {
+  var st = dsuSortState[tabela];
+  if (st.campo === campo) st.dir = -st.dir;
+  else { st.campo = campo; st.dir = 1; }
+  if      (tabela === 'dsd') dsdRenderizar();
+  else if (tabela === 'dso') dsoRenderizar();
+  else if (tabela === 'dsp') dspRenderizar();
+  else if (tabela === 'dsc') dscRenderizar();
+}
+
+// Gera um <th> clicável com seta indicando a ordenação ativa
+function dsuTh(tabela, campo, label) {
+  var st = dsuSortState[tabela];
+  var seta = (st.campo === campo) ? (st.dir === 1 ? ' ▲' : ' ▼') : '';
+  return '<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="dsuOrdenarPor(\'' + tabela + '\',\'' + campo + '\')" title="Clique pra ordenar">' + label + seta + '</th>';
+}
+
+// Comparador genérico — trata número e texto
+function dsuComparar(a, b, campo, dir) {
+  var va = a[campo], vb = b[campo];
+  if (typeof va === 'string' || typeof vb === 'string') {
+    return dir * String(va || '').localeCompare(String(vb || ''));
+  }
+  va = (va === null || va === undefined) ? -Infinity : Number(va);
+  vb = (vb === null || vb === undefined) ? -Infinity : Number(vb);
+  return dir * (va - vb);
 }
 
 function dsdRenderizar() {
@@ -5840,20 +5766,26 @@ function dsdRenderizar() {
 
   if (!rows.length) { el.innerHTML = '<div class="empty">Sem dados no período/filtro selecionado.</div>'; return; }
 
-  // Ordena do pior DS% para o melhor (top ofensores)
   var lista = rows.map(function(r){
     var pct = r.denominador_ds > 0 ? (r.numerador_ds / r.denominador_ds * 100) : 0;
-    return Object.assign({}, r, { pct: pct });
-  }).sort(function(a,b){ return a.pct - b.pct; }).slice(0, 200); // limite de performance
+    var pctComercial   = r.dispatched_comercial   > 0 ? (r.delivered_comercial   / r.dispatched_comercial   * 100) : null;
+    var pctResidencial = r.dispatched_residencial > 0 ? (r.delivered_residencial / r.dispatched_residencial * 100) : null;
+    return Object.assign({}, r, { pct: pct, pctComercial: pctComercial, pctResidencial: pctResidencial });
+  });
+
+  var st = dsuSortState.dsd;
+  lista.sort(function(a,b){ return dsuComparar(a, b, st.campo, st.dir); });
+  lista = lista.slice(0, 200); // limite de performance
 
   var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
-    '<th>Link Rota</th><th>Data</th><th>Ciclo</th><th>Driver ID</th><th>Transportadora</th><th>Placa</th>' +
-    '<th>DS%</th><th>DS Comercial</th><th>DS Residencial</th><th>Insucessos</th>' +
+    dsuTh('dsd','route_id','Link Rota') + dsuTh('dsd','dia','Data') + dsuTh('dsd','ciclo','Ciclo') +
+    dsuTh('dsd','driver_id','Driver ID') + dsuTh('dsd','transp','Transportadora') + dsuTh('dsd','placa','Placa') +
+    dsuTh('dsd','pct','DS%') + dsuTh('dsd','pctComercial','DS Comercial') + dsuTh('dsd','pctResidencial','DS Residencial') +
+    dsuTh('dsd','retornados_estacao','Retornado Estação') +
     '</tr></thead><tbody>';
 
-  function badgeOuVazio(delivered, dispatched) {
-    if (!dispatched) return '<span style="color:var(--text2);font-size:11px">—</span>';
-    var pct = delivered / dispatched * 100;
+  function badgeOuVazio(pct) {
+    if (pct === null) return '<span style="color:var(--text2);font-size:11px">—</span>';
     var info = dsCorPct(pct);
     return '<span class="ds-pct-badge ' + info.cls + '">' + pct.toFixed(1) + '%</span>';
   }
@@ -5868,15 +5800,15 @@ function dsdRenderizar() {
       '<td style="font-size:11px">' + e(r.transp) + '</td>' +
       '<td style="font-size:11px">' + e(r.placa) + '</td>' +
       '<td><span class="ds-pct-badge ' + info.cls + '">' + r.pct.toFixed(1) + '%</span></td>' +
-      '<td>' + badgeOuVazio(r.delivered_comercial, r.dispatched_comercial) + '</td>' +
-      '<td>' + badgeOuVazio(r.delivered_residencial, r.dispatched_residencial) + '</td>' +
-      '<td style="text-align:center;font-weight:700;color:' + ((r.insucessos||0)>0?'var(--danger)':'var(--text2)') + '">' + (r.insucessos||0).toLocaleString('pt-BR') + '</td>' +
+      '<td>' + badgeOuVazio(r.pctComercial) + '</td>' +
+      '<td>' + badgeOuVazio(r.pctResidencial) + '</td>' +
+      '<td style="text-align:center;font-weight:700;color:' + ((r.retornados_estacao||0)>0?'var(--danger)':'var(--text2)') + '">' + (r.retornados_estacao||0).toLocaleString('pt-BR') + '</td>' +
       '</tr>';
   });
 
   html += '</tbody></table></div>';
   if (rows.length > 200) {
-    html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando 200 piores de ' + rows.length + ' registros</div>';
+    html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando 200 registros (de ' + rows.length + ')</div>';
   }
   el.innerHTML = html;
 }
@@ -5884,43 +5816,14 @@ function dsdRenderizar() {
 // ══════════════════════════════════════════════════════════════════════
 // ORH — rotas com ORH real acima de 8h47min
 // ══════════════════════════════════════════════════════════════════════
-var dsoPeriodoDia = 'ontem';
-var dsoCicloAtivo = 'todos';
-
-function dsoSetPeriodoDia(p) {
-  dsoPeriodoDia = p;
-  document.querySelectorAll('#dsoFiltroDia .sl-btn-per').forEach(function(b){ b.classList.toggle('ativo', b.dataset.p === p); });
-  document.getElementById('dsoDatasLivres').style.display      = p === 'livre'      ? 'flex' : 'none';
-  document.getElementById('dsoDiaEspecificoWrap').style.display = p === 'especifico' ? 'flex' : 'none';
-  if (p !== 'livre' && p !== 'especifico') dsoRenderizar();
-}
-function dsoFiltrarCiclo(c) {
-  dsoCicloAtivo = c;
-  document.querySelectorAll('[data-ciclodso]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.ciclodso === c); });
-  dsoRenderizar();
-}
-
 function dsoGetFiltrado() {
-  var rows = dsDriverCache;
+  var rows = dsuAplicarFiltroBase(dsDriverCache);
 
-  var transpFiltro = '';
-  if (sessao && sessao.isMeli) {
-    var sel = document.getElementById('dsoSelTransp');
-    transpFiltro = sel ? sel.value : '';
-  } else if (sessao) {
-    transpFiltro = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
-  }
-  if (transpFiltro) rows = rows.filter(function(r){ return r.transp === transpFiltro; });
-
-  var placaFiltro = document.getElementById('dsoFiltroPlaca').value.trim().toUpperCase();
+  var placaFiltro = document.getElementById('dsuFiltroPlaca').value.trim().toUpperCase();
   if (placaFiltro) rows = rows.filter(function(r){ return (r.placa||'').toUpperCase().indexOf(placaFiltro) !== -1; });
 
-  var modalFiltro = document.getElementById('dsoSelModal').value;
+  var modalFiltro = document.getElementById('dsuSelModal').value;
   if (modalFiltro) rows = rows.filter(function(r){ return r.tipo_veiculo === modalFiltro; });
-
-  if (dsoCicloAtivo !== 'todos') rows = rows.filter(function(r){ return r.ciclo === dsoCicloAtivo; });
-
-  rows = _dsFiltroData(rows, 'dia', dsoPeriodoDia, 'dso');
 
   // Filtro fixo: só ORH acima do limite
   rows = rows.filter(function(r){ return r.orh_real_h !== null && r.orh_real_h > ORH_LIMITE_HORAS; });
@@ -5937,11 +5840,13 @@ function dsoRenderizar() {
     return;
   }
 
-  var lista = rows.slice().sort(function(a,b){ return b.orh_real_h - a.orh_real_h; }).slice(0, 200);
+  var st = dsuSortState.dso;
+  var lista = rows.slice().sort(function(a,b){ return dsuComparar(a, b, st.campo, st.dir); }).slice(0, 200);
 
   var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
-    '<th>Link Rota</th><th>Data</th><th>Ciclo</th><th>Driver ID</th><th>Transportadora</th><th>Placa</th>' +
-    '<th>ORH Real</th><th>ORH Planejado</th>' +
+    dsuTh('dso','route_id','Link Rota') + dsuTh('dso','dia','Data') + dsuTh('dso','ciclo','Ciclo') +
+    dsuTh('dso','driver_id','Driver ID') + dsuTh('dso','transp','Transportadora') + dsuTh('dso','placa','Placa') +
+    dsuTh('dso','orh_real_h','ORH Real') + dsuTh('dso','orh_planned_fmt','ORH Planejado') +
     '</tr></thead><tbody>';
 
   lista.forEach(function(r){
@@ -5959,7 +5864,7 @@ function dsoRenderizar() {
 
   html += '</tbody></table></div>';
   if (rows.length > 200) {
-    html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando 200 piores de ' + rows.length + ' registros</div>';
+    html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando 200 registros (de ' + rows.length + ')</div>';
   }
   el.innerHTML = html;
 }
@@ -5967,40 +5872,12 @@ function dsoRenderizar() {
 // ══════════════════════════════════════════════════════════════════════
 // PÓS-HORÁRIO & GHOST — ENTREGAS_POST_21/22/23, NAO_TENTADO, GHOST_VISITS
 // ══════════════════════════════════════════════════════════════════════
-var dspPeriodoDia = 'ontem';
-var dspCicloAtivo = 'todos';
-
-function dspSetPeriodoDia(p) {
-  dspPeriodoDia = p;
-  document.querySelectorAll('#dspFiltroDia .sl-btn-per').forEach(function(b){ b.classList.toggle('ativo', b.dataset.p === p); });
-  document.getElementById('dspDatasLivres').style.display      = p === 'livre'      ? 'flex' : 'none';
-  document.getElementById('dspDiaEspecificoWrap').style.display = p === 'especifico' ? 'flex' : 'none';
-  if (p !== 'livre' && p !== 'especifico') dspRenderizar();
-}
-function dspFiltrarCiclo(c) {
-  dspCicloAtivo = c;
-  document.querySelectorAll('[data-ciclodsp]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.ciclodsp === c); });
-  dspRenderizar();
-}
-
 function dspGetFiltrado() {
-  var rows = dsDriverCache;
+  var rows = dsuAplicarFiltroBase(dsDriverCache);
 
-  var transpFiltro = '';
-  if (sessao && sessao.isMeli) {
-    var sel = document.getElementById('dspSelTransp');
-    transpFiltro = sel ? sel.value : '';
-  } else if (sessao) {
-    transpFiltro = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
-  }
-  if (transpFiltro) rows = rows.filter(function(r){ return r.transp === transpFiltro; });
-
-  var driverFiltro = document.getElementById('dspFiltroDriver').value.trim().toUpperCase();
+  var driverFiltro = document.getElementById('dsuFiltroDriver').value.trim().toUpperCase();
   if (driverFiltro) rows = rows.filter(function(r){ return (r.driver_id||'').toUpperCase().indexOf(driverFiltro) !== -1; });
 
-  if (dspCicloAtivo !== 'todos') rows = rows.filter(function(r){ return r.ciclo === dspCicloAtivo; });
-
-  rows = _dsFiltroData(rows, 'dia', dspPeriodoDia, 'dsp');
   return rows;
 }
 
@@ -6029,15 +5906,17 @@ function dspRenderizar() {
     kpiCard(totNaoTentado.toLocaleString('pt-BR'), 'Não Tentados', totNaoTentado>0?'var(--danger)':'var(--text2)') +
     kpiCard(totGhost.toLocaleString('pt-BR'), 'Ghost Visits', totGhost>0?'var(--danger)':'var(--text2)');
 
-  // ── Tabela detalhada, ordenada pelo maior impacto total ────────────────
+  // ── Tabela detalhada, ordenada conforme coluna clicada ──────────────────
   var el = document.getElementById('dspLista');
   var comImpacto = rows.map(function(r){
     var impacto = (r.entregas_post21||0) + (r.entregas_post22||0) + (r.entregas_post23||0) +
                   (r.nao_tentado||0) + (r.ghost_visits||0);
     return Object.assign({}, r, { impacto: impacto });
-  }).filter(function(r){ return r.impacto > 0; })
-    .sort(function(a,b){ return b.impacto - a.impacto; })
-    .slice(0, 200);
+  }).filter(function(r){ return r.impacto > 0; });
+
+  var st = dsuSortState.dsp;
+  comImpacto.sort(function(a,b){ return dsuComparar(a, b, st.campo, st.dir); });
+  comImpacto = comImpacto.slice(0, 200);
 
   if (!comImpacto.length) {
     el.innerHTML = '<div class="empty" style="color:var(--ok)">✅ Nenhuma ocorrência de pós-horário, não tentado ou ghost visit no período/filtro selecionado.</div>';
@@ -6045,8 +5924,10 @@ function dspRenderizar() {
   }
 
   var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
-    '<th>Link Rota</th><th>Data</th><th>Ciclo</th><th>Driver ID</th><th>Transportadora</th>' +
-    '<th>Pós-21h</th><th>Pós-22h</th><th>Pós-23h</th><th>Não Tentado</th><th>Ghost Visits</th>' +
+    dsuTh('dsp','route_id','Link Rota') + dsuTh('dsp','dia','Data') + dsuTh('dsp','ciclo','Ciclo') +
+    dsuTh('dsp','driver_id','Driver ID') + dsuTh('dsp','transp','Transportadora') +
+    dsuTh('dsp','entregas_post21','Pós-21h') + dsuTh('dsp','entregas_post22','Pós-22h') + dsuTh('dsp','entregas_post23','Pós-23h') +
+    dsuTh('dsp','nao_tentado','Não Tentado') + dsuTh('dsp','ghost_visits','Ghost Visits') +
     '</tr></thead><tbody>';
 
   comImpacto.forEach(function(r){
@@ -6070,7 +5951,7 @@ function dspRenderizar() {
 
   html += '</tbody></table></div>';
   if (rows.length > comImpacto.length) {
-    html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando as ' + comImpacto.length + ' rotas com maior impacto (de ' + rows.length + ' no total do filtro)</div>';
+    html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando ' + comImpacto.length + ' de ' + rows.length + ' registros com alguma ocorrência</div>';
   }
   el.innerHTML = html;
 }
@@ -6078,42 +5959,13 @@ function dspRenderizar() {
 // ══════════════════════════════════════════════════════════════════════
 // EVOLUÇÃO DRIVER CRÍTICO — Top 20 piores DS% médio do período
 // ══════════════════════════════════════════════════════════════════════
-var dscPeriodoDia = 'semana';
-var dscCicloAtivo = 'todos';
 var dscDriverSelecionado = null;
 var dscChartEvo = null;
 var DSC_MIN_ROTAS = 2; // mínimo de rotas no período pra entrar no ranking (evita 1 rota isolada distorcer)
 var DSC_TOP_N = 20;
 
-function dscSetPeriodoDia(p) {
-  dscPeriodoDia = p;
-  document.querySelectorAll('#dscFiltroDia .sl-btn-per').forEach(function(b){ b.classList.toggle('ativo', b.dataset.p === p); });
-  document.getElementById('dscDatasLivres').style.display      = p === 'livre'      ? 'flex' : 'none';
-  document.getElementById('dscDiaEspecificoWrap').style.display = p === 'especifico' ? 'flex' : 'none';
-  if (p !== 'livre' && p !== 'especifico') dscRenderizar();
-}
-function dscFiltrarCiclo(c) {
-  dscCicloAtivo = c;
-  document.querySelectorAll('[data-ciclodsc]').forEach(function(b){ b.classList.toggle('ativo', b.dataset.ciclodsc === c); });
-  dscRenderizar();
-}
-
 function dscGetFiltrado() {
-  var rows = dsDriverCache;
-
-  var transpFiltro = '';
-  if (sessao && sessao.isMeli) {
-    var sel = document.getElementById('dscSelTransp');
-    transpFiltro = sel ? sel.value : '';
-  } else if (sessao) {
-    transpFiltro = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
-  }
-  if (transpFiltro) rows = rows.filter(function(r){ return r.transp === transpFiltro; });
-
-  if (dscCicloAtivo !== 'todos') rows = rows.filter(function(r){ return r.ciclo === dscCicloAtivo; });
-
-  rows = _dsFiltroData(rows, 'dia', dscPeriodoDia, 'dsc');
-  return rows;
+  return dsuAplicarFiltroBase(dsDriverCache);
 }
 
 function dscRenderizar() {
@@ -6136,11 +5988,12 @@ function dscRenderizar() {
     if (r.driver_career)  g.career  = r.driver_career;
   });
 
+  var st = dsuSortState.dsc;
   var lista = Object.values(porDriver)
     .filter(function(g){ return g.qtd >= DSC_MIN_ROTAS && g.denDS > 0; })
-    .map(function(g){ g.pct = g.numDS / g.denDS * 100; return g; })
-    .sort(function(a,b){ return a.pct - b.pct; })
-    .slice(0, DSC_TOP_N);
+    .map(function(g){ g.pct = g.numDS / g.denDS * 100; return g; });
+  lista.sort(function(a,b){ return dsuComparar(a, b, st.campo, st.dir); });
+  lista = lista.slice(0, DSC_TOP_N);
 
   if (!lista.length) {
     el.innerHTML = '<div class="empty">Nenhum driver com pelo menos ' + DSC_MIN_ROTAS + ' rotas no período/filtro selecionado.</div>';
@@ -6150,7 +6003,8 @@ function dscRenderizar() {
 
   window._dscStore = {};
   var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
-    '<th>#</th><th>Driver ID</th><th>Transportadora</th><th>Perfil (Career)</th><th>Qtd Rotas</th><th>DS% médio</th>' +
+    '<th>#</th>' + dsuTh('dsc','driver_id','Driver ID') + dsuTh('dsc','transp','Transportadora') +
+    dsuTh('dsc','career','Perfil (Career)') + dsuTh('dsc','qtd','Qtd Rotas') + dsuTh('dsc','pct','DS% médio') +
     '</tr></thead><tbody>';
 
   lista.forEach(function(g, idx){
