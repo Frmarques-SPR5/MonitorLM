@@ -979,7 +979,8 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="dots_border"></div>
       <span class="nav-icon">📡</span> <span>Telemetria</span>
     </button>
-    <button class="nav-item" data-view="orh" onclick="abrirView('orh')">
+    <!-- Análise ORH desativada — o ORH agora é tratado dentro do painel DS (aba ⏱️ ORH). Código mantido caso precise reverter. -->
+    <button class="nav-item" data-view="orh" data-oculto="1" onclick="abrirView('orh')" style="display:none">
       <div class="dots_border"></div>
       <span class="nav-icon">📊</span> <span>Análise ORH</span>
     </button>
@@ -997,7 +998,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     </button>
     <button class="nav-item" data-view="ds" onclick="abrirView('ds')">
       <div class="dots_border"></div>
-      <span class="nav-icon">📦</span> <span>DS</span>
+      <span class="nav-icon">📦</span> <span>DS &amp; ORH</span>
     </button>
   </nav>
 </aside>
@@ -1465,81 +1466,21 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
   <!-- VIEW: DS -->
   <div class="view" id="viewDS">
     <div class="page-header">
-      <div class="page-title">📦 DS — Delivery Success</div>
-      <div class="page-sub">Eficiência de entrega por transportadora</div>
+      <div class="page-title">📦 DS &amp; ORH — Indicadores de Entrega e Rota</div>
+      <div class="page-sub">Delivery Success, ORH, entregas tardias e detalhe por driver — tudo na mesma base</div>
     </div>
 
     <!-- Abas do painel DS -->
     <div class="tabs" style="margin-bottom:18px">
-      <div class="tab ativo" data-dstab="transp" onclick="dsSetAba('transp')">📊 Por Transportadora</div>
-      <div class="tab" data-dstab="driver" onclick="dsSetAba('driver')">🚗 Detalhe Driver</div>
+      <div class="tab ativo" data-dstab="transp" onclick="dsSetAba('transp')">📊 DS por Transportadora</div>
+      <div class="tab" data-dstab="driver" onclick="dsSetAba('driver')">🚗 DS por Driver</div>
       <div class="tab" data-dstab="orh" onclick="dsSetAba('orh')">⏱️ ORH</div>
-      <div class="tab" data-dstab="posghost" onclick="dsSetAba('posghost')">🌙 Pós-Horário &amp; Ghost</div>
-      <div class="tab" data-dstab="critico" onclick="dsSetAba('critico')">📉 Evolução Driver Crítico</div>
+      <div class="tab" data-dstab="posghost" onclick="dsSetAba('posghost')">🌙 DS — Entregas Tardias &amp; Ghost</div>
+      <div class="tab" data-dstab="critico" onclick="dsSetAba('critico')">📉 DS — Driver Crítico</div>
     </div>
 
     <!-- ═══════════ ABA: POR TRANSPORTADORA (conteúdo existente) ═══════════ -->
     <div id="dsPainelTransp">
-
-    <!-- Modo de período: Dia ou Semana -->
-    <div class="ds-modo-btns">
-      <button class="ds-mbtn ativo" data-modo="dia" onclick="dsSetModo('dia')">Por Dia</button>
-      <button class="ds-mbtn" data-modo="semana" onclick="dsSetModo('semana')">Por Semana</button>
-    </div>
-
-    <!-- Filtros -->
-    <div class="filtros" style="align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
-      <!-- Sub-filtro modo Dia -->
-      <div id="dsFiltroDia">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="sl-btn-per ativo" data-p="ontem"     onclick="dsSetPeriodoDia('ontem')">Ontem</button>
-          <button class="sl-btn-per"       data-p="semana"    onclick="dsSetPeriodoDia('semana')">Esta semana</button>
-          <button class="sl-btn-per"       data-p="7d"        onclick="dsSetPeriodoDia('7d')">Últimos 7d</button>
-          <button class="sl-btn-per"       data-p="especifico" onclick="dsSetPeriodoDia('especifico')">Dia específico</button>
-          <button class="sl-btn-per"       data-p="livre"     onclick="dsSetPeriodoDia('livre')">Livre</button>
-        </div>
-        <div id="dsDiaEspecificoWrap" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <input type="text" id="dsDiaUnico" placeholder="dd/mm/aaaa" style="width:120px">
-          <button class="btn-atualizar" onclick="dsRenderizar()" style="margin:0">Aplicar</button>
-        </div>
-        <div id="dsDatasLivres" style="display:none;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <input type="text" id="dsDe"  placeholder="dd/mm/aaaa" style="width:120px">
-          <span style="color:var(--text2);font-size:12px">até</span>
-          <input type="text" id="dsAte" placeholder="dd/mm/aaaa" style="width:120px">
-          <button class="btn-atualizar" onclick="dsRenderizar()" style="margin:0">Aplicar</button>
-        </div>
-      </div>
-
-      <!-- Sub-filtro modo Semana -->
-      <div id="dsFiltroSemana" style="display:none">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Semana</div>
-        <select id="dsSelSemana" onchange="dsRenderizar()" style="min-width:160px">
-          <option value="">Todas</option>
-        </select>
-      </div>
-
-      <!-- Ciclo -->
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Ciclo</div>
-        <div style="display:flex;gap:6px">
-          <button class="sl-btn-per ativo" data-ciclods="todos" onclick="dsFiltrarCiclo('todos')">Todos</button>
-          <button class="sl-btn-per"       data-ciclods="AM"    onclick="dsFiltrarCiclo('AM')">AM</button>
-          <button class="sl-btn-per"       data-ciclods="PM"    onclick="dsFiltrarCiclo('PM')">PM</button>
-          <button class="sl-btn-per"       data-ciclods="SD"    onclick="dsFiltrarCiclo('SD')">SD</button>
-        </div>
-      </div>
-
-      <!-- Transportadora (só MELI) -->
-      <div id="dsFiltroTranspWrap" style="display:none">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
-        <select id="dsSelTransp" onchange="dsRenderizar()" style="min-width:180px">
-          <option value="">Todas</option>
-        </select>
-      </div>
-
-      <button class="btn-atualizar" onclick="dsCarregar()" style="margin-left:auto">↺ Atualizar</button>
-    </div>
 
     <!-- KPI cards -->
     <div class="atr-summary" id="dsKpis"></div>
@@ -1553,7 +1494,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
     <!-- Ranking + Breakdown lado a lado -->
     <div class="ds-grid-2">
       <div>
-        <div class="ondas-painel-titulo" style="margin-bottom:4px">📊 Desempenho por transportadora</div>
+        <div class="ondas-painel-titulo" style="margin-bottom:4px">📊 DS — Desempenho por transportadora</div>
         <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Clique numa linha para ver a análise detalhada</div>
         <div id="dsRanking"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
       </div>
@@ -1624,6 +1565,13 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Transportadora</div>
           <select id="dsuSelTransp" onchange="dsuRenderizarAtual()" style="min-width:180px">
             <option value="">Todas</option>
+          </select>
+        </div>
+
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Facility (NEX/SVC/XPT...)</div>
+          <select id="dsuSelFacility" onchange="dsuRenderizarAtual()" style="min-width:140px">
+            <option value="">Todos</option>
           </select>
         </div>
 
@@ -1993,10 +1941,11 @@ function abrirView(nome, semFechar) {
     atrInicializar();
   }
 
-  // DS: carrega na primeira abertura
+  // DS: carrega na primeira abertura (as duas fontes: getDS + getDSDriver)
   if (nome === 'ds' && sessao && !dsCarregado) {
     dsCarregado = true;
     dsCarregar();
+    dsSetAba('transp'); // já dispara dsdCarregar() também, pro filtro compartilhado funcionar
   }
 
   if (nome === 'telemetria' && sessao && !teleCarregado) carregarTelemetria();
@@ -5024,9 +4973,6 @@ function atrRenderSummary(rows) {
 //  DS (DELIVERY SUCCESS)
 // ════════════════════════════════════════════════════════
 var dsDadosRaw    = [];
-var dsModoAtivo   = 'dia';    // 'dia' | 'semana'
-var dsPeriodoDia  = 'ontem';  // ontem | semana | 7d | livre
-var dsCicloAtivo  = 'todos';
 var dsChartEvo    = null;
 var dsChartInsuc  = null;
 var dsChartDetalhe = null;
@@ -5048,71 +4994,15 @@ function dsCarregar() {
       return;
     }
     dsDadosRaw = data.rows || [];
-
-    // Popular select de semanas (ordenado)
-    var semanas = [];
-    dsDadosRaw.forEach(function(r){ if (r.semana && semanas.indexOf(r.semana) === -1) semanas.push(r.semana); });
-    semanas.sort();
-    var selSem = document.getElementById('dsSelSemana');
-    var valSemAtual = selSem.value;
-    selSem.innerHTML = '<option value="">Todas</option>';
-    semanas.forEach(function(s){
-      var o = document.createElement('option'); o.value = s; o.textContent = s;
-      if (s === valSemAtual) o.selected = true;
-      selSem.appendChild(o);
-    });
-
-    // Popular select de transportadora (só MELI)
-    if (sessao && sessao.isMeli) {
-      document.getElementById('dsFiltroTranspWrap').style.display = 'block';
-      var transpList = [];
-      dsDadosRaw.forEach(function(r){ if (r.transp && transpList.indexOf(r.transp) === -1) transpList.push(r.transp); });
-      transpList.sort();
-      var sel = document.getElementById('dsSelTransp');
-      var valAtual = sel.value;
-      sel.innerHTML = '<option value="">Todas</option>';
-      transpList.forEach(function(t){
-        var o = document.createElement('option'); o.value = t; o.textContent = t;
-        if (t === valAtual) o.selected = true;
-        sel.appendChild(o);
-      });
-    }
-
-    dsRenderizar();
+    // Os selects de filtro (Transportadora/Facility/Modal) são populados a
+    // partir de dsDriverCache (fonte getDSDriver), em dsdCarregar() — o
+    // filtro agora é compartilhado por toda a tela DS.
+    if (dsAbaAtiva === 'transp') dsRenderizar();
   };
 
   var s = document.createElement('script'); s.src = url;
   s.onerror = function(){ toast('Erro de conexão (DS)', 1); };
   document.body.appendChild(s);
-}
-
-// ── Toggle modo Dia/Semana ──────────────────────────────
-function dsSetModo(modo) {
-  dsModoAtivo = modo;
-  document.querySelectorAll('.ds-mbtn').forEach(function(b){
-    b.classList.toggle('ativo', b.dataset.modo === modo);
-  });
-  document.getElementById('dsFiltroDia').style.display    = modo === 'dia' ? 'block' : 'none';
-  document.getElementById('dsFiltroSemana').style.display = modo === 'semana' ? 'block' : 'none';
-  dsRenderizar();
-}
-
-function dsSetPeriodoDia(p) {
-  dsPeriodoDia = p;
-  document.querySelectorAll('#dsFiltroDia .sl-btn-per').forEach(function(b){
-    b.classList.toggle('ativo', b.dataset.p === p);
-  });
-  document.getElementById('dsDatasLivres').style.display     = p === 'livre'      ? 'flex' : 'none';
-  document.getElementById('dsDiaEspecificoWrap').style.display = p === 'especifico' ? 'flex' : 'none';
-  if (p !== 'livre' && p !== 'especifico') dsRenderizar();
-}
-
-function dsFiltrarCiclo(c) {
-  dsCicloAtivo = c;
-  document.querySelectorAll('[data-ciclods]').forEach(function(b){
-    b.classList.toggle('ativo', b.dataset.ciclods === c);
-  });
-  dsRenderizar();
 }
 
 // ── Parse dd/mm/yyyy → Date ──────────────────────────────
@@ -5132,53 +5022,12 @@ function dsFmtDatas(tipo) {
 }
 
 // ── Filtro completo (dia/semana + ciclo + transportadora) ──
+// Fonte "Por Transportadora" (getDS/EXT_DS_Detalhe_TP) usando o MESMO
+// filtro compartilhado (dsu*) das outras 4 abas — período/ciclo/transp/facility
+// idênticos em toda a tela DS, só o "Modo Semana" antigo específico saiu
+// (agora é sempre por Dia/Período, igual às outras abas).
 function dsGetFiltrado() {
-  var rows = dsDadosRaw;
-
-  // Filtro transportadora: MELI usa select, não-MELI é travado na própria
-  var transpFiltro = '';
-  if (sessao && sessao.isMeli) {
-    var sel = document.getElementById('dsSelTransp');
-    transpFiltro = sel ? sel.value : '';
-  } else if (sessao) {
-    transpFiltro = (sessao.transp === 'BLD SVC' || sessao.transp === 'BLD XPT') ? 'BLD LOGÍSTICA' : sessao.transp;
-  }
-  if (transpFiltro) {
-    rows = rows.filter(function(r){ return r.transp === transpFiltro; });
-  }
-
-  // Filtro de ciclo
-  if (dsCicloAtivo !== 'todos') {
-    rows = rows.filter(function(r){ return (r.ciclo||'').toUpperCase() === dsCicloAtivo; });
-  }
-
-  // Filtro de período
-  if (dsModoAtivo === 'semana') {
-    var semSel = document.getElementById('dsSelSemana').value;
-    if (semSel) rows = rows.filter(function(r){ return r.semana === semSel; });
-  } else if (dsPeriodoDia === 'especifico') {
-    var diaUnico = document.getElementById('dsDiaUnico').value.trim();
-    if (diaUnico) {
-      rows = rows.filter(function(r){ return r.dia === diaUnico; });
-    }
-  } else {
-    var datas = dsPeriodoDia === 'livre'
-      ? { de: document.getElementById('dsDe').value.trim(), ate: document.getElementById('dsAte').value.trim() }
-      : dsFmtDatas(dsPeriodoDia);
-    if (datas && datas.de) {
-      var de  = dsParseData(datas.de);
-      var ate = dsParseData(datas.ate); if (ate) ate.setHours(23,59,59);
-      rows = rows.filter(function(r){
-        var d = dsParseData(r.dia);
-        if (!d) return false;
-        if (de && d < de) return false;
-        if (ate && d > ate) return false;
-        return true;
-      });
-    }
-  }
-
-  return rows;
+  return dsuAplicarFiltroBase(dsDadosRaw);
 }
 
 // ── Renderização principal ──────────────────────────────
@@ -5284,12 +5133,11 @@ function dsAbrirDetalheTranspById(idx) {
   if (t) dsAbrirDetalheTransp(t);
 }
 
-// ── Gráfico de evolução DS% ──────────────────────────────
+// ── Gráfico de evolução DS% (sempre por dia, igual às outras abas) ──────
 function dsRenderEvolucao(rows) {
-  var chave = dsModoAtivo === 'semana' ? 'semana' : 'dia';
   var buckets = {};
   rows.forEach(function(r){
-    var k = r[chave];
+    var k = r.dia;
     if (!k) return;
     if (!buckets[k]) buckets[k] = { despachados:0, numDS:0, denDS:0 };
     buckets[k].despachados += r.despachados;
@@ -5298,15 +5146,10 @@ function dsRenderEvolucao(rows) {
   });
 
   var keys = Object.keys(buckets);
-  // Ordena cronologicamente quando é por dia (dd/mm/yyyy)
-  if (chave === 'dia') {
-    keys.sort(function(a,b){
-      var da = dsParseData(a), db = dsParseData(b);
-      return (da && db) ? da - db : a.localeCompare(b);
-    });
-  } else {
-    keys.sort(); // "AAAA-Sxx" já ordena cronologicamente como string
-  }
+  keys.sort(function(a,b){
+    var da = dsParseData(a), db = dsParseData(b);
+    return (da && db) ? da - db : a.localeCompare(b);
+  });
 
   var labels = keys;
   var dsPctData = keys.map(function(k){
@@ -5315,8 +5158,7 @@ function dsRenderEvolucao(rows) {
   });
   var volumeData = keys.map(function(k){ return buckets[k].despachados; });
 
-  document.getElementById('dsEvoTitulo').textContent =
-    '📈 Evolução do DS% — ' + (dsModoAtivo === 'semana' ? 'por semana' : 'por dia');
+  document.getElementById('dsEvoTitulo').textContent = '📈 Evolução do DS% — por dia';
 
   var canvas = document.getElementById('dsEvoChart');
   if (dsChartEvo) { try { dsChartEvo.destroy(); } catch(e){} }
@@ -5553,24 +5395,25 @@ function dsSetAba(aba) {
   document.getElementById('dsPainelPosGhost').style.display = aba === 'posghost' ? 'block' : 'none';
   document.getElementById('dsPainelCritico').style.display  = aba === 'critico'  ? 'block' : 'none';
 
-  // Filtro compartilhado só aparece fora da aba "Por Transportadora" (que tem lógica própria)
-  document.getElementById('dsFiltroCompartilhado').style.display = aba === 'transp' ? 'none' : 'block';
+  // Filtro compartilhado agora vale para TODAS as abas, incluindo "Por Transportadora"
+  document.getElementById('dsFiltroCompartilhado').style.display = 'block';
 
   // Filtros específicos: só um fica visível por vez, conforme a aba
   document.getElementById('dsuFiltroPlacaWrap').style.display  = (aba === 'driver' || aba === 'orh') ? 'block' : 'none';
   document.getElementById('dsuFiltroModalWrap').style.display  = (aba === 'orh') ? 'block' : 'none';
   document.getElementById('dsuFiltroDriverWrap').style.display = (aba === 'posghost') ? 'block' : 'none';
 
-  if ((aba === 'driver' || aba === 'orh' || aba === 'posghost' || aba === 'critico') && !dsDriverCarregado) {
-    dsdCarregar();
+  if (!dsDriverCarregado) {
+    dsdCarregar(); // carrega as duas fontes (DS por transportadora + DS por driver) juntas
   } else {
     dsuRenderizarAtual();
   }
 }
 
-// Renderiza a aba atualmente ativa dentre as que usam o filtro compartilhado
+// Renderiza a aba atualmente ativa — todas usam o mesmo filtro compartilhado
 function dsuRenderizarAtual() {
-  if      (dsAbaAtiva === 'driver')   dsdRenderizar();
+  if      (dsAbaAtiva === 'transp')   dsRenderizar();
+  else if (dsAbaAtiva === 'driver')   dsdRenderizar();
   else if (dsAbaAtiva === 'orh')      dsoRenderizar();
   else if (dsAbaAtiva === 'posghost') dspRenderizar();
   else if (dsAbaAtiva === 'critico')  dscRenderizar();
@@ -5583,6 +5426,115 @@ function dsLinkRota(routeId) {
   return '<a href="' + url + '" target="_blank" rel="noopener" ' +
     'style="color:var(--blue);font-weight:700;font-size:11px;text-decoration:none;white-space:nowrap">🔗 Link rota</a>';
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// JUSTIFICATIVA SIMPLES — DS por Driver (DS% < 99) e ORH (> 8h47)
+// Duas listas separadas no backend (Historico_DS / Historico_ORH) — nunca
+// se misturam, mesmo reutilizando o mesmo modal aqui no front.
+// ══════════════════════════════════════════════════════════════════════
+var dsJustModalCtx = null; // { tipo: 'ds'|'orh', route_id, transp, driver_id, dia, pct/orh_txt }
+
+function dsAbrirModalJust(tipo, row) {
+  dsJustModalCtx = { tipo: tipo, row: row };
+
+  var titulo = tipo === 'ds'
+    ? '📊 Justificar DS abaixo da meta'
+    : '⏱️ Justificar ORH acima de 8h47';
+  document.getElementById('mjdTitulo').textContent = titulo;
+
+  var valorLinha = tipo === 'ds'
+    ? '<div class="mi"><label>DS%</label><span>' + e(row.pct.toFixed(1)) + '%</span></div>'
+    : '<div class="mi"><label>ORH Real</label><span>' + e(row.orh_real_fmt) + '</span></div>';
+
+  document.getElementById('mjdInfo').innerHTML =
+    '<div class="mi"><label>Rota</label><span>' + e(row.route_id) + '</span></div>' +
+    '<div class="mi"><label>Data</label><span>' + e(row.dia) + '</span></div>' +
+    '<div class="mi"><label>Driver ID</label><span>' + e(row.driver_id) + '</span></div>' +
+    '<div class="mi"><label>Transportadora</label><span>' + e(row.transp) + '</span></div>' +
+    valorLinha;
+
+  var motivoAtual = tipo === 'ds' ? (row.just_motivo_ds || '') : (row.just_motivo_orh || '');
+  document.getElementById('mjdMotivo').value = motivoAtual;
+  document.getElementById('mjdBtnSalvar').classList.remove('disabled');
+  document.getElementById('mjdBtnSalvar').textContent = 'Salvar justificativa';
+  document.getElementById('modalJustDSOrh').classList.add('open');
+  setTimeout(function(){ document.getElementById('mjdMotivo').focus(); }, 100);
+}
+
+function dsFecharModalJust() {
+  document.getElementById('modalJustDSOrh').classList.remove('open');
+  dsJustModalCtx = null;
+}
+
+function dsSalvarJust() {
+  if (!dsJustModalCtx) return;
+  var motivo = document.getElementById('mjdMotivo').value.trim();
+  if (!motivo) { toast('Informe o motivo.', 1); return; }
+
+  var ctx = dsJustModalCtx;
+  var row = ctx.row;
+  var btn = document.getElementById('mjdBtnSalvar');
+  btn.classList.add('disabled'); btn.textContent = 'Salvando...';
+
+  var params, action;
+  if (ctx.tipo === 'ds') {
+    action = 'salvarJustificativaDS';
+    params = {
+      action: action,
+      route_id: row.route_id,
+      transportadora: row.transp,
+      driver_id: row.driver_id,
+      data_rota: row.dia,
+      ds_percent: row.pct.toFixed(1),
+      motivo: motivo,
+      nome_dispatcher: sessao ? (sessao.nome + ' (' + sessao.transp + ')') : ''
+    };
+  } else {
+    action = 'salvarJustificativaORH';
+    params = {
+      action: action,
+      id_rota: row.route_id,
+      transportadora: row.transp,
+      prefixo_rota: '',
+      data_dia: row.dia,
+      orh_real: row.orh_real_fmt,
+      orh_contrato: row.orh_planned_fmt || '',
+      motivo: motivo,
+      nome_dispatcher: sessao ? (sessao.nome + ' (' + sessao.transp + ')') : ''
+    };
+  }
+
+  var cb = 'cbjustds_' + Date.now();
+  var timeout = setTimeout(function () {
+    if (window[cb]) { delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar justificativa'; toast('Erro de conexão. Tente novamente.',1); }
+  }, 12000);
+
+  window[cb] = function (d) {
+    clearTimeout(timeout); delete window[cb];
+    btn.classList.remove('disabled'); btn.textContent = 'Salvar justificativa';
+    if (d && d.ok) {
+      // Atualiza o cache local pra já refletir "justificado" sem precisar recarregar tudo
+      if (ctx.tipo === 'ds') { row.justificado_ds = true; row.just_motivo_ds = motivo; }
+      else { row.justificado_orh = true; row.just_motivo_orh = motivo; }
+      dsFecharModalJust();
+      toast('Justificativa salva!');
+      dsuRenderizarAtual();
+    } else {
+      toast('Erro: ' + ((d && d.erro) || 'desconhecido'), 1);
+    }
+  };
+
+  var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
+  var s = document.createElement('script');
+  s.src = API + '?' + qs + '&callback=' + cb + '&t=' + Date.now();
+  s.onerror = function () { clearTimeout(timeout); delete window[cb]; btn.classList.remove('disabled'); btn.textContent='Salvar justificativa'; toast('Erro de conexão. Tente novamente.',1); s.remove(); };
+  document.head.appendChild(s);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var _mjd = document.getElementById('modalJustDSOrh');
+  if (_mjd) _mjd.addEventListener('click', function(ev){ if (ev.target === this) dsFecharModalJust(); });
+});
 
 // ══════════════════════════════════════════════════════════════════════
 // FILTRO COMPARTILHADO — Período/Ciclo/Transportadora valem para as 4
@@ -5617,6 +5569,9 @@ function dsuAplicarFiltroBase(rows) {
   if (transpFiltro) rows = rows.filter(function(r){ return r.transp === transpFiltro; });
 
   if (dsuCicloAtivo !== 'todos') rows = rows.filter(function(r){ return r.ciclo === dsuCicloAtivo; });
+
+  var facilityFiltro = document.getElementById('dsuSelFacility').value;
+  if (facilityFiltro) rows = rows.filter(function(r){ return r.facility_type === facilityFiltro; });
 
   rows = _dsFiltroData(rows, 'dia', dsuPeriodoDia, 'dsu');
   return rows;
@@ -5673,6 +5628,21 @@ function dsdCarregar() {
         var o = document.createElement('option'); o.value = t; o.textContent = t;
         if (t === valModalAtual) o.selected = true;
         selModal.appendChild(o);
+      });
+    }
+
+    // Popula select de Facility (DEST_FACILITY_TYPE — NEX/SVC/XPT/DC...)
+    var facilityList = [];
+    dsDriverCache.forEach(function(r){ if (r.facility_type && facilityList.indexOf(r.facility_type) === -1) facilityList.push(r.facility_type); });
+    facilityList.sort();
+    var selFacility = document.getElementById('dsuSelFacility');
+    if (selFacility) {
+      var valFacilityAtual = selFacility.value;
+      selFacility.innerHTML = '<option value="">Todos</option>';
+      facilityList.forEach(function(t){
+        var o = document.createElement('option'); o.value = t; o.textContent = t;
+        if (t === valFacilityAtual) o.selected = true;
+        selFacility.appendChild(o);
       });
     }
 
@@ -5760,6 +5730,8 @@ function dsuComparar(a, b, campo, dir) {
   return dir * (va - vb);
 }
 
+var DS_JUST_LIMITE = 90; // abaixo disso, a rota precisa de justificativa de DS
+
 function dsdRenderizar() {
   var rows = dsdGetFiltrado();
   var el = document.getElementById('dsdLista');
@@ -5777,11 +5749,12 @@ function dsdRenderizar() {
   lista.sort(function(a,b){ return dsuComparar(a, b, st.campo, st.dir); });
   lista = lista.slice(0, 200); // limite de performance
 
+  window._dsdStore = {};
   var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
     dsuTh('dsd','route_id','Link Rota') + dsuTh('dsd','dia','Data') + dsuTh('dsd','ciclo','Ciclo') +
     dsuTh('dsd','driver_id','Driver ID') + dsuTh('dsd','transp','Transportadora') + dsuTh('dsd','placa','Placa') +
     dsuTh('dsd','pct','DS%') + dsuTh('dsd','pctComercial','DS Comercial') + dsuTh('dsd','pctResidencial','DS Residencial') +
-    dsuTh('dsd','retornados_estacao','Retornado Estação') +
+    dsuTh('dsd','retornados_estacao','Retornado Estação') + '<th>Justificativa (DS)</th>' +
     '</tr></thead><tbody>';
 
   function badgeOuVazio(pct) {
@@ -5790,8 +5763,18 @@ function dsdRenderizar() {
     return '<span class="ds-pct-badge ' + info.cls + '">' + pct.toFixed(1) + '%</span>';
   }
 
-  lista.forEach(function(r){
+  lista.forEach(function(r, idx){
+    window._dsdStore[idx] = r;
     var info = dsCorPct(r.pct);
+    var celJust;
+    if (r.pct >= DS_JUST_LIMITE) {
+      celJust = '<span style="color:var(--text2);font-size:11px">—</span>';
+    } else if (r.justificado_ds) {
+      celJust = '<span class="jok" title="' + e(r.just_motivo_ds||'') + '">✓ Justificado</span> ' +
+        '<button class="btn-just" style="background:transparent;color:var(--blue);border:1px solid var(--blue);padding:3px 9px" onclick="dsAbrirModalJust(\'ds\', window._dsdStore[' + idx + '])">Reeditar</button>';
+    } else {
+      celJust = '<button class="btn-just" onclick="dsAbrirModalJust(\'ds\', window._dsdStore[' + idx + '])">Justificar</button>';
+    }
     html += '<tr>' +
       '<td>' + dsLinkRota(r.route_id) + '</td>' +
       '<td style="font-size:11px;white-space:nowrap">' + e(r.dia) + '</td>' +
@@ -5803,6 +5786,7 @@ function dsdRenderizar() {
       '<td>' + badgeOuVazio(r.pctComercial) + '</td>' +
       '<td>' + badgeOuVazio(r.pctResidencial) + '</td>' +
       '<td style="text-align:center;font-weight:700;color:' + ((r.retornados_estacao||0)>0?'var(--danger)':'var(--text2)') + '">' + (r.retornados_estacao||0).toLocaleString('pt-BR') + '</td>' +
+      '<td>' + celJust + '</td>' +
       '</tr>';
   });
 
@@ -5843,13 +5827,19 @@ function dsoRenderizar() {
   var st = dsuSortState.dso;
   var lista = rows.slice().sort(function(a,b){ return dsuComparar(a, b, st.campo, st.dir); }).slice(0, 200);
 
+  window._dsoStore = {};
   var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
     dsuTh('dso','route_id','Link Rota') + dsuTh('dso','dia','Data') + dsuTh('dso','ciclo','Ciclo') +
     dsuTh('dso','driver_id','Driver ID') + dsuTh('dso','transp','Transportadora') + dsuTh('dso','placa','Placa') +
-    dsuTh('dso','orh_real_h','ORH Real') + dsuTh('dso','orh_planned_fmt','ORH Planejado') +
+    dsuTh('dso','orh_real_h','ORH Real') + dsuTh('dso','orh_planned_fmt','ORH Planejado') + '<th>Justificativa (ORH)</th>' +
     '</tr></thead><tbody>';
 
-  lista.forEach(function(r){
+  lista.forEach(function(r, idx){
+    window._dsoStore[idx] = r;
+    var celJust = r.justificado_orh
+      ? '<span class="jok" title="' + e(r.just_motivo_orh||'') + '">✓ Justificado</span> ' +
+        '<button class="btn-just" style="background:transparent;color:var(--blue);border:1px solid var(--blue);padding:3px 9px" onclick="dsAbrirModalJust(\'orh\', window._dsoStore[' + idx + '])">Reeditar</button>'
+      : '<button class="btn-just" onclick="dsAbrirModalJust(\'orh\', window._dsoStore[' + idx + '])">Justificar</button>';
     html += '<tr style="background:rgba(239,68,68,.05)">' +
       '<td>' + dsLinkRota(r.route_id) + '</td>' +
       '<td style="font-size:11px;white-space:nowrap">' + e(r.dia) + '</td>' +
@@ -5859,6 +5849,7 @@ function dsoRenderizar() {
       '<td style="font-size:11px">' + e(r.placa) + '</td>' +
       '<td><span style="font-weight:800;color:var(--danger)">' + e(r.orh_real_fmt) + '</span></td>' +
       '<td style="font-size:11px;color:var(--text2)">' + e(r.orh_planned_fmt||'—') + '</td>' +
+      '<td>' + celJust + '</td>' +
       '</tr>';
   });
 
@@ -6110,6 +6101,22 @@ function dscAbrirEvolucaoDriver(driverId) {
   document.getElementById('dscEvoWrap').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 </script>
+
+<!-- MODAL: JUSTIFICATIVA SIMPLES (DS por Driver / ORH) -->
+<div class="moverlay" id="modalJustDSOrh">
+  <div class="mcard" style="max-width:480px">
+    <h3 id="mjdTitulo">Justificar</h3>
+    <div class="minfo" id="mjdInfo" style="grid-template-columns:1fr 1fr"></div>
+    <div>
+      <label class="flabel" id="mjdMotivoLabel">Motivo *</label>
+      <textarea id="mjdMotivo" placeholder="Descreva o motivo..."></textarea>
+    </div>
+    <div class="mactions">
+      <button class="bcancel" onclick="dsFecharModalJust()">Cancelar</button>
+      <button class="btn-salvar-just" id="mjdBtnSalvar" onclick="dsSalvarJust()">Salvar justificativa</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: JUSTIFICATIVA TELEMETRIA -->
 <div class="modal-tele-overlay" id="modalTele">
