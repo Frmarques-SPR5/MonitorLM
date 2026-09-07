@@ -992,7 +992,8 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="dots_border"></div>
       <span class="nav-icon">💤</span> <span>SleepOver</span>
     </button>
-    <button class="nav-item" data-view="atribuicoes" onclick="abrirView('atribuicoes')">
+    <!-- Atribuições desativada a pedido do usuário. Código mantido caso precise reverter. -->
+    <button class="nav-item" data-view="atribuicoes" data-oculto="1" onclick="abrirView('atribuicoes')" style="display:none">
       <div class="dots_border"></div>
       <span class="nav-icon">📋</span> <span>Atribuições</span>
     </button>
@@ -1479,56 +1480,8 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="tab" data-dstab="critico" onclick="dsSetAba('critico')">📉 DS — Driver Crítico</div>
     </div>
 
-    <!-- ═══════════ ABA: POR TRANSPORTADORA (conteúdo existente) ═══════════ -->
-    <div id="dsPainelTransp">
-
-    <!-- KPI cards -->
-    <div class="atr-summary" id="dsKpis"></div>
-
-    <!-- Gráfico de evolução -->
-    <div class="evo-card" style="margin-bottom:20px">
-      <div class="evo-card-title" id="dsEvoTitulo">📈 Evolução do DS%</div>
-      <div class="evo-canvas-wrap" style="height:260px"><canvas id="dsEvoChart"></canvas></div>
-    </div>
-
-    <!-- Ranking + Breakdown lado a lado -->
-    <div class="ds-grid-2">
-      <div>
-        <div class="ondas-painel-titulo" style="margin-bottom:4px">📊 DS — Desempenho por transportadora</div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Clique numa linha para ver a análise detalhada</div>
-        <div id="dsRanking"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
-      </div>
-      <div>
-        <div class="ondas-painel-titulo" style="margin-bottom:10px">🚫 Motivos de insucesso</div>
-        <div class="evo-card">
-          <div class="evo-canvas-wrap" style="height:280px"><canvas id="dsInsucessoChart"></canvas></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Análise detalhada por transportadora (aparece ao clicar na tabela de desempenho) -->
-    <div id="dsDetalheWrap" style="display:none; margin-top:24px">
-      <div class="ondas-painel-titulo" style="margin-bottom:10px" id="dsDetalheTitulo">📍 Análise detalhada</div>
-
-      <div class="atr-summary" id="dsDetalheKpis" style="margin-bottom:16px"></div>
-
-      <div class="ds-grid-2">
-        <div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:700">🔥 Principais dias de impacto</div>
-          <div id="dsDetalheDias"></div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:700">📈 Evolução do DS% — só esta transportadora</div>
-          <div class="evo-card">
-            <div class="evo-canvas-wrap" style="height:260px"><canvas id="dsDetalheChart"></canvas></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div> <!-- fim #dsPainelTransp -->
-
     <!-- ═══════════ FILTRO COMPARTILHADO — vale para Detalhe Driver, ORH, Pós-Horário e Evolução Crítico ═══════════ -->
-    <div id="dsFiltroCompartilhado" style="display:none">
+    <div id="dsFiltroCompartilhado" style="display:block">
       <div class="filtros" style="align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
         <div id="dsuFiltroDia">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);font-weight:700;margin-bottom:6px">Período</div>
@@ -1596,6 +1549,54 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         <button class="btn-atualizar" onclick="dsdCarregar()" style="margin-left:auto">↺ Atualizar</button>
       </div>
     </div>
+
+    <!-- ═══════════ ABA: POR TRANSPORTADORA (conteúdo existente) ═══════════ -->
+    <div id="dsPainelTransp">
+
+    <!-- KPI cards -->
+    <div class="atr-summary" id="dsKpis"></div>
+
+    <!-- Gráfico de evolução -->
+    <div class="evo-card" style="margin-bottom:20px">
+      <div class="evo-card-title" id="dsEvoTitulo">📈 Evolução do DS%</div>
+      <div class="evo-canvas-wrap" style="height:260px"><canvas id="dsEvoChart"></canvas></div>
+    </div>
+
+    <!-- Ranking + Breakdown lado a lado -->
+    <div class="ds-grid-2">
+      <div>
+        <div class="ondas-painel-titulo" style="margin-bottom:4px">📊 DS — Desempenho por transportadora</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Clique numa linha para ver a análise detalhada</div>
+        <div id="dsRanking"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+      </div>
+      <div>
+        <div class="ondas-painel-titulo" style="margin-bottom:10px">🚫 Motivos de insucesso</div>
+        <div class="evo-card">
+          <div class="evo-canvas-wrap" style="height:280px"><canvas id="dsInsucessoChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Análise detalhada por transportadora (aparece ao clicar na tabela de desempenho) -->
+    <div id="dsDetalheWrap" style="display:none; margin-top:24px">
+      <div class="ondas-painel-titulo" style="margin-bottom:10px" id="dsDetalheTitulo">📍 Análise detalhada</div>
+
+      <div class="atr-summary" id="dsDetalheKpis" style="margin-bottom:16px"></div>
+
+      <div class="ds-grid-2">
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:700">🔥 Principais dias de impacto</div>
+          <div id="dsDetalheDias"></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:700">📈 Evolução do DS% — só esta transportadora</div>
+          <div class="evo-card">
+            <div class="evo-canvas-wrap" style="height:260px"><canvas id="dsDetalheChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div> <!-- fim #dsPainelTransp -->
 
     <!-- ═══════════ ABA: DETALHE DRIVER ═══════════ -->
     <div id="dsPainelDriver" style="display:none">
