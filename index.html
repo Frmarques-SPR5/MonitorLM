@@ -5832,7 +5832,12 @@ function dsoRenderizar() {
   var html = '<div style="overflow-x:auto"><table class="ds-table"><thead><tr>' +
     dsuTh('dso','route_id','Link Rota') + dsuTh('dso','dia','Data') + dsuTh('dso','ciclo','Ciclo') +
     dsuTh('dso','driver_id','Driver ID') + dsuTh('dso','transp','Transportadora') + dsuTh('dso','placa','Placa') +
-    dsuTh('dso','orh_real_h','ORH Real') + dsuTh('dso','orh_planned_fmt','ORH Planejado') + '<th>Justificativa (ORH)</th>' +
+    dsuTh('dso','orh_real_h','ORH Real') + dsuTh('dso','orh_planned_fmt','ORH Planejado') +
+    dsuTh('dso','hora_inicio','Início Rota') + dsuTh('dso','stem_out_fmt','Chegada Área Entrega') +
+    dsuTh('dso','primeira_parada','1ª Parada') + dsuTh('dso','ultima_parada','Última Parada') +
+    dsuTh('dso','hora_fim','Fim Rota') +
+    dsuTh('dso','km_planned','KM Planejado') + dsuTh('dso','km_odometro','KM Real') +
+    '<th>Justificativa (ORH)</th>' +
     '</tr></thead><tbody>';
 
   lista.forEach(function(r, idx){
@@ -5850,6 +5855,13 @@ function dsoRenderizar() {
       '<td style="font-size:11px">' + e(r.placa) + '</td>' +
       '<td><span style="font-weight:800;color:var(--danger)">' + e(r.orh_real_fmt) + '</span></td>' +
       '<td style="font-size:11px;color:var(--text2)">' + e(r.orh_planned_fmt||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(r.hora_inicio||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(r.stem_out_fmt||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(r.primeira_parada||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(r.ultima_parada||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(r.hora_fim||'—') + '</td>' +
+      '<td style="font-size:11px;color:var(--text2)">' + (r.km_planned ? r.km_planned.toLocaleString('pt-BR') + ' km' : '—') + '</td>' +
+      '<td style="font-size:11px">' + (r.km_odometro ? r.km_odometro.toLocaleString('pt-BR') + ' km' : '—') + '</td>' +
       '<td>' + celJust + '</td>' +
       '</tr>';
   });
