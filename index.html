@@ -5421,6 +5421,15 @@ function dsuRenderizarAtual() {
 }
 
 // Monta o link de monitoramento da rota a partir do ROUTE_ID
+// Extrai só a hora (HH:MM ou HH:MM:SS) de uma string que pode vir com data
+// junto (ex: "07/09/2026 07:15:13" → "07:15:13"). Se não achar hora, devolve
+// o texto original sem mexer.
+function dsSoHora(str) {
+  if (!str) return str;
+  var m = String(str).match(/\d{1,2}:\d{2}(:\d{2})?/);
+  return m ? m[0] : str;
+}
+
 function dsLinkRota(routeId) {
   if (!routeId) return '<span style="color:var(--text2)">—</span>';
   var url = 'https://envios.adminml.com/logistics/monitoring-distribution/detail/' + encodeURIComponent(routeId) + '?site=MLB';
@@ -5855,11 +5864,11 @@ function dsoRenderizar() {
       '<td style="font-size:11px">' + e(r.placa) + '</td>' +
       '<td><span style="font-weight:800;color:var(--danger)">' + e(r.orh_real_fmt) + '</span></td>' +
       '<td style="font-size:11px;color:var(--text2)">' + e(r.orh_planned_fmt||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(r.hora_inicio||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(r.stem_out_fmt||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(r.primeira_parada||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(r.ultima_parada||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(r.hora_fim||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.hora_inicio)||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.stem_out_fmt)||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.primeira_parada)||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.ultima_parada)||'—') + '</td>' +
+      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.hora_fim)||'—') + '</td>' +
       '<td style="font-size:11px;color:var(--text2)">' + (r.km_planned ? r.km_planned.toLocaleString('pt-BR') + ' km' : '—') + '</td>' +
       '<td style="font-size:11px">' + (r.km_odometro ? r.km_odometro.toLocaleString('pt-BR') + ' km' : '—') + '</td>' +
       '<td>' + celJust + '</td>' +
