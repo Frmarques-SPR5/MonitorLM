@@ -659,6 +659,10 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
 .ds-table td { padding:9px 11px; border-bottom:1px solid var(--border); vertical-align:middle; }
 .ds-table tr:last-child td { border-bottom:none; }
 .ds-table tr:hover td { background:rgba(52,131,250,.04); }
+.ds-table-compact th { padding:6px 8px; font-size:9px; }
+.ds-table-compact td { padding:6px 8px; font-size:11px; }
+.ds-table-compact .ds-linha2 { display:block; font-size:10px; color:var(--text2); margin-top:1px; }
+.ds-cluster-star { color:#fbbf24; margin-left:3px; font-size:12px; }
 .ds-pct-badge { font-weight:800; font-size:13px; padding:2px 9px; border-radius:6px; display:inline-block; }
 .ds-pct-ok   { background:rgba(0,166,80,.14);  color:var(--ok); }
 .ds-pct-warn { background:rgba(240,168,0,.16); color:var(--warn); }
@@ -1476,6 +1480,7 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
       <div class="tab ativo" data-dstab="transp" onclick="dsSetAba('transp')">📊 DS por Transportadora</div>
       <div class="tab" data-dstab="driver" onclick="dsSetAba('driver')">🚗 DS por Driver</div>
       <div class="tab" data-dstab="orh" onclick="dsSetAba('orh')">⏱️ ORH</div>
+      <div class="tab" data-dstab="orhdetalhe" onclick="dsSetAba('orhdetalhe')">⏱️ ORH Detalhe Ofensores</div>
       <div class="tab" data-dstab="posghost" onclick="dsSetAba('posghost')">🌙 DS — Entregas Tardias &amp; Ghost</div>
       <div class="tab" data-dstab="critico" onclick="dsSetAba('critico')">📉 DS — Driver Crítico</div>
     </div>
@@ -1612,6 +1617,14 @@ textarea:focus { border-color: var(--blue); background: var(--surface); }
         ⏱️ Mostrando rotas com <strong style="color:var(--text)">ORH real acima de 8h 47min</strong> · clique no título de uma coluna pra ordenar
       </div>
       <div id="dsoLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
+    </div>
+
+    <!-- ═══════════ ABA: ORH DETALHE OFENSORES ═══════════ -->
+    <div id="dsPainelOrhDetalhe" style="display:none">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px">
+        ⏱️ Detalhe completo das rotas acima de 8h 47min · ⭐ marca o Cluster 1 · clique no título de uma coluna pra ordenar
+      </div>
+      <div id="dsodLista"><div class="empty"><span class="spinner"></span> Carregando...</div></div>
     </div>
 
     <!-- ═══════════ ABA: PÓS-HORÁRIO & GHOST ═══════════ -->
@@ -5390,18 +5403,19 @@ function dsSetAba(aba) {
   document.querySelectorAll('[data-dstab]').forEach(function(t){
     t.classList.toggle('ativo', t.getAttribute('data-dstab') === aba);
   });
-  document.getElementById('dsPainelTransp').style.display   = aba === 'transp'   ? 'block' : 'none';
-  document.getElementById('dsPainelDriver').style.display   = aba === 'driver'   ? 'block' : 'none';
-  document.getElementById('dsPainelOrh').style.display      = aba === 'orh'      ? 'block' : 'none';
-  document.getElementById('dsPainelPosGhost').style.display = aba === 'posghost' ? 'block' : 'none';
-  document.getElementById('dsPainelCritico').style.display  = aba === 'critico'  ? 'block' : 'none';
+  document.getElementById('dsPainelTransp').style.display     = aba === 'transp'     ? 'block' : 'none';
+  document.getElementById('dsPainelDriver').style.display     = aba === 'driver'     ? 'block' : 'none';
+  document.getElementById('dsPainelOrh').style.display        = aba === 'orh'        ? 'block' : 'none';
+  document.getElementById('dsPainelOrhDetalhe').style.display  = aba === 'orhdetalhe' ? 'block' : 'none';
+  document.getElementById('dsPainelPosGhost').style.display    = aba === 'posghost'   ? 'block' : 'none';
+  document.getElementById('dsPainelCritico').style.display     = aba === 'critico'    ? 'block' : 'none';
 
   // Filtro compartilhado agora vale para TODAS as abas, incluindo "Por Transportadora"
   document.getElementById('dsFiltroCompartilhado').style.display = 'block';
 
   // Filtros específicos: só um fica visível por vez, conforme a aba
-  document.getElementById('dsuFiltroPlacaWrap').style.display  = (aba === 'driver' || aba === 'orh') ? 'block' : 'none';
-  document.getElementById('dsuFiltroModalWrap').style.display  = (aba === 'orh') ? 'block' : 'none';
+  document.getElementById('dsuFiltroPlacaWrap').style.display  = (aba === 'driver' || aba === 'orh' || aba === 'orhdetalhe') ? 'block' : 'none';
+  document.getElementById('dsuFiltroModalWrap').style.display  = (aba === 'orh' || aba === 'orhdetalhe') ? 'block' : 'none';
   document.getElementById('dsuFiltroDriverWrap').style.display = (aba === 'posghost') ? 'block' : 'none';
 
   if (!dsDriverCarregado) {
@@ -5413,11 +5427,12 @@ function dsSetAba(aba) {
 
 // Renderiza a aba atualmente ativa — todas usam o mesmo filtro compartilhado
 function dsuRenderizarAtual() {
-  if      (dsAbaAtiva === 'transp')   dsRenderizar();
-  else if (dsAbaAtiva === 'driver')   dsdRenderizar();
-  else if (dsAbaAtiva === 'orh')      dsoRenderizar();
-  else if (dsAbaAtiva === 'posghost') dspRenderizar();
-  else if (dsAbaAtiva === 'critico')  dscRenderizar();
+  if      (dsAbaAtiva === 'transp')     dsRenderizar();
+  else if (dsAbaAtiva === 'driver')     dsdRenderizar();
+  else if (dsAbaAtiva === 'orh')        dsoRenderizar();
+  else if (dsAbaAtiva === 'orhdetalhe') dsodRenderizar();
+  else if (dsAbaAtiva === 'posghost')   dspRenderizar();
+  else if (dsAbaAtiva === 'critico')    dscRenderizar();
 }
 
 // Monta o link de monitoramento da rota a partir do ROUTE_ID
@@ -5591,6 +5606,7 @@ function dsuAplicarFiltroBase(rows) {
 function dsdCarregar() {
   document.getElementById('dsdLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
   document.getElementById('dsoLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
+  document.getElementById('dsodLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
   document.getElementById('dspLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
   document.getElementById('dscLista').innerHTML = '<div class="empty"><span class="spinner"></span> Carregando...</div>';
 
@@ -5603,6 +5619,7 @@ function dsdCarregar() {
       toast('DS Driver: ' + data.erro, 1);
       document.getElementById('dsdLista').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
       document.getElementById('dsoLista').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
+      document.getElementById('dsodLista').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
       document.getElementById('dspLista').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
       document.getElementById('dscLista').innerHTML = '<div class="empty">Erro ao carregar dados.</div>';
       return;
@@ -5708,6 +5725,7 @@ function dsdGetFiltrado() {
 var dsuSortState = {
   dsd: { campo: 'pct',         dir:  1 }, // pior DS% primeiro
   dso: { campo: 'orh_real_h',  dir: -1 }, // maior ORH primeiro
+  dsod:{ campo: 'orh_real_h',  dir: -1 }, // maior ORH primeiro (Detalhe Ofensores)
   dsp: { campo: 'impacto',     dir: -1 }, // maior impacto primeiro
   dsc: { campo: 'pct',         dir:  1 }  // pior DS% médio primeiro
 };
@@ -5718,6 +5736,7 @@ function dsuOrdenarPor(tabela, campo) {
   else { st.campo = campo; st.dir = 1; }
   if      (tabela === 'dsd') dsdRenderizar();
   else if (tabela === 'dso') dsoRenderizar();
+  else if (tabela === 'dsod') dsodRenderizar();
   else if (tabela === 'dsp') dspRenderizar();
   else if (tabela === 'dsc') dscRenderizar();
 }
@@ -5842,10 +5861,6 @@ function dsoRenderizar() {
     dsuTh('dso','route_id','Link Rota') + dsuTh('dso','dia','Data') + dsuTh('dso','ciclo','Ciclo') +
     dsuTh('dso','driver_id','Driver ID') + dsuTh('dso','transp','Transportadora') + dsuTh('dso','placa','Placa') +
     dsuTh('dso','orh_real_h','ORH Real') + dsuTh('dso','orh_planned_fmt','ORH Planejado') +
-    dsuTh('dso','hora_inicio','Início Rota') + dsuTh('dso','stem_out_fmt','Chegada Área Entrega') +
-    dsuTh('dso','primeira_parada','1ª Parada') + dsuTh('dso','ultima_parada','Última Parada') +
-    dsuTh('dso','hora_fim','Fim Rota') +
-    dsuTh('dso','km_planned','KM Planejado') + dsuTh('dso','km_odometro','KM Real') +
     '<th>Justificativa (ORH)</th>' +
     '</tr></thead><tbody>';
 
@@ -5864,13 +5879,73 @@ function dsoRenderizar() {
       '<td style="font-size:11px">' + e(r.placa) + '</td>' +
       '<td><span style="font-weight:800;color:var(--danger)">' + e(r.orh_real_fmt) + '</span></td>' +
       '<td style="font-size:11px;color:var(--text2)">' + e(r.orh_planned_fmt||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.hora_inicio)||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.stem_out_fmt)||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.primeira_parada)||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.ultima_parada)||'—') + '</td>' +
-      '<td style="font-size:11px;white-space:nowrap">' + e(dsSoHora(r.hora_fim)||'—') + '</td>' +
-      '<td style="font-size:11px;color:var(--text2)">' + (r.km_planned ? r.km_planned.toLocaleString('pt-BR') + ' km' : '—') + '</td>' +
-      '<td style="font-size:11px">' + (r.km_odometro ? r.km_odometro.toLocaleString('pt-BR') + ' km' : '—') + '</td>' +
+      '<td>' + celJust + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  if (rows.length > 200) {
+    html += '<div style="text-align:center;padding:10px;color:var(--text2);font-size:12px">Mostrando 200 registros (de ' + rows.length + ')</div>';
+  }
+  el.innerHTML = html;
+}
+
+// ── ORH Detalhe Ofensores — mesma base filtrada do ORH, com todos os
+// campos extras, em layout compacto (colunas combinadas) pra caber na tela ──
+function dsodRenderizar() {
+  var rows = dsoGetFiltrado(); // mesmo filtro >8h47 já aplicado
+  var el = document.getElementById('dsodLista');
+
+  if (!rows.length) {
+    el.innerHTML = '<div class="empty" style="color:var(--ok)">✅ Nenhuma rota acima de 8h47min de ORH no período/filtro selecionado.</div>';
+    return;
+  }
+
+  var st = dsuSortState.dsod;
+  var lista = rows.slice().sort(function(a,b){ return dsuComparar(a, b, st.campo, st.dir); }).slice(0, 200);
+
+  window._dsodStore = {};
+  var html = '<div style="overflow-x:auto"><table class="ds-table ds-table-compact"><thead><tr>' +
+    dsuTh('dsod','route_id','Link Rota') + dsuTh('dsod','dia','Data') + dsuTh('dsod','ciclo','Ciclo') +
+    dsuTh('dsod','driver_id','Driver ID') + dsuTh('dsod','cluster','Cluster') +
+    dsuTh('dsod','transp','Transportadora') + dsuTh('dsod','placa','Placa') +
+    dsuTh('dsod','orh_real_h','ORH (Real / Planej.)') +
+    dsuTh('dsod','hora_inicio','Rota (Início → Fim)') +
+    dsuTh('dsod','stem_out_fmt','Chegada Área') +
+    dsuTh('dsod','primeira_parada','Paradas (1ª → Última)') +
+    dsuTh('dsod','km_planned','KM (Planej. / Real)') +
+    '<th>Justificativa</th>' +
+    '</tr></thead><tbody>';
+
+  lista.forEach(function(r, idx){
+    window._dsodStore[idx] = r;
+    var celJust = r.justificado_orh
+      ? '<span class="jok" title="' + e(r.just_motivo_orh||'') + '">✓ Justif.</span> ' +
+        '<button class="btn-just" style="background:transparent;color:var(--blue);border:1px solid var(--blue);padding:2px 7px;font-size:11px" onclick="dsAbrirModalJust(\'orh\', window._dsodStore[' + idx + '])">Reeditar</button>'
+      : '<button class="btn-just" style="font-size:11px;padding:3px 9px" onclick="dsAbrirModalJust(\'orh\', window._dsodStore[' + idx + '])">Justificar</button>';
+
+    var clusterStr = String(r.cluster || '').trim();
+    var clusterCel = clusterStr
+      ? e(clusterStr) + (clusterStr === '1' ? '<span class="ds-cluster-star" title="Cluster 1">⭐</span>' : '')
+      : '<span style="color:var(--text2)">—</span>';
+
+    html += '<tr style="background:rgba(239,68,68,.05)">' +
+      '<td>' + dsLinkRota(r.route_id) + '</td>' +
+      '<td style="white-space:nowrap">' + e(r.dia) + '</td>' +
+      '<td>' + e(r.ciclo||'—') + '</td>' +
+      '<td class="sid">' + e(r.driver_id) + '</td>' +
+      '<td style="text-align:center;font-weight:700">' + clusterCel + '</td>' +
+      '<td>' + e(r.transp) + '</td>' +
+      '<td>' + e(r.placa) + '</td>' +
+      '<td><span style="font-weight:800;color:var(--danger)">' + e(r.orh_real_fmt) + '</span>' +
+        '<span class="ds-linha2">' + e(r.orh_planned_fmt||'—') + '</span></td>' +
+      '<td style="white-space:nowrap">' + e(dsSoHora(r.hora_inicio)||'—') +
+        '<span class="ds-linha2">→ ' + e(dsSoHora(r.hora_fim)||'—') + '</span></td>' +
+      '<td style="white-space:nowrap">' + e(dsSoHora(r.stem_out_fmt)||'—') + '</td>' +
+      '<td style="white-space:nowrap">' + e(dsSoHora(r.primeira_parada)||'—') +
+        '<span class="ds-linha2">→ ' + e(dsSoHora(r.ultima_parada)||'—') + '</span></td>' +
+      '<td>' + (r.km_planned ? r.km_planned.toLocaleString('pt-BR') + ' km' : '—') +
+        '<span class="ds-linha2">' + (r.km_odometro ? r.km_odometro.toLocaleString('pt-BR') + ' km' : '—') + '</span></td>' +
       '<td>' + celJust + '</td>' +
       '</tr>';
   });
